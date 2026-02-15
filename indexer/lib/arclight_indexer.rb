@@ -31,8 +31,6 @@ class ArclightIndexer < PeriodicIndexer
     @time_to_sleep = AppConfig[:arclight_indexing_frequency_seconds].to_i
     @thread_count = AppConfig[:arclight_indexer_thread_count].to_i
 
-    @unpublished_records = java.util.Collections.synchronizedList(java.util.ArrayList.new)
-
     @db_path = File.join(AppConfig[:shared_storage], "arclight_indexer.db")
     @db = Sequel.connect("jdbc:sqlite:#{@db_path}")
 
@@ -46,7 +44,7 @@ class ArclightIndexer < PeriodicIndexer
   def init_schema
     @db.create_table?(:resource) do
       primary_key :id
-      String :uri
+      String :uri, :null => false, :unique => true
     end
 
     # start with a fresh document table
@@ -78,21 +76,32 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def record_types
-    [:resource, :archival_object]
+    [:resource, :archival_object, :top_container]
+  end
+
+  def flag_for_indexing(*uris)
+    uris.each do |uri|
+      begin
+        @db[:resource].insert(:uri => uri)
+      rescue Sequel::UniqueConstraintViolation
+        # this is ok - just means some other record implicated
+        # in the resource has already flagged it
+      end
+    end
   end
 
   def index_records(records, timing = IndexerTiming.new)
     # we don't index individual records
-    # so all this needs to do is remember the resource uri
+    # so all this needs to do is remember any affected resources
     records.each do |record|
       if reference = JSONModel.parse_reference(record['uri'])
-        resource_uri = if reference[:type] == 'resource'
-                         record['record']['uri']
-                       elsif reference[:type] == 'archival_object'
-                         record['record']['resource']['ref']
-                       end
-
-        @db[:resource].insert(:uri => resource_uri)
+        if reference[:type] == 'resource'
+          flag_for_indexing(record['record']['uri'])
+        elsif reference[:type] == 'archival_object'
+          flag_for_indexing(record['record']['resource']['ref'])
+        elsif reference[:type] == 'top_container'
+          flag_for_indexing(record['record']['collection'].map{|c| c['ref']})
+        end
       else
         Log.error "ArcLight Indexer couldn't parse uri: #{record['uri']}"
       end
@@ -238,7 +247,7 @@ class ArclightIndexer < PeriodicIndexer
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
-    @db[:resource].select_map(:uri).uniq.each do |resource_uri|
+    @db[:resource].select_map(:uri).each do |resource_uri|
       resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
 
       if resource_json['publish']
