@@ -82,19 +82,28 @@ class ArclightIndexer < PeriodicIndexer
     [:resource, :archival_object]
   end
 
-  def configure_doc_rules
-    add_document_prepare_hook {|doc, record|
-      resource_uri = if doc['primary_type'] == 'resource'
-                       record['record']['uri']
-                     elsif doc['primary_type'] == 'archival_object'
-                       record['record']['resource']['ref']
-                     end
+  def index_records(records, timing = IndexerTiming.new)
+    # we don't index individual records
+    # so all this needs to do is remember the resource uri
+    records.each do |record|
+      if reference = JSONModel.parse_reference(record['uri'])
+        resource_uri = if reference[:type] == 'resource'
+                         record['record']['uri']
+                       elsif reference[:type] == 'archival_object'
+                         record['record']['resource']['ref']
+                       end
 
-      # remember the resource uri so we can index its entire tree later
-      @db[:resource].insert(:uri => resource_uri)
-    }
+        @db[:resource].insert(:uri => resource_uri)
+      else
+        Log.error "ArcLight Indexer couldn't parse uri: #{record['uri']}"
+      end
+    end
   end
 
+  def configure_doc_rules
+  end
+
+  # FIXME: this is straight from the pui indexer. it might be right, but needs a check
   # Run the final doc rules after all the hooks have been added
   # This allows plugins to access ancestor data in PUI records before it is removed
   def final_doc_rules
@@ -131,23 +140,6 @@ class ArclightIndexer < PeriodicIndexer
         end
       end
     }
-  end
-
-  def skip_index_record?(record)
-    published = record['record']['publish']
-
-    stage_unpublished_for_deletion("#{record['record']['uri']}#pui") unless published
-
-    !published
-  end
-
-
-  def skip_index_doc?(doc)
-    published = doc['publish']
-
-    stage_unpublished_for_deletion(doc['id']) unless published
-
-    !published
   end
 
   def map_children(waypoints_json, resource_uri, parent_doc_id, parent_uri)
@@ -205,9 +197,11 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  def stream_nested_doc(root_id)
+  def stream_nested_doc(root_id, uri)
+    # FIXME: can we pipe it straight from the db? what about Content-Length?
     fh = Tempfile.new('arclight_stream.json')
-    log "Dumping nested doc to: #{fh.path}"
+    temp_file_path = fh.path
+    log "Dumping nested doc to: #{temp_file_path}"
 
     fh.write('[')
 
@@ -218,11 +212,33 @@ class ArclightIndexer < PeriodicIndexer
     fh.flush
     fh.close
     log "Dump complete"
+
+    req = Net::HTTP::Post.new("#{solr_url.path}/update")
+    req['Content-Type'] = 'application/json'
+    req['Content-Length'] = File.size(temp_file_path)
+
+    stream = File.open(temp_file_path, "rb")
+    req.body_stream = stream
+
+    resp = do_http_request(solr_url, req)
+
+    stream.close
+    File.unlink(temp_file_path)
+
+    if resp.code == '200'
+      send_commit
+      log "Indexed #{uri}"
+    else
+      Log.error "ArcLight Indexer: error when indexing #{uri}: #{response.body}"
+    end
+
   end
 
   def index_round_complete(repository)
-    batch = IndexBatch.new
-
+    start = Time.now
+    resource_count = 0
+    indexed_count = 0
+    deleted_count = 0
     @db[:resource].select_map(:uri).uniq.each do |resource_uri|
       resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
 
@@ -238,49 +254,28 @@ class ArclightIndexer < PeriodicIndexer
 
         log "Generated index docs for #{resource_uri}"
 
-        stream_nested_doc(resource_doc_id)
-
-        log "Streamed nested doc for #{resource_uri}"
+        stream_nested_doc(resource_doc_id, resource_uri)
 
         @db[:document].filter(:resource_uri => resource_uri).delete
+
+        indexed_count += 1
       else
         log "Ensuring resource #{resource_uri} is not in the ArcLight index because it is not published"
         # FIXME: actually delete it
+
+        deleted_count += 1
       end
 
       @db[:resource].filter(:uri => resource_uri).delete
+      resource_count += 1
     end
 
-    if batch.length > 0
-      log "Indexed #{batch.length} Resource trees in ArcLight for repository #{repository.repo_code}"
+    if resource_count > 0
+      log "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count} for repository #{repository.repo_code}"
 
-      pp batch
-
-      # index_batch(batch, nil, :parent_id_field => 'pui_parent_id')
-      # send_commit
-      # update_mtimes = true
+      @state.set_last_mtime(repository.id, 'resource', start)
+      @state.set_last_mtime(repository.id, 'archival_object', start)
     end
-
-    # if tree_indexer.deletes.length > 0
-    #   tree_indexer.deletes.each_slice(100) do |deletes|
-    #     delete_records(deletes, :parent_id_field => 'pui_parent_id')
-    #   end
-    # end
-
-    # handle_deletes(:parent_id_field => 'pui_parent_id')
-
-    # Delete any unpublished records and decendents
-    # delete_records(@unpublished_records, :parent_id_field => 'pui_parent_id')
-    # @unpublished_records.clear()
-
-    # checkpoints.each do |repository, type, start|
-    #   @state.set_last_mtime(repository.id, type, start, state_type) if update_mtimes
-    # end
-
-  end
-
-  def stage_unpublished_for_deletion(doc_id)
-    @unpublished_records.add(doc_id) if doc_id =~ /#pui$/
   end
 
   def repositories_updated_action(updated_repositories)
