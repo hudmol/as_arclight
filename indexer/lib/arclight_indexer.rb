@@ -129,7 +129,6 @@ class ArclightIndexer < PeriodicIndexer
             end
           end
         end
-#        build_fullrecord(doc, record)
       end
     }
   end
@@ -154,7 +153,9 @@ class ArclightIndexer < PeriodicIndexer
   def map_children(waypoints_json, resource_uri, parent_doc_id, parent_uri)
     waypoints_json.each do |waypoint_record|
       record_uri = waypoint_record.fetch('uri')
+      child_count = waypoint_record.fetch('child_count')
       ao_json = JSONModel::HTTP.get_json(record_uri, 'resolve[]' => ArchivalObjectMapper.resolves)
+      ao_json['_child_count'] = child_count
       mapper = ArchivalObjectMapper.new(ao_json)
       ao_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.map.json)
 
@@ -182,6 +183,43 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
+  def stream_doc(id, fh)
+    doc = @db[:document].filter(:id => id).select_map(:json).first
+    kid_ids = @db[:document].filter(:parent_id => id).select_map(:id)
+
+    if kid_ids.empty?
+      fh.write(doc)
+    else
+      fh.write(doc[0..-2])
+      fh.write(',"components":[')
+      first = true
+      kid_ids.each do |kid|
+        if first
+          first = false
+        else
+          fh.write(',')
+        end
+        stream_doc(kid, fh)
+      end
+      fh.write(']}')
+    end
+  end
+
+  def stream_nested_doc(root_id)
+    fh = Tempfile.new('arclight_stream.json')
+    log "Dumping nested doc to: #{fh.path}"
+
+    fh.write('[')
+
+    stream_doc(root_id, fh)
+
+    fh.write(']')
+
+    fh.flush
+    fh.close
+    log "Dump complete"
+  end
+
   def index_round_complete(repository)
     batch = IndexBatch.new
 
@@ -189,20 +227,28 @@ class ArclightIndexer < PeriodicIndexer
       resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
 
       if resource_json['publish']
+        log "Preparing resource #{resource_uri} for ArcLight indexing"
+
         mapper = ResourceMapper.new(resource_json)
         resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.map.json)
 
-        # walk the tree saving mapped docs as we go
         root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
 
         map_waypoints(root_json, resource_uri, resource_doc_id, nil)
 
         log "Generated index docs for #{resource_uri}"
 
+        stream_nested_doc(resource_doc_id)
+
+        log "Streamed nested doc for #{resource_uri}"
+
+        @db[:document].filter(:resource_uri => resource_uri).delete
       else
-        # FIXME: delete
+        log "Ensuring resource #{resource_uri} is not in the ArcLight index because it is not published"
+        # FIXME: actually delete it
       end
 
+      @db[:resource].filter(:uri => resource_uri).delete
     end
 
     if batch.length > 0
@@ -231,8 +277,6 @@ class ArclightIndexer < PeriodicIndexer
     #   @state.set_last_mtime(repository.id, type, start, state_type) if update_mtimes
     # end
 
-    # all done, so clear the table
-    # @db[:resource].delete
   end
 
   def stage_unpublished_for_deletion(doc_id)
