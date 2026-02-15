@@ -30,7 +30,6 @@ class ArclightIndexer < PeriodicIndexer
 
     @time_to_sleep = AppConfig[:arclight_indexing_frequency_seconds].to_i
     @thread_count = AppConfig[:arclight_indexer_thread_count].to_i
-    @records_per_thread = AppConfig[:arclight_indexer_records_per_thread].to_i
 
     @unpublished_records = java.util.Collections.synchronizedList(java.util.ArrayList.new)
 
