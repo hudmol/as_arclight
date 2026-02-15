@@ -79,34 +79,3 @@ class ResourceMapper < ArclightMapper
   end
 
 end
-
-
-    #     doc["ref_ssi"] = rec['component_id']
-    #     doc["ref_ssm"] = [rec['component_id']]
-    #     doc["id"] = resource['ead_id'] + '_' + rec['component_id']
-    #     doc["title_filing_ssi"] = rec['title']
-    #     doc["title_ssm"] = [rec['title']]
-    #     doc["title_tesim"] = [rec['title']]
-    #     doc["unitdate_inclusive_ssm"] = rec['dates'].map{|d| d['expression']}
-    #     doc["normalized_date_ssm"] = rec['dates'].map{|d| d['expression']}
-    #     doc["normalized_title_ssm"] = [rec['display_string']]
-
-    #     # hmm
-    #     doc["text"] = ["Hornstein's Introduction notes, undated","Lillian Herlands Hornstein Papers, 1930-1980","Series I.a: Research on Chaucer's Man of Law's Tale for the Chaucer Variorum","Box 2","Folder 14","Barcode #: 3 1142 04058121 0"]
-
-
-    #     doc["component_level_isim"] = [ancestors.length],
-    #     doc["parent_ids_ssim"] = [resource['ead_id'], ancestors[1..-1].map{|a| resource['ead_id'] + '_' + a['component_id']}]
-
-    #     doc["parent_unittitles_ssm"] = ancestors.map{|a| a['title']}
-    #     doc["parent_unittitles_tesim"] = ancestors.map{|a| a['title']}
-    #     doc["parent_levels_ssm"] = ancestors.map{|a| a['level']}
-    #     doc["repository_ssim"] = [rec['respository']['_resolved']['name']]
-    #     doc["collection_ssim"] = [rec['respository']['_resolved']['finding_aid_title']]
-    #     doc["has_online_content_ssim"] = ["false"] # hmm
-    #     doc["child_component_count_isi"] = 0 # hmm
-    #     doc["level_ssm"] = [rec['level'].capitalize]
-    #     doc["level_ssim"] = [rec['level'].capitalize]
-    #     doc["sort_isi"] = 52 # hmm
-    #     doc["parent_access_restrict_tesm"] = rec['notes'].select{|n| n['type'] == 'accessrestrict'}.map{|n| n['subnotes'].select{|s| s['publish']}.map{|s| s['content']}.join("\n")}
-    #     doc["parent_access_terms_tesm"] = rec['notes'].select{|n| n['type'] == 'userestrict'}.map{|n| n['subnotes'].select{|s| s['publish']}.map{|s| s['content']}.join("\n")}
