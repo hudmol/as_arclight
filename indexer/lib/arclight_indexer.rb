@@ -204,19 +204,20 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def stream_nested_doc(root_id, uri)
-    # FIXME: can we pipe it straight from the db? what about Content-Length?
+    # write the payload to a temp file because body_stream wants an IO
+    # and this avoids having to load the whole thing into memory
     fh = Tempfile.new('arclight_stream.json')
     temp_file_path = fh.path
     log "Dumping nested doc to: #{temp_file_path}"
 
-    fh.write('[')
+    begin
+      fh.write('[')
+      stream_doc(root_id, fh)
+      fh.write(']')
+    ensure
+      fh.close
+    end
 
-    stream_doc(root_id, fh)
-
-    fh.write(']')
-
-    fh.flush
-    fh.close
     log "Dump complete"
 
     req = Net::HTTP::Post.new("#{solr_url.path}/update")
@@ -224,12 +225,14 @@ class ArclightIndexer < PeriodicIndexer
     req['Content-Length'] = File.size(temp_file_path)
 
     stream = File.open(temp_file_path, "rb")
-    req.body_stream = stream
 
-    resp = do_http_request(solr_url, req)
-
-    stream.close
-    File.unlink(temp_file_path)
+    begin
+      req.body_stream = stream
+      resp = do_http_request(solr_url, req)
+    ensure
+      stream.close
+      File.unlink(temp_file_path)
+    end
 
     if resp.code == '200'
       send_commit
@@ -249,7 +252,7 @@ class ArclightIndexer < PeriodicIndexer
       resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
 
       if resource_json['publish']
-        log "Preparing resource #{resource_uri} for ArcLight indexing"
+        log "Preparing resource: #{resource_uri}"
 
         mapper = ResourceMapper.new(resource_json)
         resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.map.json)
@@ -285,7 +288,6 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def repositories_updated_action(updated_repositories)
-
     updated_repositories.each do |repository|
 
       if !repository['record']['publish']
@@ -304,11 +306,7 @@ class ArclightIndexer < PeriodicIndexer
         else
           Log.error "SolrIndexerError when deleting ArcLight documents in private repository #{repository['record']['repo_code']}: #{response.body}"
         end
-
       end
-
     end
-
   end
-
 end
