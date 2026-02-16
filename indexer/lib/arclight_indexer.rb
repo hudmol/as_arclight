@@ -296,8 +296,6 @@ class ArclightIndexer < PeriodicIndexer
         req = Net::HTTP::Post.new("#{solr_url.path}/update")
         req['Content-Type'] = 'application/json'
 
-        # FIXME: it seems ArcLight doesn't store the repo code, just it's name
-        # so this for now, but it's no good
         delete_request = {:delete => {'query' => "repository_ssim:\"#{repository['name']}\""}}
         req.body = delete_request.to_json
         response = do_http_request(solr_url, req)
