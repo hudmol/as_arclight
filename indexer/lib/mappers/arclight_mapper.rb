@@ -1,5 +1,4 @@
 require 'json'
-require 'pp'
 
 class ArclightMapper
 
@@ -10,6 +9,8 @@ class ArclightMapper
   def initialize(json)
     @json = json
     @map = {}
+
+    self.map
   end
 
   def map
@@ -26,11 +27,5 @@ class ArclightMapper
 
   def json
     @map.to_json
-  end
-
-  def dump
-    pp ['XXXXXXXXXXXXXXXXXXXXXXXXX',
-        @map,
-        'XXXXXXXXXXXXXXXXXXXXXXXXX']
   end
 end
