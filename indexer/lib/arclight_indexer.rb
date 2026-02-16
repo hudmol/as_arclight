@@ -34,9 +34,7 @@ class ArclightIndexer < PeriodicIndexer
     @db_path = File.join(AppConfig[:shared_storage], "arclight_indexer.db")
     @db = Sequel.connect("jdbc:sqlite:#{@db_path}")
 
-    # FIXME: check these
-    @db.run("PRAGMA synchronous = OFF;")
-    @db.run("PRAGMA journal_mode = OFF;")
+    @db.run("PRAGMA journal_mode = WAL;")
     init_schema
     Log.info('Initialized ArcLight Indexer db at: ' + @db_path)
   end
