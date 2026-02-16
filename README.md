@@ -18,3 +18,11 @@ Example:
 Note that in the example, ArcLight Solr is running on the default Solr port.
 This is the same port that ArchivesSpace's Solr defaults to. Someone is going
 to have to move!
+
+## Notes
+
+  * The repository that a resource gets added to in ArcLight is determined
+    by the repository_ssm field in its solr. This is the name of the repository
+    as defined in config/repositories.yml. So, if the name of the repository
+    gets changed in ArchivesSpace it will need to be changed to match in
+    ArcLight. This will require reindexing the whole repository.
