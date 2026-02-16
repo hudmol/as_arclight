@@ -23,7 +23,7 @@ class ResourceMapper < ArclightMapper
     map_field('normalized_title_ssm',   [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
     map_field('collection_title_tesim', [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
     map_field('collection_ssim',        [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
-    map_field('repository_ssm',         [repository['name']])
+    map_field('repository_ssm',         [repository['name']]) # this has to match the 'name' in arclight's repositories.yml
     map_field('repository_ssim',        [repository['name']])
     map_field('creator_ssm',            @json['linked_agents'].select{|a| a['role'] == 'creator'}.map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('creator_ssim',           @map['creator_ssm'])
