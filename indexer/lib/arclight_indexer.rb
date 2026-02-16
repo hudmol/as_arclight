@@ -29,7 +29,7 @@ class ArclightIndexer < PeriodicIndexer
     RecordInheritance.prepare_schemas
 
     @time_to_sleep = AppConfig[:arclight_indexing_frequency_seconds].to_i
-    @thread_count = AppConfig[:arclight_indexer_thread_count].to_i
+    @thread_count = 1
 
     @db_path = File.join(AppConfig[:shared_storage], "arclight_indexer.db")
     @db = Sequel.connect("jdbc:sqlite:#{@db_path}")

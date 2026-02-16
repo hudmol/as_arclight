@@ -13,7 +13,6 @@ Example:
 ```
     AppConfig[:arclight_solr_url] = "http://localhost:8983/solr/blacklight-core"
     AppConfig[:arclight_indexing_frequency_seconds] = 30
-    AppConfig[:arclight_indexer_thread_count] = 2
 ```
 
 Note that in the example, ArcLight Solr is running on the default Solr port.
