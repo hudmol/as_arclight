@@ -18,7 +18,7 @@ class ArchivalObjectMapper < ArclightMapper
   end
 
   def ancestors
-    @json['ancestors'].map{|a| a['_resolved']}
+    @json['ancestors'].reverse.map{|a| a['_resolved']}
   end
 
   # FIXME: neither of these are required in the ao schema
@@ -36,7 +36,7 @@ class ArchivalObjectMapper < ArclightMapper
     map_field('title_tesim',                 [@json['title']])
     map_field('normalized_title_ssm',        [@json['title']])
     map_field('component_level_isim',        [ancestors.length])
-    map_field('parent_ids_ssim',             [resource_id, ancestors[1..-1].map{|a| resource_id + '_' + (a['component_id'] || a['ref_id'] || a['uri'])}])
+    map_field('parent_ids_ssim',             [resource_id, ancestors[1..-1].map{|a| resource_id + '_' + (a['component_id'] || a['ref_id'] || a['uri'])}].flatten)
     map_field('parent_unittitles_ssm',       ancestors.map{|a| a['title']})
     map_field('parent_unittitles_tesim',     ancestors.map{|a| a['title']})
     map_field('parent_levels_ssm',           ancestors.map{|a| a['level']})
