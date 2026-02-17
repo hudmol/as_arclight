@@ -70,8 +70,8 @@ class ResourceMapper < ArclightMapper
     map_field('persname_ssim',          @json['linked_agents'].select{|a| a['role'] == 'subject' && a['_resolved']['jsonmodel_type'] == 'agent_person'}
                                                               .map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('language_ssim',          @json['finding_aid_language'])
-    map_field('total_component_count_is',[719]) # FIXME
-    map_field('online_item_count_is',   [0]) # FIXME
+    map_field('total_component_count_is',[@json['_total_components']])
+    map_field('online_item_count_is',   [@json['_online_item_count']])
     map_field('component_level_isim',   [0])
     map_field('sort_isi',               [0])
 

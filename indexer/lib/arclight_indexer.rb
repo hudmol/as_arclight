@@ -248,6 +248,7 @@ class ArclightIndexer < PeriodicIndexer
     deleted_count = 0
     @db[:resource].select_map(:uri).each do |resource_uri|
       resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
+      resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
 
       if resource_json['publish']
         log "Preparing resource: #{resource_uri}"
