@@ -9,7 +9,7 @@ class ResourceMapper < ArclightMapper
   end
 
   def map
-    map_field('id',                     @json['ead_id'] || @json['id_0']) # FIXME
+    map_field('id',                     @json['ead_id'] || [0,1,2,3].map{|n| @json["id_#{n}"]}.join('-'))
     map_field('title_ssm',              [@json['title']])
     map_field('title_tesim',            [@json['title']])
     map_field('ead_ssi',                @json['ead_id'])
