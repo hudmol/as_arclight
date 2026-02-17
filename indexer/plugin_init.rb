@@ -1,16 +1,13 @@
 require 'log'
 
-# FIXME: the sleep and the const test are hacky work arounds
-# this file is getting loaded twice - annoying - and
-# PeriodicIndexer isn't loaded when is gets called
-# so we hang around for a second, and blah
-sleep 1
-unless Object.const_defined?('ArclightIndexer')
+# This file gets loaded first by common_indexer.rb (which is too early because
+# PeriodicIndexer isn't loaded yet) and then again by main.rb.  Since our
+# indexer depends on PeriodicIndexer, wait until it's available.
+if Object.const_defined?('PeriodicIndexer')
+  require_relative 'lib/arclight_indexer'
+
   Thread.new do
     begin
-      require_relative '../../../indexer/app/lib/periodic_indexer'
-      require_relative  'lib/arclight_indexer'
-
       Log.info("Starting ArcLight indexer")
 
       ArclightIndexer.get_indexer(state = nil, name = 'ArcLight Indexer').run
@@ -18,4 +15,5 @@ unless Object.const_defined?('ArclightIndexer')
       Log.error("Unexpected failure in ArcLight indexer: #{$!}")
     end
   end
+
 end
