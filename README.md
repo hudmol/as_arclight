@@ -1,7 +1,7 @@
 # as_arclight
 An ArchivesSpace plugin for syncing published data to an ArcLight Solr index.
 
-Compatible with ArchivesSpace v4.x.
+Compatible with ArchivesSpace v4.x and ArcLight v1.6.x.
 
 Developed by Hudson Molonglo for The Research Foundation for The State University of New York.
 
