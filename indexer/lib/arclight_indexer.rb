@@ -236,7 +236,7 @@ class ArclightIndexer < PeriodicIndexer
       send_commit
       log "Indexed #{uri}"
     else
-      Log.error "ArcLight Indexer: error when indexing #{uri}: #{response.body}"
+      Log.error "ArcLight Indexer: error when indexing #{uri}: #{resp.body}"
     end
 
   end
