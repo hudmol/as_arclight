@@ -242,7 +242,6 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def index_round_complete(repository)
-    start = Time.now
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
@@ -280,9 +279,6 @@ class ArclightIndexer < PeriodicIndexer
 
     if resource_count > 0
       log "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count} for repository #{repository.repo_code}"
-
-      @state.set_last_mtime(repository.id, 'resource', start)
-      @state.set_last_mtime(repository.id, 'archival_object', start)
     end
   end
 
