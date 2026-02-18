@@ -68,12 +68,18 @@ class ArclightMapper
 
           map_field("#{note}_html_tesm",
                     @json['notes'].select{|n| n['type'] == note}.map{|n|
-                      n['subnotes'].select{|s| s.has_key?('content') && s['publish']}
-                        .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}}.flatten.join("\n") +
-                      '<list type="ordered">' + "\n" +
-                      n['subnotes'].select{|s| s.has_key?('items') && s['publish']}
-                        .map{|is| is['items'].map{|i| '<item>' + i + '</item>'}.join("\n")}.join("\n")
-          })
+                      n['subnotes'].select{|s| s['publish']}.map{|psn|
+                        if psn.has_key?('content')
+                          psn['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n")
+                        elsif psn.has_key?('items')
+                          '<list type="ordered">' + "\n" +
+                            psn['items'].map{|i| '<item>' + i + '</item>'}.join("\n") +
+                            '</list>'
+                        else
+                          ''
+                        end
+                      }.join("\n")
+                    })
         end
       end
     end
