@@ -14,7 +14,10 @@ class ArclightMapper
   end
 
   def map
-    self
+  end
+
+  def doc_id
+    @map['id']
   end
 
   def map_field(field, mapped, &block)

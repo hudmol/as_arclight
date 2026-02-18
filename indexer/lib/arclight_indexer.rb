@@ -248,11 +248,11 @@ class ArclightIndexer < PeriodicIndexer
     @db[:resource].select_map(:uri).each do |resource_uri|
       resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
       resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
+      mapper = ResourceMapper.new(resource_json)
 
       if resource_json['publish']
         log "Preparing resource: #{resource_uri}"
 
-        mapper = ResourceMapper.new(resource_json)
         resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
         root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
@@ -268,9 +268,21 @@ class ArclightIndexer < PeriodicIndexer
         indexed_count += 1
       else
         log "Ensuring resource #{resource_uri} is not in the ArcLight index because it is not published"
-        # FIXME: actually delete it
 
-        deleted_count += 1
+        req = Net::HTTP::Post.new("#{solr_url.path}/update")
+        req['Content-Type'] = 'application/json'
+        delete_json = {'delete' => {'id' => mapper.doc_id}}.to_json
+        req['Content-Length'] = delete_json.length
+        req.body = delete_json
+        resp = do_http_request(solr_url, req)
+
+        if resp.code == '200'
+          send_commit
+          log "Deleted #{resource_uri}"
+          deleted_count += 1
+        else
+          Log.error "ArcLight Indexer: error when deleting #{resource_uri}: #{resp.body}"
+        end
       end
 
       @db[:resource].filter(:uri => resource_uri).delete
