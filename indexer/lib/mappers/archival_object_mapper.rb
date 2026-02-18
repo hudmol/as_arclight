@@ -57,7 +57,8 @@ class ArchivalObjectMapper < ArclightMapper
                                                               .map{|n| n['subnotes'].select{|s| s['publish']}
                                                               .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")})
 
-    map_field('date_range_isim',             resource['dates'].map{|d| (d['begin']..d['end']).to_a}.flatten.uniq) # FIXME: inheritance?
+    map_field('date_range_isim',             resource['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
+
     map_field('containers_ssim',             @json['instances'].select{|i| i['sub_container']}
                                                                .map{|i|
                                                                    [i['sub_container']['top_container']['_resolved']['display_string'],

@@ -19,7 +19,7 @@ class ResourceMapper < ArclightMapper
     map_field('level_ssim',             [@json['level'].capitalize])
     map_field('unitid_ssm',             [@json['id_0']])
     map_field('unitid_tesim',           [@json['id_0']])
-    map_field('normalized_date_ssm',    @json['dates'].map{|d| d['expression']})
+    map_field('normalized_date_ssm',    @json['dates'].map{|d| format_date(d)})
     map_field('normalized_title_ssm',   [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
     map_field('collection_title_tesim', [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
     map_field('collection_ssim',        [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
