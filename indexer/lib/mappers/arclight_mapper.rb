@@ -85,6 +85,10 @@ class ArclightMapper
     end
   end
 
+  def format_date(date)
+    date['expression'] || (date['begin'][0,4] + (date['end'] ? "-#{date['end'][0,4]}" : ''))
+  end
+
   def json
     @map.to_json
   end

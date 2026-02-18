@@ -9,12 +9,12 @@ class ResourceMapper < ArclightMapper
   end
 
   def map
-    map_field('id',                     @json['ead_id'] || [0,1,2,3].map{|n| @json["id_#{n}"]}.join('-'))
+    map_field('id',                     @json['ead_id'] || [0,1,2,3].map{|n| @json["id_#{n}"]}.select{|i| !i.nil?}.join('-'))
     map_field('title_ssm',              [@json['title']])
     map_field('title_tesim',            [@json['title']])
     map_field('ead_ssi',                @json['ead_id'])
-    map_field('unitdate_ssm',           @json['dates'].map{|d| d['expression']})
-    map_field('unitdate_inclusive_ssm', @json['dates'].map{|d| d['expression']})
+    map_field('unitdate_ssm',           @json['dates'].map{|d| format_date(d)})
+    map_field('unitdate_inclusive_ssm', @json['dates'].map{|d| format_date(d)})
     map_field('level_ssm',              [@json['level']])
     map_field('level_ssim',             [@json['level'].capitalize])
     map_field('unitid_ssm',             [@json['id_0']])
@@ -41,7 +41,7 @@ class ResourceMapper < ArclightMapper
     map_field('extent_ssm',             @json['extents'].map{|e| e['container_summary']})
     map_field('extent_tesim',           @map['extent_ssm'])
     map_field('genreform_ssim',         @json['subjects'].map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'genre_form'}.map{|t| t['term']})
-    map_field('date_range_isim',        @json['dates'].map{|d| (d['begin']..d['end']).to_a}.flatten.uniq)
+    map_field('date_range_isim',        @json['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
 
     map_field('names_coll_ssim',        @json['linked_agents'].select{|a| a['role'] == 'subject'}.map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('names_ssim',             @json['linked_agents'].map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
