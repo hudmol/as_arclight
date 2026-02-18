@@ -49,30 +49,22 @@ class ArchivalObjectMapper < ArclightMapper
     map_field('level_ssim',                  [@json['level'].capitalize])
     map_field('sort_isi',                    [@json['position']])  #FIXME: is this right?
 
-    map_field('parent_access_restrict_tesm', resource['notes'].select{|n| n['type'] == 'accessrestrict'}
-                                                              .map{|n| n['subnotes']
-                                                              .select{|s| s['publish']}
-                                                              .map{|s| s['content']}.join("\n")}) #FIXME: strip?, inheritance?
+    map_field('parent_access_restrict_tesm',    resource['notes'].select{|n| n['type'] == 'accessrestrict'}
+                                                              .map{|n| n['subnotes'].select{|s| s['publish']}
+                                                              .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")})
+
     map_field('parent_access_terms_tesm',    resource['notes'].select{|n| n['type'] == 'userestrict'}
-                                                              .map{|n| n['subnotes']
-                                                              .select{|s| s['publish']}
-                                                              .map{|s| s['content']}.join("\n")}) #FIXME: strip?, inheritance?
-    map_field('date_range_isim',             resource['dates'].map{|d| (d['begin']..d['end']).to_a}.flatten.uniq)
+                                                              .map{|n| n['subnotes'].select{|s| s['publish']}
+                                                              .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")})
+
+    map_field('date_range_isim',             resource['dates'].map{|d| (d['begin']..d['end']).to_a}.flatten.uniq) # FIXME: inheritance?
     map_field('containers_ssim',             @json['instances'].select{|i| i['sub_container']}
                                                                .map{|i|
                                                                    [i['sub_container']['top_container']['_resolved']['display_string'],
                                                                     i['sub_container']['type_2'] + ' ' + i['sub_container']['indicator_2']]
                                                                }.flatten)
 
-    # FIXME: other notes - worry about different kinds of notes and not hard-coding heading
-    [['scopecontent', 'Scope and Content Note'],
-     ['odd',          'General note']].each do |note_type|
-      if @json['notes'].find{|n| n['type'] == note_type[0]}
-          map_field("#{note_type[0]}_heading_ssm",  [note_type[1]])
-          map_field("#{note_type[0]}_tesm",         @json['notes'].select{|n| n['type'] == note_type[0]}.map{|n| n['subnotes'].select{|s| s['publish']}.map{|s| s['content']}.join("\n")})
-          map_field("#{note_type[0]}_html_tesm",    @map["#{note_type[0]}_tesm"].map{|n| '<p>' + n + '</p>'})
-        end
-    end
+    map_notes
 
     super
   end
