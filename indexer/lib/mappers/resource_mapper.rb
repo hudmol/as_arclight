@@ -44,7 +44,7 @@ class ResourceMapper < ArclightMapper
     map_field('access_subjects_ssim',   @json['subjects'].map{|s| s['_resolved']['title']})
     map_field('access_subjects_ssm',    @map['access_subjects_ssim'])
     map_field('has_online_content_ssim',[@json['_online_item_count'] > 0])
-    map_field('extent_ssm',             @json['extents'].map{|e| e['container_summary']})
+    map_field('extent_ssm',             @json['extents'].map{|e| e['container_summary'] || "#{e['number']} #{I18n.t('enumerations.extent_extent_type.' + e['extent_type'])}"})
     map_field('extent_tesim',           @map['extent_ssm'])
     map_field('genreform_ssim',         @json['subjects'].map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'genre_form'}.map{|t| t['term']})
     map_field('date_range_isim',        @json['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
