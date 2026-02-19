@@ -8,17 +8,23 @@ class ResourceMapper < ArclightMapper
     @json['repository']['_resolved']
   end
 
+  # ArcLight needs a value in ead_ssi, but ead_id is not required in ArchivesSapce
+  # so use the four part id as a default
+  def ead_id
+    @json['ead_id'] || [0,1,2,3].map{|n| @json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
+  end
+
   def map
-    map_field('id',                     @json['ead_id'] || [0,1,2,3].map{|n| @json["id_#{n}"]}.select{|i| !i.nil?}.join('-'))
+    map_field('id',                     ead_id)
     map_field('title_ssm',              [@json['title']])
     map_field('title_tesim',            [@json['title']])
-    map_field('ead_ssi',                @json['ead_id'])
+    map_field('ead_ssi',                ead_id)
     map_field('unitdate_ssm',           @json['dates'].map{|d| format_date(d)})
     map_field('unitdate_inclusive_ssm', @json['dates'].map{|d| format_date(d)})
     map_field('level_ssm',              [@json['level']])
     map_field('level_ssim',             [@json['level'].capitalize])
-    map_field('unitid_ssm',             [@json['id_0']])
-    map_field('unitid_tesim',           [@json['id_0']])
+    map_field('unitid_ssm',             [ead_id]) # FIXME check what is meant to go here
+    map_field('unitid_tesim',           [ead_id]) # FIXME and here
     map_field('normalized_date_ssm',    @json['dates'].map{|d| format_date(d)})
     map_field('normalized_title_ssm',   [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
     map_field('collection_title_tesim', [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
