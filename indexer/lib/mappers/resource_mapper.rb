@@ -18,6 +18,7 @@ class ResourceMapper < ArclightMapper
     map_field('id',                     ead_id)
     map_field('title_ssm',              [@json['title']])
     map_field('title_tesim',            [@json['title']])
+    map_field('title_filing_ssi',       @json['finding_aid_filing_title'])
     map_field('ead_ssi',                ead_id)
     map_field('unitdate_ssm',           @json['dates'].map{|d| format_date(d)})
     map_field('unitdate_inclusive_ssm', @json['dates'].map{|d| format_date(d)})
