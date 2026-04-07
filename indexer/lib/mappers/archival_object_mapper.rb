@@ -43,6 +43,12 @@ class ArchivalObjectMapper < ArclightMapper
     map_field('title_ssm',                   [title(@json)])
     map_field('title_tesim',                 [title(@json)])
     map_field('normalized_title_ssm',        [title(@json)])
+
+    map_field('unitdate_ssm',                @json['dates'].map{|d| format_date(d)})
+    map_field('unitdate_bulk_ssim',          @json['dates'].select{|d| d['date_type'] == 'bulk'}.map{|d| format_date(d)})
+    map_field('unitdate_inclusive_ssm',      @json['dates'].select{|d| d['date_type'] == 'inclusive'}.map{|d| format_date(d)})
+    map_field('unitdate_other_ssim',         @json['dates'].select{|d| !['bulk', 'inclusive'].include?(d['date_type'])}.map{|d| format_date(d)})
+
     map_field('component_level_isim',        [ancestors.length])
     map_field('parent_ids_ssim',             [resource_id(resource), ancestors[1..-1].map{|a| resource_id(resource) + '_' + (a['component_id'] || a['ref_id'] || a['uri'])}].flatten)
     map_field('parent_unittitles_ssm',       ancestors.map{|a| title(a)})
