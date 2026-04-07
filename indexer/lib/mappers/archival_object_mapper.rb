@@ -13,10 +13,6 @@ class ArchivalObjectMapper < ArclightMapper
     @json['resource']['_resolved']
   end
 
-  def resource_id
-    resource['ead_id'] || resource['id_0']
-  end
-
   # aos don't need a title, if it isn't there, use display_string
   # the display_string is 'title, date'
   # FIXME: confirm traject mapping doesn't have date unless no title
@@ -35,16 +31,20 @@ class ArchivalObjectMapper < ArclightMapper
     @json['component_id'] || @json['ref_id'] || @json['uri']
   end
 
+  def ao_id
+    resource_id(resource) + '_' + ao_ref
+  end
+
   def map
     map_field('ref_ssi',                     ao_ref)
     map_field('ref_ssm',                     [ao_ref, ao_ref]) # the traject mapping duplicates so here we are
-    map_field('id',                          resource_id + '_' + ao_ref)
+    map_field('id',                          ao_id)
     map_field('title_filing_ssi',            title(@json))
     map_field('title_ssm',                   [title(@json)])
     map_field('title_tesim',                 [title(@json)])
     map_field('normalized_title_ssm',        [title(@json)])
     map_field('component_level_isim',        [ancestors.length])
-    map_field('parent_ids_ssim',             [resource_id, ancestors[1..-1].map{|a| resource_id + '_' + (a['component_id'] || a['ref_id'] || a['uri'])}].flatten)
+    map_field('parent_ids_ssim',             [resource_id(resource), ancestors[1..-1].map{|a| resource_id(resource) + '_' + (a['component_id'] || a['ref_id'] || a['uri'])}].flatten)
     map_field('parent_unittitles_ssm',       ancestors.map{|a| title(a)})
     map_field('parent_unittitles_tesim',     ancestors.map{|a| title(a)})
     map_field('parent_levels_ssm',           ancestors.map{|a| a['level']})

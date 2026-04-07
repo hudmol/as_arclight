@@ -28,6 +28,10 @@ class ArclightMapper
     end
   end
 
+  def resource_id(json)
+    json['ead_id'] || [0,1,2,3].map{|n| json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
+  end
+
   # FIXME: check for other types - might have been missed in the example
   def map_notes
     {
