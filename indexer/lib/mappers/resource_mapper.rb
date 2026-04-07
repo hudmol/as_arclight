@@ -16,7 +16,10 @@ class ResourceMapper < ArclightMapper
     map_field('ead_ssi',                resource_id(@json))
 
     map_field('unitdate_ssm',           @json['dates'].map{|d| format_date(d)})
-    map_field('unitdate_inclusive_ssm', @json['dates'].map{|d| format_date(d)})
+    map_field('unitdate_bulk_ssim',     @json['dates'].select{|d| d['date_type'] == 'bulk'}.map{|d| format_date(d)})
+    map_field('unitdate_inclusive_ssm', @json['dates'].select{|d| d['date_type'] == 'inclusive'}.map{|d| format_date(d)})
+    map_field('unitdate_other_ssim',    @json['dates'].select{|d| !['bulk', 'inclusive'].include?(d['date_type'])}.map{|d| format_date(d)})
+
     map_field('level_ssm',              [@json['level']])
     map_field('level_ssim',             [@json['level'].capitalize])
     map_field('unitid_ssm',             [resource_id(@json)]) # FIXME check what is meant to go here
