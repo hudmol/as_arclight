@@ -43,6 +43,7 @@ class ArchivalObjectMapper < ArclightMapper
     map_field('title_ssm',                   [title(@json)])
     map_field('title_tesim',                 [title(@json)])
     map_field('normalized_title_ssm',        [title(@json)])
+    map_field('unitid_ssm',                  [ao_ref, @json['uri']])
 
     map_field('unitdate_ssm',                @json['dates'].map{|d| format_date(d)})
     map_field('unitdate_bulk_ssim',          @json['dates'].select{|d| d['date_type'] == 'bulk'}.map{|d| format_date(d)})
