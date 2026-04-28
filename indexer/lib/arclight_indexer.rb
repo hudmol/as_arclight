@@ -10,7 +10,7 @@ require_relative '../../../../indexer/app/lib/periodic_indexer'
 class ArclightIndexer < PeriodicIndexer
 
   def solr_url
-    URI.parse(AppConfig[:arclight_solr_url])
+    URI.parse(AppConfig[:as_arclight_solr_url])
   end
 
   ARCLIGHT_RESOLVES = AppConfig[:record_inheritance_resolves]
@@ -26,7 +26,7 @@ class ArclightIndexer < PeriodicIndexer
     # Set up our JSON schemas now that we know the JSONModels have been loaded
     RecordInheritance.prepare_schemas
 
-    @time_to_sleep = AppConfig[:arclight_indexing_frequency_seconds].to_i
+    @time_to_sleep = AppConfig[:as_arclight_indexing_frequency_seconds].to_i
     @thread_count = 1
 
     @db_path = File.join(AppConfig[:shared_storage], "arclight_indexer.db")

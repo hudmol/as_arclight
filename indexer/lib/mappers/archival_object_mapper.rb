@@ -28,7 +28,15 @@ class ArchivalObjectMapper < ArclightMapper
   # FIXME: neither of these are required in the ao schema
   # but we need something reliable because it is used for the solr doc id
   def ao_ref
-    @json['component_id'] || @json['ref_id'] || @json['uri']
+    if @json['ref_id']
+      if AppConfig.has_key?(:as_arclight_ref_id_prefix)
+        AppConfig[:as_arclight_ref_id_prefix] + @json['ref_id']
+      else
+        @json['ref_id']
+      end
+    else
+      @json['component_id'] || @json['uri']
+    end
   end
 
   def ao_id

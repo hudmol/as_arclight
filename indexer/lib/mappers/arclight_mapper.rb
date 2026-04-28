@@ -29,7 +29,15 @@ class ArclightMapper
   end
 
   def resource_id(json)
-    json['ead_id'] || [0,1,2,3].map{|n| json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
+    if json['ead_id']
+      if AppConfig.has_key?(:as_arclight_ead_id_prefix)
+        AppConfig[:as_arclight_ead_id_prefix] + json['ead_id']
+      else
+        json['ead_id']
+      end
+    else
+      [0,1,2,3].map{|n| json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
+    end
   end
 
   # FIXME: check for other types - might have been missed in the example
