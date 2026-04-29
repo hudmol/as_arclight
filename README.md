@@ -29,12 +29,8 @@ nested document for each Resource and posting it to Arclight's Solr.
     ```
       AppConfig[:plugins] << 'as_arclight'
     ```
-3.  Ensure we have the SQLite JDBC driver Gem.
-    ```
-      /path/to/archivesspace/scripts/initialize-plugin.sh as_arclight
-    ```
-4.  Configure `as_arclight` (see below)
-5.  Start ArchivesSpace
+3.  Configure `as_arclight` (see below)
+4.  Start ArchivesSpace
 
 
 ## Configuration

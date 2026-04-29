@@ -1,5 +1,7 @@
 require 'log'
 
+require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar')
+
 # config check
 bad = []
 unless AppConfig.has_key?(:as_arclight_solr_url)
