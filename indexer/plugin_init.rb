@@ -9,7 +9,7 @@ unless AppConfig.has_key?(:as_arclight_indexing_frequency_seconds)
   bad.push("as_arclight plugin requires AppConfig[:as_arclight_indexing_frequency_seconds] to be set. Example: 60")
 end
 unless bad.empty?
-  raise bad.join('. ')
+  raise bad.join("\n")
 end
 
 

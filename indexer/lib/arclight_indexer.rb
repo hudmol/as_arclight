@@ -150,9 +150,9 @@ class ArclightIndexer < PeriodicIndexer
     waypoints_json.each do |waypoint_record|
       record_uri = waypoint_record.fetch('uri')
       child_count = waypoint_record.fetch('child_count')
-      ao_json = JSONModel::HTTP.get_json(record_uri, 'resolve[]' => ArchivalObjectMapper.resolves)
+      ao_json = JSONModel::HTTP.get_json(record_uri, 'resolve[]' => Arclight::ArchivalObjectMapper.resolves)
       ao_json['_child_count'] = child_count
-      mapper = ArchivalObjectMapper.new(ao_json)
+      mapper = Arclight::ArchivalObjectMapper.new(ao_json)
       ao_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
 
       if waypoint_record.fetch('child_count') > 0
@@ -246,9 +246,9 @@ class ArclightIndexer < PeriodicIndexer
     indexed_count = 0
     deleted_count = 0
     @db[:resource].select_map(:uri).each do |resource_uri|
-      resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => ResourceMapper.resolves)
+      resource_json = JSONModel::HTTP.get_json(resource_uri, 'resolve[]' => Arclight::ResourceMapper.resolves)
       resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
-      mapper = ResourceMapper.new(resource_json)
+      mapper = Arclight::ResourceMapper.new(resource_json)
 
       if resource_json['publish']
         log "Preparing resource: #{resource_uri}"

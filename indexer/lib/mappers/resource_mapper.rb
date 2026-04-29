@@ -1,4 +1,4 @@
-class ResourceMapper < ArclightMapper
+class Arclight::ResourceMapper < Arclight::Mapper
 
   def self.resolves
     ['repository', 'linked_agents', 'subjects']

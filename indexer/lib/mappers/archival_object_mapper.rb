@@ -1,4 +1,4 @@
-class ArchivalObjectMapper < ArclightMapper
+class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
   # FIXME: a bit ouchy resolving ancestors - needed for various fields
   def self.resolves
