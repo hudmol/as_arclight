@@ -25,9 +25,9 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('unitid_ssm',             [resource_id(@json), @json['uri']])
     map_field('unitid_tesim',           [resource_id(@json), @json['uri']])
     map_field('normalized_date_ssm',    @json['dates'].map{|d| format_date(d)})
-    map_field('normalized_title_ssm',   [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
-    map_field('collection_title_tesim', [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
-    map_field('collection_ssim',        [@json['title'] + ', ' + @map['unitdate_ssm'].join(', ')])
+    map_field('normalized_title_ssm',   [collection_title(@json)])
+    map_field('collection_title_tesim', [collection_title(@json)])
+    map_field('collection_ssim',        [collection_title(@json)])
     map_field('repository_ssm',         [repository['name']]) # this has to match the 'name' in arclight's repositories.yml
     map_field('repository_ssim',        [repository['name']])
     map_field('creator_ssm',            @json['linked_agents'].select{|a| a['role'] == 'creator'}.map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)

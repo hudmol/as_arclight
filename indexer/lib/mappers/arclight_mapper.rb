@@ -41,6 +41,10 @@ module Arclight
       end
     end
 
+    def collection_title(json)
+      json['title'] + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
+    end
+
     # FIXME: check for other types - might have been missed in the example
     def map_notes
       {

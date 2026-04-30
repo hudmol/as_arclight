@@ -86,7 +86,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('parent_unittitles_tesim',     ancestors.map{|a| title(a)})
     map_field('parent_levels_ssm',           ancestors.map{|a| a['level']})
     map_field('repository_ssim',             [repository['name']])
-    map_field('collection_ssim',             [resource['finding_aid_title']])
+    map_field('collection_ssim',             [collection_title(resource)])
     map_field('creator_sort',                ['']) #FIXME
     map_field('child_component_count_isi',   [@json['_child_count']])
     map_field('level_ssm',                   [@json['level'].capitalize])
