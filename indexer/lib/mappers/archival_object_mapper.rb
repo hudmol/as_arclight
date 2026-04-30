@@ -88,7 +88,6 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('repository_ssim',             [repository['name']])
     map_field('collection_ssim',             [resource['finding_aid_title']])
     map_field('creator_sort',                ['']) #FIXME
-    map_field('has_online_content_ssim',     [false]) #FIXME
     map_field('child_component_count_isi',   [@json['_child_count']])
     map_field('level_ssm',                   [@json['level'].capitalize])
     map_field('level_ssim',                  [@json['level'].capitalize])
@@ -126,6 +125,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
       }.compact
     )
 
+    map_field('has_online_content_ssim', [!published_digital_object_instances.empty?])
 
     iiif_text = []
 
