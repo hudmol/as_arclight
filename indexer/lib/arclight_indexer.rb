@@ -5,7 +5,7 @@ require_relative 'mappers/arclight_mapper'
 require_relative 'mappers/resource_mapper'
 require_relative 'mappers/archival_object_mapper'
 
-require_relative '../../../../indexer/app/lib/periodic_indexer'
+require_relative 'iiif_client'
 
 class ArclightIndexer < PeriodicIndexer
 
