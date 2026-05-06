@@ -59,6 +59,14 @@ This is the same port that ArchivesSpace's Solr defaults to. If the two Solrs
 are running on the same host, one will have to choose a non-default port.
 
 
+## Customization
+
+It is possible to customize the mapping of ArchivesSpace records to Solr docs by
+creating a plugin that registers its own mappers.
+
+[Example plugin](https://github.com/hudmol/as_arclight_custom_example)
+
+
 ## Notes
 
   * The repository that a resource gets added to in ArcLight is determined
