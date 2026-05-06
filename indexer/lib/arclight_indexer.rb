@@ -6,8 +6,8 @@ require_relative 'iiif_client'
 
 class ArclightIndexer < PeriodicIndexer
 
-  def solr_url
-    URI.parse(AppConfig[:as_arclight_solr_url])
+  def solr_urls
+    [AppConfig[:as_arclight_solr_url]].flatten.map{|url| URI.parse(url)}
   end
 
   ARCLIGHT_RESOLVES = AppConfig[:record_inheritance_resolves]
@@ -211,29 +211,38 @@ class ArclightIndexer < PeriodicIndexer
       fh.close
     end
 
-    log "Dump complete"
-
-    req = Net::HTTP::Post.new("#{solr_url.path}/update")
-    req['Content-Type'] = 'application/json'
-    req['Content-Length'] = File.size(temp_file_path)
-
-    stream = File.open(temp_file_path, "rb")
+    Log.debug "as_arclight plugin: Dump complete, sending to Solrs ..."
 
     begin
-      req.body_stream = stream
-      resp = do_http_request(solr_url, req)
+      solr_urls.each do |solr_url|
+        req = Net::HTTP::Post.new("#{solr_url}/update")
+        req['Content-Type'] = 'application/json'
+        req['Content-Length'] = File.size(temp_file_path)
+
+        stream = File.open(temp_file_path, "rb")
+
+        begin
+          req.body_stream = stream
+          resp = do_http_request(solr_url, req)
+
+          unless resp.code == '200'
+            Log.error "as_arclight plugin: Error when streaming doc for #{uri} to #{solr_url}: #{resp.body}"
+            next
+          end
+        ensure
+          stream.close
+        end
+
+        if resp.code == '200'
+          send_commit
+          log "Indexed #{uri} to #{solr_url}"
+        else
+          Log.error "as_arclight plugin: Error commiting index doc for #{uri} to #{solr_url}: #{resp.body}"
+        end
+      end
     ensure
-      stream.close
       File.unlink(temp_file_path)
     end
-
-    if resp.code == '200'
-      send_commit
-      log "Indexed #{uri}"
-    else
-      Log.error "ArcLight Indexer: error when indexing #{uri}: #{resp.body}"
-    end
-
   end
 
   def index_round_complete(repository)
@@ -262,21 +271,23 @@ class ArclightIndexer < PeriodicIndexer
 
         indexed_count += 1
       else
-        log "Ensuring resource #{resource_uri} is not in the ArcLight index because it is not published"
+        log "Ensuring resource #{resource_uri} is not in the ArcLight indexes because it is not published"
 
-        req = Net::HTTP::Post.new("#{solr_url.path}/update")
-        req['Content-Type'] = 'application/json'
-        delete_json = {'delete' => {'id' => mapper.doc_id}}.to_json
-        req['Content-Length'] = delete_json.length
-        req.body = delete_json
-        resp = do_http_request(solr_url, req)
+        solr_urls.each do |solr_url|
+          req = Net::HTTP::Post.new("#{solr_url.path}/update")
+          req['Content-Type'] = 'application/json'
+          delete_json = {'delete' => {'id' => mapper.doc_id}}.to_json
+          req['Content-Length'] = delete_json.length
+          req.body = delete_json
+          resp = do_http_request(solr_url, req)
 
-        if resp.code == '200'
-          send_commit
-          log "Deleted #{resource_uri}"
-          deleted_count += 1
-        else
-          Log.error "ArcLight Indexer: error when deleting #{resource_uri}: #{resp.body}"
+          if resp.code == '200'
+            send_commit
+            log "Deleted #{resource_uri} from #{solr_url.path}"
+            deleted_count += 1
+          else
+            Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{solr_url.path}: #{resp.body}"
+          end
         end
       end
 

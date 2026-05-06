@@ -36,7 +36,7 @@ nested document for each Resource and posting it to Arclight's Solr.
 ## Configuration
 
 Required configuration:
-*  AppConfig[:as_arclight_solr_url] - The URL of an Arclight Solr instance
+*  AppConfig[:as_arclight_solr_url] - The URL of an Arclight Solr instance, or an array of Solr URLs
 *  AppConfig[:as_arclight_indexing_frequency_seconds] - Number of seconds to wait between indexing runs
 
 Optional configuration:
