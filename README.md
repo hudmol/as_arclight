@@ -1,7 +1,7 @@
 # as_arclight
-An ArchivesSpace plugin for syncing published data to an ArcLight Solr index.
+An ArchivesSpace plugin for syncing published data to an Arclight Solr index.
 
-Compatible with ArchivesSpace v4.x and ArcLight v1.6.x.
+Compatible with ArchivesSpace v4.x and Arclight v1.6.x.
 
 Developed by Hudson Molonglo for The Research Foundation for The State University of New York.
 
@@ -54,7 +54,7 @@ Example configuration:
 The plugin will check the configuration on start up and raise an exception if
 there are any problems.
 
-Note that in the example, ArcLight Solr is running on the default Solr port.
+Note that in the example, Arclight Solr is running on the default Solr port.
 This is the same port that ArchivesSpace's Solr defaults to. If the two Solrs
 are running on the same host, one will have to choose a non-default port.
 
@@ -69,8 +69,8 @@ creating a plugin that registers its own mappers.
 
 ## Notes
 
-  * The repository that a resource gets added to in ArcLight is determined
+  * The repository that a resource gets added to in Arclight is determined
     by the repository_ssm field in its solr. This is the name of the repository
     as defined in config/repositories.yml. So, if the name of the repository
     gets changed in ArchivesSpace it will need to be changed to match in
-    ArcLight. This will require reindexing the whole repository.
+    Arclight. This will require reindexing the whole repository.
