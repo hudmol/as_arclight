@@ -171,7 +171,5 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('text', iiif_text)
 
     map_notes
-
-    super
   end
 end

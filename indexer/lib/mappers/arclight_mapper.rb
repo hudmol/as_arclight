@@ -1,7 +1,38 @@
 require 'json'
 
 module Arclight
+
   class Mapper
+
+    require_relative 'resource_mapper'
+    require_relative 'archival_object_mapper'
+
+    @resource_mapper = Arclight::ResourceMapper
+    @archival_object_mapper = Arclight::ArchivalObjectMapper
+
+    def self.register_resource_mapper(mapper_class)
+      unless mapper_class.ancestors.include?(self)
+        raise "as_arclight plugin: Custom mapper classes must subclass Arclight::Mapper"
+      end
+
+      @resource_mapper = mapper_class
+    end
+
+    def self.resource_mapper
+      @resource_mapper
+    end
+
+    def self.register_archival_object_mapper(mapper_class)
+      unless mapper_class.ancestors.include?(self)
+        raise "as_arclight plugin: Custom mapper classes must subclass Arclight::Mapper"
+      end
+
+      @archival_object_mapper = mapper_class
+    end
+
+    def self.archival_object_mapper
+      @archival_object_mapper
+    end
 
     def self.resolves
       []
@@ -15,6 +46,7 @@ module Arclight
     end
 
     def map
+      raise NotImplementedError, "Arclight Mapper classes must implement #map"
     end
 
     def doc_id

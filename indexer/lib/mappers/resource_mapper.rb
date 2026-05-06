@@ -61,8 +61,6 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('sort_isi',               [0])
 
     map_notes
-
-    super
   end
 
 end
