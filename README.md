@@ -40,15 +40,15 @@ Required configuration:
 *  AppConfig[:as_arclight_indexing_frequency_seconds] - Number of seconds to wait between indexing runs
 
 Optional configuration:
-*  AppConfig[:as_arclight_ead_id_prefix] - a string to prefix a Resource's EAD ID with when mapping
-*  AppConfig[:as_arclight_ref_id_prefix] - a string to prefix an Archival Object's Ref ID with when mapping
+*  AppConfig[:as_arclight_resource_id_prefix] - a string to prefix a Resource's EAD ID with when mapping
+*  AppConfig[:as_arclight_archival_object_id_prefix] - a string to prefix an Archival Object's Ref ID with when mapping
 
 Example configuration:
 ```
     AppConfig[:as_arclight_solr_url] = "http://localhost:8983/solr/blacklight-core"
     AppConfig[:as_arclight_indexing_frequency_seconds] = 30
-    AppConfig[:as_arclight_ead_id_prefix] = 'XXX'
-    AppConfig[:as_arclight_ref_id_prefix] = 'XXX'
+    AppConfig[:as_arclight_resource_id_prefix] = 'XXX'
+    AppConfig[:as_arclight_archival_object_id_prefix] = 'XXX'
 ```
 
 The plugin will check the configuration on start up and raise an exception if

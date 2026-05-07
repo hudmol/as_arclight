@@ -62,15 +62,13 @@ module Arclight
     end
 
     def resource_id(json)
-      if json['ead_id']
-        if AppConfig.has_key?(:as_arclight_ead_id_prefix)
-          AppConfig[:as_arclight_ead_id_prefix] + json['ead_id']
-        else
-          json['ead_id']
-        end
-      else
-        [0,1,2,3].map{|n| json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
+      id = json['ead_id'] || [0,1,2,3].map{|n| json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
+
+      if AppConfig.has_key?(:as_arclight_resource_id_prefix)
+        id = AppConfig[:as_arclight_resource_id_prefix] + id
       end
+
+      id
     end
 
     def collection_title(json)

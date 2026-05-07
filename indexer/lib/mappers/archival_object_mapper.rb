@@ -25,22 +25,18 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     @json['ancestors'].reverse.map{|a| a['_resolved']}
   end
 
-  # FIXME: neither of these are required in the ao schema
-  # but we need something reliable because it is used for the solr doc id
-  def ao_ref
-    if @json['ref_id']
-      if AppConfig.has_key?(:as_arclight_ref_id_prefix)
-        AppConfig[:as_arclight_ref_id_prefix] + @json['ref_id']
-      else
-        @json['ref_id']
-      end
-    else
-      @json['component_id'] || @json['uri']
+  def archival_object_id
+    id = @json['ref_id'] || @json['component_id'] || @json['uri']
+
+    if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
+      id = AppConfig[:as_arclight_archival_object_id_prefix] + id
     end
+
+    id
   end
 
   def ao_id
-    resource_id(resource) + '_' + ao_ref
+    resource_id(resource) + '_' + archival_object_id
   end
 
   def iiif_client
@@ -66,14 +62,14 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   end
 
   def map
-    map_field('ref_ssi',                     ao_ref)
-    map_field('ref_ssm',                     [ao_ref, ao_ref]) # the traject mapping duplicates so here we are
+    map_field('ref_ssi',                     archival_object_id)
+    map_field('ref_ssm',                     [archival_object_id, archival_object_id]) # the traject mapping duplicates so here we are
     map_field('id',                          ao_id)
     map_field('title_filing_ssi',            title(@json))
     map_field('title_ssm',                   [title(@json)])
     map_field('title_tesim',                 [title(@json)])
     map_field('normalized_title_ssm',        [title(@json)])
-    map_field('unitid_ssm',                  [ao_ref, @json['uri']])
+    map_field('unitid_ssm',                  [archival_object_id, @json['uri']])
 
     map_field('unitdate_ssm',                @json['dates'].map{|d| format_date(d)})
     map_field('unitdate_bulk_ssim',          @json['dates'].select{|d| d['date_type'] == 'bulk'}.map{|d| format_date(d)})
