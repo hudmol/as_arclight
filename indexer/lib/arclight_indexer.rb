@@ -234,7 +234,10 @@ class ArclightIndexer < PeriodicIndexer
         end
 
         if resp.code == '200'
-          send_commit
+          run_for_solr_url(solr_url) do
+            send_commit
+          end
+
           log "Indexed #{uri} to #{solr_url}"
         else
           Log.error "as_arclight plugin: Error commiting index doc for #{uri} to #{solr_url}: #{resp.body}"
@@ -243,6 +246,22 @@ class ArclightIndexer < PeriodicIndexer
     ensure
       File.unlink(temp_file_path)
     end
+  end
+
+  @solr_url_override = nil
+  def run_for_solr_url(solr_url, &block)
+    begin
+      @solr_url_override = solr_url
+      block.call
+    ensure
+      @solr_url_override = nil
+    end
+  end
+
+  def solr_url
+    return super if @solr_url_override.nil?
+
+    @solr_url_override
   end
 
   def index_round_complete(repository)
@@ -282,7 +301,10 @@ class ArclightIndexer < PeriodicIndexer
           resp = do_http_request(solr_url, req)
 
           if resp.code == '200'
-            send_commit
+            run_for_solr_url(solr_url) do
+              send_commit
+            end
+
             log "Deleted #{resource_uri} from #{solr_url.path}"
             deleted_count += 1
           else
