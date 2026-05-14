@@ -248,20 +248,17 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  @solr_url_override = nil
   def run_for_solr_url(solr_url, &block)
     begin
-      @solr_url_override = solr_url
+      Thread.current[:arclight_indexer_solr_url_override] = solr_url
       block.call
     ensure
-      @solr_url_override = nil
+      Thread.current[:arclight_indexer_solr_url_override] = nil
     end
   end
 
   def solr_url
-    return super if @solr_url_override.nil?
-
-    @solr_url_override
+    Thread.current[:arclight_indexer_solr_url_override] || super
   end
 
   def index_round_complete(repository)
