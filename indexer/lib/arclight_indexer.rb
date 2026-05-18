@@ -215,7 +215,7 @@ class ArclightIndexer < PeriodicIndexer
 
     begin
       solr_urls.each do |solr_url|
-        req = Net::HTTP::Post.new("#{solr_url}/update")
+        req = Net::HTTP::Post.new("#{solr_url.path}/update")
         req['Content-Type'] = 'application/json'
         req['Content-Length'] = File.size(temp_file_path)
 
