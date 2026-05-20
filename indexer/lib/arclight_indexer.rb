@@ -6,6 +6,25 @@ require_relative 'iiif_client'
 
 class ArclightIndexer < PeriodicIndexer
 
+  # some fancy footwork to support multiple solr_urls
+  # the send_commit method takes no arguments and sends the commit
+  # to whatever #solr_url returns, so we need to make sure we get the
+  # solr_url we are currently working with
+  def run_for_solr_url(solr_url, &block)
+    begin
+      Thread.current[:arclight_indexer_solr_url_override] = solr_url
+      block.call
+    ensure
+      Thread.current[:arclight_indexer_solr_url_override] = nil
+    end
+  end
+
+  # solr_url is sometimes called when our override isn't set
+  # if that is the case, then just return the first one
+  def solr_url
+    Thread.current[:arclight_indexer_solr_url_override] || self.solr_urls.first
+  end
+
   def solr_urls
     [AppConfig[:as_arclight_solr_url]].flatten.map{|url| URI.parse(url)}
   end
@@ -253,19 +272,6 @@ class ArclightIndexer < PeriodicIndexer
     ensure
       File.unlink(temp_file_path)
     end
-  end
-
-  def run_for_solr_url(solr_url, &block)
-    begin
-      Thread.current[:arclight_indexer_solr_url_override] = solr_url
-      block.call
-    ensure
-      Thread.current[:arclight_indexer_solr_url_override] = nil
-    end
-  end
-
-  def solr_url
-    Thread.current[:arclight_indexer_solr_url_override] || super
   end
 
   def index_round_complete(repository)
