@@ -86,6 +86,13 @@ class ArclightIndexer < PeriodicIndexer
     # so all this needs to do is remember any affected resources
     records.each do |record|
       if reference = JSONModel.parse_reference(record['uri'])
+        # skip records in unpublished repos - they are deleted when the repo is indexed
+        if (reference[:type] == 'repository' && !record['record']['publish']) ||
+            (reference[:type] != 'repository' && !record['record']['repository']['_resolved']['publish'])
+          Log.debug "as_arclight plugin: Skipping record #{record['record']['uri']} because it is in an unpublished repository"
+          next
+        end
+
         if reference[:type] == 'resource'
           flag_for_indexing(record['record']['uri'])
         elsif reference[:type] == 'archival_object'
@@ -302,10 +309,10 @@ class ArclightIndexer < PeriodicIndexer
               send_commit
             end
 
-            log "Deleted #{resource_uri} from #{solr_url.path}"
+            log "Deleted #{resource_uri} from #{solr_url}"
             deleted_count += 1
           else
-            Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{solr_url.path}: #{resp.body}"
+            Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{solr_url}: #{resp.body}"
           end
         end
       end
@@ -323,18 +330,21 @@ class ArclightIndexer < PeriodicIndexer
     updated_repositories.each do |repository|
 
       if !repository['record']['publish']
+        solr_urls.each do |solr_url|
+          req = Net::HTTP::Post.new("#{solr_url.path}/update")
+          req['Content-Type'] = 'application/json'
 
-        # Delete PUI-only Solr documents in case this is the first index run after the repository has been unpublished
-        req = Net::HTTP::Post.new("#{solr_url.path}/update")
-        req['Content-Type'] = 'application/json'
-
-        delete_request = {:delete => {'query' => "repository_ssim:\"#{repository['name']}\""}}
-        req.body = delete_request.to_json
-        response = do_http_request(solr_url, req)
-        if response.code == '200'
-          Log.info "Arclight Indexer deleted all documents in private repository #{repository['record']['repo_code']}: #{response}"
-        else
-          Log.error "SolrIndexerError when deleting Arclight documents in private repository #{repository['record']['repo_code']}: #{response.body}"
+          delete_request = {:delete => {'query' => "repository_ssim:\"#{repository['record']['name']}\""}}
+          req.body = delete_request.to_json
+          response = do_http_request(solr_url, req)
+          if response.code == '200'
+            run_for_solr_url(solr_url) do
+              send_commit
+            end
+            log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{solr_url}"
+          else
+            Log.error "as_arclight plugin: failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{solr_url}: #{response.body}"
+          end
         end
       end
     end
