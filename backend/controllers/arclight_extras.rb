@@ -1,7 +1,7 @@
 class ArchivesSpaceService < Sinatra::Base
 
   Endpoint.get('/repositories/:repo_id/resources/:id/arclight_extras')
-    .description("Fetch extra summary information needed for ArcLight indexing")
+    .description("Fetch extra summary information needed for Arclight indexing")
     .params(["id", :id],
             ["repo_id", :repo_id])
     .permissions([:view_repository])

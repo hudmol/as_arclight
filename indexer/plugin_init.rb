@@ -48,11 +48,11 @@ if Object.const_defined?('PeriodicIndexer')
 
   Thread.new do
     begin
-      Log.info("Starting ArcLight indexer")
+      Log.info("Starting Arclight indexer")
 
-      ArclightIndexer.get_indexer(state = nil, name = 'ArcLight Indexer').run
+      ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer').run
     rescue
-      Log.error("Unexpected failure in ArcLight indexer: #{$!}")
+      Log.error("Unexpected failure in Arclight indexer: #{$!}")
     end
   end
 

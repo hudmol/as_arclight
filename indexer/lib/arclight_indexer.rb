@@ -29,7 +29,7 @@ class ArclightIndexer < PeriodicIndexer
 
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
-    Log.info('Initialized ArcLight Indexer db at: ' + @db_path)
+    Log.info('Initialized Arclight Indexer db at: ' + @db_path)
   end
 
   def init_schema
@@ -58,7 +58,7 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  def self.get_indexer(state = nil, name = "ArcLight Indexer")
+  def self.get_indexer(state = nil, name = "Arclight Indexer")
     indexer = self.new(state, name)
   end
 
@@ -94,7 +94,7 @@ class ArclightIndexer < PeriodicIndexer
           flag_for_indexing(record['record']['collection'].map{|c| c['ref']})
         end
       else
-        Log.error "ArcLight Indexer couldn't parse uri: #{record['uri']}"
+        Log.error "Arclight Indexer couldn't parse uri: #{record['uri']}"
       end
     end
   end
@@ -287,7 +287,7 @@ class ArclightIndexer < PeriodicIndexer
 
         indexed_count += 1
       else
-        log "Ensuring resource #{resource_uri} is not in the ArcLight indexes because it is not published"
+        log "Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published"
 
         solr_urls.each do |solr_url|
           req = Net::HTTP::Post.new("#{solr_url.path}/update")
@@ -332,9 +332,9 @@ class ArclightIndexer < PeriodicIndexer
         req.body = delete_request.to_json
         response = do_http_request(solr_url, req)
         if response.code == '200'
-          Log.info "ArcLight Indexer deleted all documents in private repository #{repository['record']['repo_code']}: #{response}"
+          Log.info "Arclight Indexer deleted all documents in private repository #{repository['record']['repo_code']}: #{response}"
         else
-          Log.error "SolrIndexerError when deleting ArcLight documents in private repository #{repository['record']['repo_code']}: #{response.body}"
+          Log.error "SolrIndexerError when deleting Arclight documents in private repository #{repository['record']['repo_code']}: #{response.body}"
         end
       end
     end
