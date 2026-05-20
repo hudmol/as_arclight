@@ -87,7 +87,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('child_component_count_isi',   [@json['_child_count']])
     map_field('level_ssm',                   [@json['level'].capitalize])
     map_field('level_ssim',                  [@json['level'].capitalize])
-    map_field('sort_isi',                    [@json['position']])  #FIXME: is this right?
+    map_field('sort_isi',                    [@json['position']])
 
     map_field('parent_access_restrict_tesm',    resource['notes'].select{|n| n['type'] == 'accessrestrict'}
                                                               .map{|n| n['subnotes'].select{|s| s['publish']}
