@@ -1,25 +1,37 @@
 # as_arclight
-An ArchivesSpace plugin for syncing published data to an Arclight Solr index.
+An ArchivesSpace plugin for syncing published data to Arclight Solr indexes.
 
 Compatible with ArchivesSpace v4.x and Arclight v1.6.x.
 
-Developed by Hudson Molonglo for The Research Foundation for The State University of New York.
+Developed by Hudson Molonglo for
+The Research Foundation for The State University of New York.
+
 
 ## Overview
 
 This plugin defines a new indexer which operates similarly to the existing
-ArchivesSpace indexers, except that it targets an Arclight Solr.
+ArchivesSpace indexers, except that it targets one or more Arclight Solr
+instances.
 
 The Arclight Solr expects a collection (ArchivesSpace Resource) to be indexed as
 a single nested document. This means that if any component of the collection
 changes, the entire collection must be reindexed. The plugin achieves this by
 maintaining a SQLite database that stores the URIs of any Resources that have
-had changes made directly or to any of their components (Archival Objects)
+had changes made directly or to any of their components or related records
 since the last index run.
 
 When the Arclight indexer runs an indexing round, it works sequentially through
 the list of Resource URIs in the SQLite database, building up the complete
 nested document for each Resource and posting it to Arclight's Solr.
+
+This database, and another for storing cached IIIF manifests, are placed in a
+directory called `as_arclight` in ArchivesSpace's data directory
+(AppConfig[:data_directory]).
+
+As with other indexers, the as_arclight indexer creates state files -
+containing last indexed timestamps for record types within repositories. These
+files are stored in a directory called `indexer_arclight_state`, also in
+ArchivesSpace's data directory.
 
 
 ## Installation
@@ -36,12 +48,16 @@ nested document for each Resource and posting it to Arclight's Solr.
 ## Configuration
 
 Required configuration:
-*  AppConfig[:as_arclight_solr_url] - The URL of an Arclight Solr instance, or an array of Solr URLs
-*  AppConfig[:as_arclight_indexing_frequency_seconds] - Number of seconds to wait between indexing runs
+*  AppConfig[:as_arclight_solr_url]
+    - The URL of an Arclight Solr instance, or an array of Solr URLs
+*  AppConfig[:as_arclight_indexing_frequency_seconds]
+    - Number of seconds to wait between indexing runs
 
 Optional configuration:
-*  AppConfig[:as_arclight_resource_id_prefix] - a string to prefix a Resource's EAD ID with when mapping
-*  AppConfig[:as_arclight_archival_object_id_prefix] - a string to prefix an Archival Object's Ref ID with when mapping
+*  AppConfig[:as_arclight_resource_id_prefix]
+    - a string to prefix a Resource's ID with when mapping
+*  AppConfig[:as_arclight_archival_object_id_prefix]
+    - a string to prefix an Archival Object's ID with when mapping
 
 Example configuration:
 ```
