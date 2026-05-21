@@ -38,7 +38,7 @@ end
 begin
   data_dir = File.join(AppConfig[:data_directory], 'as_arclight')
   Dir.mkdir(data_dir)
-rescue => Errno::EEXIST
+rescue Errno::EEXIST => e
   # good!
 rescue => e
   bad.push("as_arclight plugin unable to create data directory #{data_dir}: #{e}")
