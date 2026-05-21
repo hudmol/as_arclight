@@ -47,10 +47,6 @@ class IIIFClient
     def max_redirects
       10
     end
-
-    def log(level, s)
-      $stderr.puts(sprintf("[%s] %s", level, s))
-    end
   end
 
 end

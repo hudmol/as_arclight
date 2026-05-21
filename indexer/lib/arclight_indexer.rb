@@ -51,7 +51,7 @@ class ArclightIndexer < PeriodicIndexer
 
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
-    Log.info('Initialized Arclight Indexer db at: ' + @db_path)
+    log 'Initialized db at: ' + @db_path
   end
 
   def init_schema
@@ -123,7 +123,7 @@ class ArclightIndexer < PeriodicIndexer
           flag_for_indexing(record['record']['collection'].map{|c| c['ref']})
         end
       else
-        Log.error "Arclight Indexer couldn't parse uri: #{record['uri']}"
+        Log.error "as_arclight plugin: Indexer couldn't parse uri #{record['uri']}"
       end
     end
   end
@@ -230,7 +230,7 @@ class ArclightIndexer < PeriodicIndexer
     # and this avoids having to load the whole thing into memory
     fh = Tempfile.new('arclight_stream.json')
     temp_file_path = fh.path
-    log "Dumping nested doc to: #{temp_file_path}"
+    Log.debug "as_arclight plugin: Dumping nested doc to #{temp_file_path}"
 
     begin
       fh.write('[')
@@ -287,7 +287,7 @@ class ArclightIndexer < PeriodicIndexer
       mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
       if resource_json['publish']
-        log "Preparing resource: #{resource_uri}"
+        Log.debug "as_arclight plugin: Preparing resource #{resource_uri}"
 
         resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
@@ -295,7 +295,7 @@ class ArclightIndexer < PeriodicIndexer
 
         map_waypoints(root_json, resource_uri, resource_doc_id, nil)
 
-        log "Generated index docs for #{resource_uri}"
+        Log.debug "as_arclight plugin: Generated index docs for #{resource_uri}"
 
         stream_nested_doc(resource_doc_id, resource_uri)
 
@@ -303,7 +303,7 @@ class ArclightIndexer < PeriodicIndexer
 
         indexed_count += 1
       else
-        log "Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published"
+        Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published"
 
         solr_urls.each do |solr_url|
           req = Net::HTTP::Post.new("#{solr_url.path}/update")
