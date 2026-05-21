@@ -43,7 +43,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
         end
 
         def request_cache
-          @cache_instance ||= IIIFClient::Cache::SQLiteCache.new(File.join(AppConfig[:data_directory], "iiif_cache.db"))
+          @cache_instance ||= IIIFClient::Cache::SQLiteCache.new(File.join(ArclightIndexer.data_dir, "iiif_cache.db"))
         end
       end
 

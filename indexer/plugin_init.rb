@@ -35,6 +35,15 @@ if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
   end
 end
 
+begin
+  data_dir = File.join(AppConfig[:data_directory], 'as_arclight')
+  Dir.mkdir(data_dir)
+rescue => Errno::EEXIST
+  # good!
+rescue => e
+  bad.push("as_arclight plugin unable to create data directory #{data_dir}: #{e}")
+end
+
 unless bad.empty?
   raise bad.join("\n")
 end
@@ -50,6 +59,7 @@ if Object.const_defined?('PeriodicIndexer')
     begin
       Log.info("Starting Arclight indexer")
 
+      ArclightIndexer.data_dir = data_dir
       ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer').run
     rescue
       Log.error("Unexpected failure in Arclight indexer: #{$!}")

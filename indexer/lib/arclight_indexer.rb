@@ -5,6 +5,9 @@ require_relative 'mappers/arclight_mapper'
 require_relative 'iiif_client'
 
 class ArclightIndexer < PeriodicIndexer
+  class << self
+    attr_accessor :data_dir
+  end
 
   # some fancy footwork to support multiple solr_urls
   # the send_commit method takes no arguments and sends the commit
@@ -43,7 +46,7 @@ class ArclightIndexer < PeriodicIndexer
     @time_to_sleep = AppConfig[:as_arclight_indexing_frequency_seconds].to_i
     @thread_count = 1
 
-    @db_path = File.join(AppConfig[:shared_storage], "arclight_indexer.db")
+    @db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
     @db = Sequel.connect("jdbc:sqlite:#{@db_path}")
 
     @db.run("PRAGMA journal_mode = WAL;")
