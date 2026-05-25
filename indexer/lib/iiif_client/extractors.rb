@@ -15,6 +15,13 @@ class IIIFClient
       end
     end
 
+    class ALTOExtractor
+      def extract(s)
+        doc = Nokogiri::HTML(s)
+        doc.css('string').map {|str_elt| str_elt['content']}.compact.join(' ').gsub(/\s+/, ' ').strip
+      end
+    end
+
     class HTMLExtractor
       def extract(s)
         doc = Nokogiri::HTML(s)

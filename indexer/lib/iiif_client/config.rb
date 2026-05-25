@@ -19,6 +19,8 @@ class IIIFClient
         IIIFClient::Extractors::TextExtractor.new
       elsif rendering.type == 'Text' && rendering.format == 'text/vnd.hocr+html'
         IIIFClient::Extractors::HOCRExtractor.new
+      elsif rendering.type == 'Text' && rendering.format =~ %r{application/.*\balto\b}
+        IIIFClient::Extractors::ALTOExtractor.new
       else
         nil
       end
