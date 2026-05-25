@@ -64,6 +64,7 @@ if Object.const_defined?('PeriodicIndexer')
       ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer').run
     rescue
       Log.error("Unexpected failure in Arclight indexer: #{$!}")
+      Log.exception($!)
     end
   end
 

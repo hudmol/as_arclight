@@ -29,8 +29,9 @@ class IIIFClient
       end
 
       def get_cache_entry(uri)
-        auto_close(@connection.prepare_statement("SELECT uri, response, timestamp FROM cache WHERE uri = ?")) do |ps|
+        auto_close(@connection.prepare_statement("SELECT uri, response, timestamp FROM cache WHERE uri = ? AND expiration_time < ?")) do |ps|
           ps.set_string(1, uri.to_s)
+          ps.set_long(2, Time.now.to_i)
           auto_close(ps.execute_query) do |rs|
             if rs.next
               compressed = rs.get_bytes("response")
@@ -43,14 +44,26 @@ class IIIFClient
         end
       end
 
+      def run_expiration!
+        auto_close(@connection.prepare_statement("delete FROM cache WHERE expiration_time < ?")) do |ps|
+          ps.set_long(1, Time.now.to_i)
+          ps.execute_update
+        end
+      end
+
       def insert_response(uri, http_response)
+        if rand < 0.01
+          run_expiration!
+        end
+
         json = http_response.to_json
         compressed = compress(json)
 
-        auto_close(@connection.prepare_statement("INSERT OR REPLACE INTO cache (uri, response, timestamp) VALUES (?, ?, ?)")) do |ps|
+        auto_close(@connection.prepare_statement("INSERT OR REPLACE INTO cache (uri, response, timestamp, expiration_time) VALUES (?, ?, ?, ?)")) do |ps|
           ps.set_string(1, uri.to_s)
           ps.set_bytes(2, compressed)
           ps.set_long(3, Time.now.to_i)
+          ps.set_long(4, http_response.cache_expiration_time.to_i)
           ps.execute_update
         end
 
@@ -100,8 +113,11 @@ class IIIFClient
           stmt.execute_update("CREATE TABLE IF NOT EXISTS cache (" +
                               "  uri TEXT PRIMARY KEY," +
                               "  response BLOB," +
-                              "  timestamp INTEGER" +
+                              "  timestamp INTEGER," +
+                              "  expiration_time INTEGER" +
                               ")")
+
+          stmt.execute_update("CREATE INDEX IF NOT EXISTS idx_cache_expiration_time ON cache (expiration_time)")
         end
       end
 

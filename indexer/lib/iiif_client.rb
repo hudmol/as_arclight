@@ -127,6 +127,33 @@ class IIIFClient
       self.headers.fetch('content-type', []).fetch(0, 'application/octet-stream')
     end
 
+    def cache_expiration_time
+      now = Time.now
+
+      cache_control = self.headers.fetch('cache-control', []).first
+
+      if cache_control
+        if cache_control =~ /max-age\s*=\s*(\d+)/i
+          return now + Integer($1)
+        end
+
+        if cache_control =~ /no-cache|no-store/i
+          return now - 1
+        end
+      end
+
+      expires = self.headers.fetch('expires', []).first
+
+      if expires
+        begin
+          return Time.parse(expires)
+        rescue
+        end
+      end
+
+      now - 1
+    end
+
   end
 
   module StructFromHash
