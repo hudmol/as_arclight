@@ -56,12 +56,13 @@ end
 if Object.const_defined?('PeriodicIndexer')
   require_relative 'lib/arclight_indexer'
 
+  ArclightIndexer.data_dir = data_dir
+  indexer = ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer')
+
   Thread.new do
     begin
       Log.info("Starting Arclight indexer")
-
-      ArclightIndexer.data_dir = data_dir
-      ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer').run
+      indexer.run
     rescue
       Log.error("Unexpected failure in Arclight indexer: #{$!}")
       Log.exception($!)
