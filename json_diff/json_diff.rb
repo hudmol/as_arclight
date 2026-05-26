@@ -113,7 +113,7 @@ def compare_files(old_file, new_file)
                       .first
 
       if !matched_row
-        puts "Record #{old_record_value.fetch(:record_id)} key missing value in candidate: #{old_record_value.fetch(:key)}"
+        puts "Record #{old_record_value.fetch(:record_id)} field missing in candidate: '#{old_record_value.fetch(:key)}'"
         next
       end
 
@@ -121,7 +121,7 @@ def compare_files(old_file, new_file)
       new_value = JSON.parse(matched_row.fetch(:value))
 
       if old_value != new_value
-        puts "Record #{old_record_value.fetch(:record_id)} has mismatch in value for key #{old_record_value.fetch(:key)}:"
+        puts "Record #{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
 
         puts "Pristine value: #{old_value}"
         puts "Candidate value: #{new_value}"
@@ -142,7 +142,7 @@ def compare_files(old_file, new_file)
                       .first
 
       if !matched_row
-        puts "Record #{new_record_value.fetch(:record_id)} key missing value in pristine: #{new_record_value.fetch(:key)}"
+        puts "Record #{new_record_value.fetch(:record_id)} field missing in pristine: '#{new_record_value.fetch(:key)}'"
         next
       end
     end
