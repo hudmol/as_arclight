@@ -35,15 +35,12 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     unless @iiif_client
       config = IIIFClient::Config.new
 
+      # FIXME: albany-specific
       config.instance_eval do
         def configure_http_request(http, request)
           if request.uri.to_s.include?('albany.edu')
             request['Referer'] = 'https://archives.albany.edu/'
           end
-        end
-
-        def request_cache
-          @cache_instance ||= IIIFClient::Cache::SQLiteCache.new(File.join(ArclightIndexer.data_dir, "iiif_cache.db"))
         end
       end
 
