@@ -120,7 +120,7 @@ class ArclightIndexer < PeriodicIndexer
         elsif reference[:type] == 'archival_object'
           flag_for_indexing(record['record']['resource']['ref'])
         elsif reference[:type] == 'top_container'
-          flag_for_indexing(record['record']['collection'].map{|c| c['ref']})
+          flag_for_indexing(*(record['record']['collection'].map{|c| c['ref']}))
         end
       else
         Log.error "as_arclight plugin: Indexer couldn't parse uri #{record['uri']}"
