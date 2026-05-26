@@ -88,7 +88,7 @@ def compare_files(old_file, new_file)
            .filter(parent_id: old_parent_child.fetch(:parent_id))
            .filter(child_id: old_parent_child.fetch(:child_id))
            .count == 0
-        puts "\nRecord only in pristine: #{old_parent_child}"
+        puts "\nParent/child relationship only in pristine: parent=#{old_parent_child.fetch(:parent_id)} child=#{old_parent_child.fetch(:child_id)}"
       end
     end
 
@@ -98,7 +98,7 @@ def compare_files(old_file, new_file)
            .filter(parent_id: new_parent_child.fetch(:parent_id))
            .filter(child_id: new_parent_child.fetch(:child_id))
            .count == 0
-        puts "\nRecord only in candidate: #{new_parent_child}"
+        puts "\nParent/child relationship only in candidate: parent=#{new_parent_child.fetch(:parent_id)} child=#{new_parent_child.fetch(:child_id)}"
       end
     end
 
