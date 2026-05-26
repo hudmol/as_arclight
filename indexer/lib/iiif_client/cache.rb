@@ -17,7 +17,7 @@ class IIIFClient
 
     class SQLiteCache
 
-      def initialize(db_path)
+      def initialize(db_path, opts)
         @connection = org.sqlite.JDBC.new.connect("jdbc:sqlite:#{db_path}", java.util.Properties.new)
 
         # Enable WAL
@@ -25,11 +25,13 @@ class IIIFClient
           stmt.execute_update("PRAGMA journal_mode=WAL")
         end
 
+        @min_cache_seconds = opts.fetch(:min_cache_seconds, nil)
+
         create_schema!
       end
 
       def get_cache_entry(uri)
-        auto_close(@connection.prepare_statement("SELECT uri, response, timestamp FROM cache WHERE uri = ? AND expiration_time < ?")) do |ps|
+        auto_close(@connection.prepare_statement("SELECT uri, response, timestamp FROM cache WHERE uri = ? AND expiration_time > ?")) do |ps|
           ps.set_string(1, uri.to_s)
           ps.set_long(2, Time.now.to_i)
           auto_close(ps.execute_query) do |rs|
@@ -59,11 +61,18 @@ class IIIFClient
         json = http_response.to_json
         compressed = compress(json)
 
+        expiration_time = http_response.cache_expiration_time.to_i
+
+        if @min_cache_seconds
+          min_expiration = (Time.now.to_i + @min_cache_seconds)
+          expiration_time = [expiration_time, min_expiration].max
+        end
+
         auto_close(@connection.prepare_statement("INSERT OR REPLACE INTO cache (uri, response, timestamp, expiration_time) VALUES (?, ?, ?, ?)")) do |ps|
           ps.set_string(1, uri.to_s)
           ps.set_bytes(2, compressed)
           ps.set_long(3, Time.now.to_i)
-          ps.set_long(4, http_response.cache_expiration_time.to_i)
+          ps.set_long(4, expiration_time)
           ps.execute_update
         end
 

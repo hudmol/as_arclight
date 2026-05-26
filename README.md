@@ -58,6 +58,24 @@ Optional configuration:
     - a string to prefix a Resource's ID with when mapping
 *  AppConfig[:as_arclight_archival_object_id_prefix]
     - a string to prefix an Archival Object's ID with when mapping
+*  AppConfig[:as_arclight_iiif_min_cache_seconds]
+    - the minimum number of seconds to cache a URL's contents when
+      fetching IIIF resources.  If unset, relies on the IIIF server's
+      `Expires` and `Cache-Control` headers for guidance, defaulting
+      to never caching.
+*  AppConfig[:as_arclight_test_pristine_directory]
+    - If `AppConfig[:as_arclight_test_mode]` is set to
+      `:record_pristine`, mapped Solr documents will be written to
+      this directory prior to being sent to Solr.
+*  AppConfig[:as_arclight_test_mode]
+    - If `AppConfig[:as_arclight_test_mode]` is set to
+      `:record_candidate`, mapped Solr documents will be written to
+      this directory prior to being sent to Solr.
+*  AppConfig[:as_arclight_test_mode]
+    - If set, should be one of `:record_pristine` or
+      `:record_candidate`.  See the "Testing Your Mappings" section
+      below for more information.
+
 
 Example configuration:
 ```
@@ -90,3 +108,74 @@ creating a plugin that registers its own mappers.
     as defined in config/repositories.yml. So, if the name of the repository
     gets changed in ArchivesSpace it will need to be changed to match in
     Arclight. This will require reindexing the whole repository.
+
+
+## Testing Your Mappings
+
+Using the `AppConfig[:as_arclight_test_mode]` option, you can check
+whether the mapped versions of your records are what you expect.  The
+basic workflow is:
+
+  * Record the "pristine" versions of your mapped records:
+
+    Start ArchivesSpace with the `as_arclight` plugin loaded, and the
+    following configuration set:
+
+         AppConfig[:as_arclight_test_mode] = :record_pristine
+
+         # Directory will be created if it doesn't exist.  Just needs
+         # to be somewhere writeable by the user running ArchivesSpace.
+         AppConfig[:as_arclight_test_pristine_directory] = "/tmp/as_arclight_pristine"
+
+  * Save some records in ArchivesSpace to trigger them to be reindexed
+    into Arclight.  As this happens, a copy of each Resource record
+    will be captured into your
+    `AppConfig[:as_arclight_test_pristine_directory]` directory.
+
+  * Remove (or comment out) the `AppConfig[:as_arclight_test_mode]`
+    line from your configuration and restart ArchivesSpace.
+
+Now you have a saved copy of your mapped records that you can use as a
+baseline when checking future changes.  For example, you might use
+this to verify that changing your mapping only changed your records in
+the ways you expect.  Or, you might use it to verify that an upgraded
+version of ArchivesSpace hasn't affected your mapped records at all.
+To do that:
+
+  * Record the "candidate" versions of your mapped records:
+
+    Start ArchivesSpace with the `as_arclight` plugin loaded, and the
+    following configuration set:
+
+         AppConfig[:as_arclight_test_mode] = :record_candidate
+
+         # Directory will be created if it doesn't exist.  Just needs
+         # to be somewhere writeable by the user running ArchivesSpace.
+         AppConfig[:as_arclight_test_candidate_directory] = "/tmp/as_arclight_candidate"
+
+  * Save some records in ArchivesSpace to trigger them to be reindexed
+    into Arclight.  As this happens, a copy of each Resource record
+    will be captured into your
+    `AppConfig[:as_arclight_test_candidate_directory]` directory.
+
+  * Remove (or comment out) the `AppConfig[:as_arclight_test_mode]`
+    line from your configuration and restart ArchivesSpace.
+
+  * Use the `json_diff` tool to compare your pristine mapped files
+    against the candidate mapped files (adjusting the paths to match
+    your own):
+
+         /path/to/archivesspace/plugins/as_arclight/json_diff/json_diff.sh \
+           /tmp/as_arclight_pristine \
+           /tmp/as_arclight_candidate \
+
+    If the `json_diff` tool produces no output, your candidate files
+    exactly matched your pristine files.  Otherwise, the tool will
+    report any differences it finds:
+
+      * Resource records that were not present in both file sets
+
+      * Differences in the records present in each Resource or
+        differences in their parent/child relationships
+
+      * Differences in the values of corresponding records

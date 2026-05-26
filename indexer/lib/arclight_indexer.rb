@@ -38,6 +38,8 @@ class ArclightIndexer < PeriodicIndexer
     state_class = Object.const_get(AppConfig[:index_state_class])
     index_state = state || state_class.new("indexer_arclight_state")
 
+    
+
     super(backend, index_state, name)
 
     # Set up our JSON schemas now that we know the JSONModels have been loaded
@@ -243,6 +245,25 @@ class ArclightIndexer < PeriodicIndexer
       fh.close
     end
 
+    self_test_output_dir = case self_test_mode
+                           when :record_pristine
+                             AppConfig[:as_arclight_test_pristine_directory]
+                           when :record_candidate
+                             AppConfig[:as_arclight_test_candidate_directory]
+                           else
+                             nil
+                           end
+
+    if self_test_output_dir
+      FileUtils.mkdir_p(self_test_output_dir)
+      output_basename = @db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
+      output_file = File.join(self_test_output_dir, output_basename + ".json")
+
+      log.debug "as_arclight plugin: Writing #{output_file} for further inspection"
+      FileUtils.cp(fh.path, output_file + ".tmp")
+      File.rename(output_file + ".tmp", output_file)
+    end
+
     Log.debug "as_arclight plugin: Dump complete, sending to Solrs ..."
 
     begin
@@ -360,5 +381,9 @@ class ArclightIndexer < PeriodicIndexer
         end
       end
     end
+  end
+
+  def self_test_mode
+    @self_test_mode ||= (AppConfig[:as_arclight_test_mode] rescue nil)
   end
 end

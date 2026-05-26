@@ -1,16 +1,23 @@
-archivesspace_dir = ARGV.fetch(0)
-
-ENV['GEM_HOME'] = ENV['GEM_PATH'] = File.join(archivesspace_dir, 'build', 'gems', 'jruby', Gem.ruby_api_version)
-
+require 'tempfile'
 require 'fileutils'
+
 FileUtils.mkdir_p(ENV['APPCONFIG_DATA_DIRECTORY'] = '/tmp/as_arclight_test_data')
 
-Gem.clear_paths
+archivesspace_dir = ENV.fetch('ARCHIVESSPACE')
 
 $LOAD_PATH << File.join(archivesspace_dir, 'common')
 $LOAD_PATH << File.join(archivesspace_dir, 'indexer', 'app', 'lib')
 
-require 'periodic_indexer'
+begin
+  require 'periodic_indexer'
+rescue LoadError => e
+  $stderr.puts("")
+  $stderr.puts("NOTE: We have failed to load our dependencies.")
+  $stderr.puts("These tests need to be run from a git clone of ArchivesSpace that has been bootstrapped with `build/run bootstrap`")
+  $stderr.puts("")
+
+  raise e
+end
 require_relative '../indexer/lib/arclight_indexer'
 
 require 'active_support/all'
