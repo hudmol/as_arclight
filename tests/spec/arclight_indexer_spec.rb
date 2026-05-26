@@ -18,7 +18,8 @@ describe 'ArclightIndexer' do
   let(:db) { indexer.instance_variable_get(:@db) }
 
   before(:each) do
-    # The arclight indexer keeps its SQLite db at /tmp/arclight_indexer.db and the
+    # The arclight indexer keeps its SQLite db at:
+    #   /tmp/as_arclight_test_data/as_arclight/arclight_indexer.db
     # :resource table survives across instances, so clear it between examples.
     db[:resource].delete
     db[:document].delete
