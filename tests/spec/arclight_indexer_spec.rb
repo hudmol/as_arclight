@@ -17,6 +17,8 @@ describe 'ArclightIndexer' do
 
   let(:db) { indexer.instance_variable_get(:@db) }
 
+  let(:http_request_log) { @http_request_log ||= [] }
+
   before(:each) do
     # The arclight indexer keeps its SQLite db at:
     #   /tmp/as_arclight_test_data/as_arclight/arclight_indexer.db
@@ -27,6 +29,20 @@ describe 'ArclightIndexer' do
     # Silence log output unless an example sets its own expectation.
     allow(Log).to receive(:debug)
     allow(Log).to receive(:error)
+
+    allow(indexer).to receive(:do_http_request) do |url, request|
+      http_request_log.push(:url => url, :request => request)
+
+      Object.new.tap do |o|
+        def o.code
+          '200'
+        end
+      end
+    end
+  end
+
+  after(:each) do
+    http_request_log = []
   end
 
   # Build a record in the shape index_records expects:
@@ -36,6 +52,19 @@ describe 'ArclightIndexer' do
       'uri' => uri,
       'record' => { 'uri' => uri }.merge(attrs)
     }
+  end
+
+  describe "#repositories_updated_action" do
+    let(:unpublished_repo) { { 'record' => { 'name' => 'unpublished_repo', 'publish' => false } } }
+
+    it "deletes unpublished repositories" do
+      indexer.repositories_updated_action([unpublished_repo])
+      delete_request = JSON.parse(http_request_log.first[:request].body)
+      commit_request = JSON.parse(http_request_log.last[:request].body)
+
+      expect(delete_request.dig('delete', 'query')).to eq('repository_ssim:"unpublished_repo"')
+      expect(commit_request.dig('commit', 'softCommit')).to eq(false)
+    end
   end
 
   describe '#index_records' do
