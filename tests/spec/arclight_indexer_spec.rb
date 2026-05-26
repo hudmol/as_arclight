@@ -55,6 +55,7 @@ describe 'ArclightIndexer' do
   end
 
   describe "#repositories_updated_action" do
+    let(:published_repo) { { 'record' => { 'publish' => true } } }
     let(:unpublished_repo) { { 'record' => { 'name' => 'unpublished_repo', 'publish' => false } } }
 
     it "deletes unpublished repositories" do
@@ -64,6 +65,12 @@ describe 'ArclightIndexer' do
 
       expect(delete_request.dig('delete', 'query')).to eq('repository_ssim:"unpublished_repo"')
       expect(commit_request.dig('commit', 'softCommit')).to eq(false)
+    end
+
+    it "leaves published repositories alone" do
+      indexer.repositories_updated_action([published_repo])
+
+      expect(http_request_log).to be_empty
     end
   end
 
