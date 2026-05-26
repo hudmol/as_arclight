@@ -8,7 +8,7 @@ describe 'ArclightIndexer' do
 
     JSONModel::init(enum_source: mock_enum_source)
 
-    ArclightIndexer.data_dir = "/tmp"
+    ArclightIndexer.data_dir = File.join(AppConfig[:data_directory], 'as_arclight')
   end
 
   let!(:indexer) do

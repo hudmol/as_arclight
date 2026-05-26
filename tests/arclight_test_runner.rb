@@ -2,6 +2,9 @@ archivesspace_dir = ARGV.fetch(0)
 
 ENV['GEM_HOME'] = ENV['GEM_PATH'] = File.join(archivesspace_dir, 'build', 'gems', 'jruby', Gem.ruby_api_version)
 
+require 'fileutils'
+FileUtils.mkdir_p(ENV['APPCONFIG_DATA_DIRECTORY'] = '/tmp/as_arclight_test_data')
+
 Gem.clear_paths
 
 $LOAD_PATH << File.join(archivesspace_dir, 'common')

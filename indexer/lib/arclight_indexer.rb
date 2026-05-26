@@ -51,7 +51,7 @@ class ArclightIndexer < PeriodicIndexer
 
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
-    log 'Initialized db at: ' + @db_path
+    Log.debug 'as_arclight plugin: Initialized db at: ' + @db_path
   end
 
   def init_schema
