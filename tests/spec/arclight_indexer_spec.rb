@@ -58,7 +58,7 @@ describe 'ArclightIndexer' do
     let(:published_repo) { { 'record' => { 'publish' => true } } }
     let(:unpublished_repo) { { 'record' => { 'name' => 'unpublished_repo', 'publish' => false } } }
 
-    it "deletes unpublished repositories" do
+    it "deletes all collections in unpublished repositories" do
       indexer.repositories_updated_action([unpublished_repo])
       delete_request = JSON.parse(http_request_log.first[:request].body)
       commit_request = JSON.parse(http_request_log.last[:request].body)
