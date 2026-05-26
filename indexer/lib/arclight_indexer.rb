@@ -47,11 +47,14 @@ class ArclightIndexer < PeriodicIndexer
     @thread_count = 1
 
     @db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
+    unless File.exist?(@db_path)
+      Log.info 'as_arclight plugin: Initializing db at ' + @db_path
+    end
+
     @db = Sequel.connect("jdbc:sqlite:#{@db_path}")
 
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
-    Log.debug 'as_arclight plugin: Initialized db at: ' + @db_path
   end
 
   def init_schema
