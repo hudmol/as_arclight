@@ -4,6 +4,11 @@ require 'tempfile'
 
 require_relative '../indexer/lib/sqlite-jdbc-3.53.0.0.jar'
 
+# Read current terminal width into MAX_WIDTH
+ENV['COLUMNS'] ||= `tput cols 2>/dev/null`.strip rescue ''
+
+MAX_WIDTH = Integer(ENV.fetch('COLUMNS', '80'))
+
 def load_hierarchy(db, file_id, record, ancestors = [])
   if record.is_a?(Hash)
     if record['id']
@@ -83,7 +88,7 @@ def compare_files(old_file, new_file)
            .filter(parent_id: old_parent_child.fetch(:parent_id))
            .filter(child_id: old_parent_child.fetch(:child_id))
            .count == 0
-        puts "Record only in pristine: #{old_parent_child}"
+        puts "\nRecord only in pristine: #{old_parent_child}"
       end
     end
 
@@ -93,7 +98,7 @@ def compare_files(old_file, new_file)
            .filter(parent_id: new_parent_child.fetch(:parent_id))
            .filter(child_id: new_parent_child.fetch(:child_id))
            .count == 0
-        puts "Record only in candidate: #{new_parent_child}"
+        puts "\nRecord only in candidate: #{new_parent_child}"
       end
     end
 
@@ -113,18 +118,40 @@ def compare_files(old_file, new_file)
                       .first
 
       if !matched_row
-        puts "Record #{old_record_value.fetch(:record_id)} field missing in candidate: '#{old_record_value.fetch(:key)}'"
+        puts "\nRecord #{old_record_value.fetch(:record_id)} field missing in candidate: '#{old_record_value.fetch(:key)}'"
         next
       end
 
-      old_value = JSON.parse(old_record_value.fetch(:value))
-      new_value = JSON.parse(matched_row.fetch(:value))
+      old_value = old_record_value.fetch(:value)
+      new_value = matched_row.fetch(:value)
 
       if old_value != new_value
-        puts "Record #{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
+        puts "\nRecord #{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
 
-        puts "Pristine value: #{old_value}"
-        puts "Candidate value: #{new_value}"
+        mismatch_char = (0..[old_value.length, new_value.length].min).find {|i| old_value[i] != new_value[i]}
+
+        ellipses = "... "
+
+        context_size = (MAX_WIDTH / 2) - ellipses.length
+
+        context_start = [0, mismatch_char - context_size].max
+        context_end = [old_value.length, new_value.length , mismatch_char + context_size].min
+
+        old_substring = old_value[context_start...context_end]
+        new_substring = new_value[context_start...context_end]
+
+        offset = context_start
+
+        if context_start > 0
+          old_substring = "#{ellipses}#{old_substring}"
+          new_substring = "#{ellipses}#{new_substring}"
+
+          offset -= ellipses.length
+        end
+
+        puts "Pristine snippet:  #{old_substring}"
+        puts "Candidate snippet: #{new_substring}"
+        puts "                  " + (" " * (mismatch_char - offset)) + "^ character #{mismatch_char}"
       end
     end
 
@@ -142,7 +169,7 @@ def compare_files(old_file, new_file)
                       .first
 
       if !matched_row
-        puts "Record #{new_record_value.fetch(:record_id)} field missing in pristine: '#{new_record_value.fetch(:key)}'"
+        puts "\nRecord #{new_record_value.fetch(:record_id)} field missing in pristine: '#{new_record_value.fetch(:key)}'"
         next
       end
     end
@@ -186,7 +213,7 @@ def main
 
     if old_paths.empty?
       new_paths.each do |path|
-        puts "File only appeared in candidate and was not checked: #{path}"
+        puts "\nFile only appeared in candidate and was not checked: #{path}"
       end
 
       break
@@ -194,7 +221,7 @@ def main
 
     if new_paths.empty?
       old_paths.each do |path|
-        puts "File only appeared in pristine and was not checked: #{path}"
+        puts "\nFile only appeared in pristine and was not checked: #{path}"
       end
 
       break
@@ -205,10 +232,10 @@ def main
       old_paths.shift
       new_paths.shift
     elsif File.basename(old_paths[0]) < File.basename(new_paths[0])
-      puts "File only appeared in pristine and was not checked: #{old_paths[0]}"
+      puts "\nFile only appeared in pristine and was not checked: #{old_paths[0]}"
       old_paths.shift
     else
-      puts "File only appeared in candidate and was not checked: #{new_paths[0]}"
+      puts "\nFile only appeared in candidate and was not checked: #{new_paths[0]}"
       new_paths.shift
     end
   end
