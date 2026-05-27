@@ -11,6 +11,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
   def map
     map_field('id',                     resource_id(@json))
     map_field('title_ssm',              [@json['title']])
+    map_field('title_html_tesm',        [@json['title']])
     map_field('title_tesim',            [@json['title']])
     map_field('title_filing_ssi',       @json['finding_aid_filing_title'])
     map_field('ead_ssi',                resource_id(@json))
@@ -22,8 +23,8 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
     map_field('level_ssm',              [@json['level']])
     map_field('level_ssim',             [@json['level'].capitalize])
-    map_field('unitid_ssm',             [resource_id(@json), @json['uri']])
-    map_field('unitid_tesim',           [resource_id(@json), @json['uri']])
+    map_field('unitid_ssm',             [resource_id(@json)])
+    map_field('unitid_tesim',           [resource_id(@json)])
     map_field('normalized_date_ssm',    @json['dates'].map{|d| format_date(d)})
     map_field('normalized_title_ssm',   [collection_title(@json)])
     map_field('collection_title_tesim', [collection_title(@json)])
@@ -36,16 +37,20 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('creator_persname_ssim',  @map['creator_ssm'])
     map_field('creators_ssim',          @map['creator_ssm'])
 
-    map_field('access_terms_ssm',       @json['notes'].select{|n| n['type'] == 'userestrict'}
-                                                      .map{|n| n['subnotes'].select{|s| s['publish']}
-                                                      .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")})
+    map_field('access_terms_ssm',       @json['notes'].select{|n| n['type'] == 'userestrict' && n['publish']}
+                                                      .map{|n| n['subnotes'].select{|s| s['publish']}.map{|s| s['content'].split(/\n+/)}}.flatten)
 
-    map_field('access_subjects_ssim',   @json['subjects'].map{|s| s['_resolved']['title']})
+    map_field('access_subjects_ssim',   @json['subjects'].select{|s| s.dig('_resolved', 'terms', 0, 'term_type') == 'topical'}.map{|s| s['_resolved']['title']})
     map_field('access_subjects_ssm',    @map['access_subjects_ssim'])
     map_field('has_online_content_ssim',[@json['_online_item_count'] > 0])
     map_field('extent_ssm',             @json['extents'].map{|e| e['container_summary'] || "#{e['number']} #{I18n.t('enumerations.extent_extent_type.' + e['extent_type'], :default => e['extent_type'])}"})
     map_field('extent_tesim',           @map['extent_ssm'])
-    map_field('genreform_ssim',         @json['subjects'].map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'genre_form'}.map{|t| t['term']})
+
+    map_field('genreform_ssim',         @json['subjects'].select{|s| s['publish']}.map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'genre_form'}.map{|t| t['term']})
+    map_field('geogname_ssim',          @json['subjects'].select{|s| s['publish']}.map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'geographic'}.map{|t| t['term']})
+    map_field('geogname_ssm',           @map['geogname_ssim'])
+    map_field('places_ssim',            @map['geogname_ssim'])
+
     map_field('date_range_isim',        @json['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
 
     map_field('names_coll_ssim',        @json['linked_agents'].select{|a| a['role'] == 'subject'}.map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
@@ -54,11 +59,19 @@ class Arclight::ResourceMapper < Arclight::Mapper
                                                               .map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('persname_ssim',          @json['linked_agents'].select{|a| a['role'] == 'subject' && a['_resolved']['jsonmodel_type'] == 'agent_person'}
                                                               .map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
-    map_field('language_ssim',          I18n.t('enumerations.language_iso639_2.' + @json.fetch('finding_aid_language', 'eng')))
-    map_field('total_component_count_is',[@json['_total_components']])
-    map_field('online_item_count_is',   [@json['_online_item_count']])
+
+    map_field('language_ssim',          @json['lang_materials'].map{|lm|
+                                          out = lm['notes'].map{|n| n['content']}.flatten
+                                          if las = lm.dig('language_and_script', 'language')
+                                            out.unshift(I18n.t('enumerations.language_iso639_2.' + las))
+                                          end
+                                          out
+                                        }.flatten)
+
+    map_field('total_component_count_is',@json['_total_components'])
+    map_field('online_item_count_is',   @json['_online_item_count'])
     map_field('component_level_isim',   [0])
-    map_field('sort_isi',               [0])
+    map_field('sort_isi',               0)
 
     map_notes
   end

@@ -75,49 +75,56 @@ module Arclight
       json['title'] + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
     end
 
-    # FIXME: check for other types - might have been missed in the example
+    # FIXME: refactor?
     def map_notes
       {
         'accessrestrict' => 'multipart',
+        'acqinfo' => 'multipart',
         'arrangement' => 'orderedlist',
         'bioghist' => 'multipart',
         'custodhist' => 'multipart',
-        'prefercite' => 'multipart', # FIXME: in example has no header and has _tesim, might need a special type
+        'physloc' => 'singlepart',
+        'prefercite' => 'multipart',
+        'processinfo' => 'multipart',
         'scopecontent' => 'multipart',
         'userestrict' => 'multipart',
-        'abstract' => 'singlepart', # FIXME: in example has no header and has _tesim, might need a special type
+        'abstract' => 'singlepart',
         'odd' => 'multipart'
       }.each do |note, type|
 
-        if @json['notes'].find{|n| n['type'] == note}
+        if @json['notes'].find{|n| n['type'] == note && n['publish']}
           map_field("#{note}_heading_ssm",  [I18n.t('enumerations._note_types.' + note)])
 
           if type == 'multipart'
             map_field("#{note}_tesm",
-                      @json['notes'].select{|n| n['type'] == note}
+                      @json['notes'].select{|n| n['type'] == note && n['publish']}
                         .map{|n| n['subnotes'].select{|s| s['publish']}
                           .map{|s| s['content']}.join("\n")})
 
+            map_field("#{note}_tesim", @map["#{note}_tesm"])
+
             map_field("#{note}_html_tesm",
-                      @map["#{note}_tesm"].map{|n| n.split(/\n+/).map{|s| '<p>' + s + '</p>'}}.flatten)
+                      @map["#{note}_tesm"].map{|n| n.split(/\n+/)}.flatten)
 
           elsif type == 'singlepart'
-            map_field("#{note}_tesm",
+            suffix = type == 'abstract' ? 'tesim' : 'tesm'
+
+            map_field("#{note}_#{suffix}",
                       @json['notes'].select{|n| n['type'] == note && n['publish']}
                         .map{|s| s['content'].join("\n")})
 
-            map_field("#{note}_html_tesm",
-                      @map["#{note}_tesm"].map{|n| '<p>' + n + '</p>'})
+            map_field("#{note}_html_#{suffix}",
+                      @map["#{note}_#{suffix}"].map{|n| '<p>' + n + '</p>'})
 
           elsif type == 'orderedlist'
             map_field("#{note}_tesm",
-                      @json['notes'].select{|n| n['type'] == note}
+                      @json['notes'].select{|n| n['type'] == note && n['publish']}
                         .map{|n| n['subnotes']}.flatten
                         .select{|s| s['publish']}
                         .map{|s| s['items'] ? s['items'].join(', ') : s['content']})
 
             map_field("#{note}_html_tesm",
-                      @json['notes'].select{|n| n['type'] == note}.map{|n|
+                      @json['notes'].select{|n| n['type'] == note && n['publish']}.map{|n|
                         n['subnotes'].select{|s| s['publish']}.map{|psn|
                           if psn.has_key?('content')
                             psn['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n")

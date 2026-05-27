@@ -17,8 +17,8 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     @json['ancestors'].reverse.map{|a| a['_resolved']}
   end
 
-  def archival_object_id
-    id = @json['ref_id'] || @json['component_id'] || @json['uri']
+  def archival_object_id(ao_json)
+    id = ao_json['ref_id'] || ao_json['component_id'] || ao_json['uri']
 
     if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
       id = AppConfig[:as_arclight_archival_object_id_prefix] + id
@@ -27,8 +27,8 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     id
   end
 
-  def ao_id
-    resource_id(resource) + '_' + archival_object_id
+  def ao_id(ao_json)
+    resource_id(resource) + '_' + archival_object_id(ao_json)
   end
 
   def iiif_client
@@ -51,16 +51,17 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   end
 
   def map
-    map_field('ref_ssi',                     archival_object_id)
-    map_field('ref_ssm',                     [archival_object_id, archival_object_id]) # the traject mapping duplicates so here we are
-    map_field('id',                          ao_id)
+    map_field('ref_ssi',                     archival_object_id(@json))
+    map_field('ref_ssm',                     [archival_object_id(@json), archival_object_id(@json)]) # the traject mapping duplicates so here we are
+    map_field('id',                          ao_id(@json))
 
     map_field('title_filing_ssi',            @json['title'])
     map_field('title_ssm',                   [@json['title']])
     map_field('title_tesim',                 [@json['title']])
-    map_field('normalized_title_ssm',        [@json['display_string']])
+    map_field('title_html_tesm',             [@json['title']])
+    map_field('normalized_title_ssm',        [@json['display_string'].gsub(/<.+?>/, '')])
 
-    map_field('unitid_ssm',                  [archival_object_id, @json['uri']])
+    map_field('unitid_ssm',                  [archival_object_id(@json), @json['uri']])
 
     map_field('unitdate_ssm',                @json['dates'].map{|d| format_date(d)})
     map_field('unitdate_bulk_ssim',          @json['dates'].select{|d| d['date_type'] == 'bulk'}.map{|d| format_date(d)})
@@ -68,19 +69,22 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('unitdate_other_ssim',         @json['dates'].select{|d| !['bulk', 'inclusive'].include?(d['date_type'])}.map{|d| format_date(d)})
 
     map_field('component_level_isim',        [ancestors.length])
-    map_field('parent_ids_ssim',             [resource_id(resource), ancestors[1..-1].map{|a| resource_id(resource) + '_' + (a['component_id'] || a['ref_id'] || a['uri'])}].flatten)
+    map_field('parent_ids_ssim',             [resource_id(resource), ancestors[1..-1].map{|a| ao_id(a)}].flatten)
+    map_field('parent_ssi',                  @map['parent_ids_ssim'].last)
+    map_field('parent_ssim',                 @map['parent_ids_ssim'])
 
-    map_field('parent_unittitles_ssm',       ancestors.map{|a| [a['title'], a['display_string']]}.flatten)
-    map_field('parent_unittitles_tesim',     ancestors.map{|a| a['title']})
+    map_field('parent_unittitles_ssm',       [collection_title(resource), ancestors[1..-1].map{|a| a['display_string']}].select{|a| !a.nil?}.flatten)
+    map_field('parent_unittitles_tesim',     @map['parent_unittitles_ssm'])
 
     map_field('parent_levels_ssm',           ancestors.map{|a| a['level']})
     map_field('repository_ssim',             [repository['name']])
+    map_field('repository_ssm',              [repository['name']])
     map_field('collection_ssim',             [collection_title(resource)])
     map_field('creator_sort',                @json['linked_agents'].select{|a| a['role'] == 'creator'}.map{|a| a['_resolved']['names'].map{|n| n['sort_name']}}.flatten.uniq)
     map_field('child_component_count_isi',   [@json['_child_count']])
     map_field('level_ssm',                   [@json['level'].capitalize])
     map_field('level_ssim',                  [@json['level'].capitalize])
-    map_field('sort_isi',                    [@json['position']])
+    map_field('sort_isi',                    @json['position'])
 
     map_field('parent_access_restrict_tesm',    resource['notes'].select{|n| n['type'] == 'accessrestrict'}
                                                               .map{|n| n['subnotes'].select{|s| s['publish']}
@@ -91,6 +95,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
                                                               .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")})
 
     map_field('date_range_isim',             resource['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
+    map_field('normalized_date_ssm',         @map['date_range_isim'].length == 1 ? @map['date_range_isim'].first : [@map['date_range_isim'].first, @map['date_range_isim'].last].join('-'))
 
     map_field('containers_ssim',             @json['instances'].select{|i| i['sub_container']}
                                                                .map{|i|
