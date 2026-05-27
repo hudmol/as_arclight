@@ -99,8 +99,13 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
     map_field('containers_ssim',             @json['instances'].select{|i| i['sub_container']}
                                                                .map{|i|
-                                                                   [i['sub_container']['top_container']['_resolved']['display_string'],
-                                                                    i['sub_container']['type_2'] + ' ' + i['sub_container']['indicator_2']]
+                                                                   [
+                                                                     i['sub_container']['top_container']['_resolved']['display_string'],
+                                                                     [
+                                                                       i['sub_container']['type_2'],
+                                                                       i['sub_container']['indicator_2']
+                                                                     ].compact.join(' ')
+                                                                   ].reject(&:empty?)
                                                                }.flatten)
 
     published_digital_object_instances = @json['instances'].select{|i| i.dig('digital_object', '_resolved', 'publish')}
