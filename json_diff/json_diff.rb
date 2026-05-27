@@ -133,7 +133,9 @@ def compare_files(args, old_file, new_file)
 
       if !matched_row
         if old_record_value.fetch(:value) != '[]'
-          puts "\n--- Record #{old_record_value.fetch(:record_id)} field missing in #{args.candidate_label}: '#{old_record_value.fetch(:key)}'"
+          puts "\n--- Record::#{old_record_value.fetch(:record_id)} field missing in #{args.candidate_label}: '#{old_record_value.fetch(:key)}'"
+          puts "+++ Record::#{old_record_value.fetch(:record_id)} (missing)"
+          puts "@@ -1,1 +1,1 @@"
           puts_truncated("-Sample from #{args.pristine_label}: #{old_record_value.fetch(:value)}")
           puts_truncated("+(missing from #{args.candidate_label})")
         end
@@ -145,7 +147,9 @@ def compare_files(args, old_file, new_file)
       new_value = matched_row.fetch(:value)
 
       if old_value != new_value
-        puts "\n--- Record #{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
+        puts "\n--- Record::#{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
+        puts "+++ Record::#{old_record_value.fetch(:record_id)} (mismatched)"
+        puts "@@ -1,1 +1,1 @@"
 
         mismatch_char = (0..[old_value.length, new_value.length].min).find {|i| old_value[i] != new_value[i]}
 
@@ -189,7 +193,10 @@ def compare_files(args, old_file, new_file)
 
       if !matched_row
         if new_record_value.fetch(:value) != '[]'
-          puts "\n--- Record #{new_record_value.fetch(:record_id)} field missing in #{args.pristine_label}: '#{new_record_value.fetch(:key)}'"
+          puts "\n--- Record::#{new_record_value.fetch(:record_id)} (missing)"
+          puts "+++ Record::#{new_record_value.fetch(:record_id)} field missing in #{args.pristine_label}: '#{new_record_value.fetch(:key)}'"
+          puts "@@ -1,1 +1,1 @@"
+
           puts_truncated("-(missing from #{args.pristine_label}): #{new_record_value.fetch(:value)}")
           puts_truncated("+Sample from #{args.candidate_label}: #{new_record_value.fetch(:value)}")
         end
