@@ -263,7 +263,7 @@ class ArclightIndexer < PeriodicIndexer
       output_basename = @db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
       output_file = File.join(self_test_output_dir, output_basename + ".json")
 
-      log.debug "as_arclight plugin: Writing #{output_file} for further inspection"
+      Log.debug "as_arclight plugin: Writing #{output_file} for further inspection"
       FileUtils.cp(fh.path, output_file + ".tmp")
       File.rename(output_file + ".tmp", output_file)
     end
