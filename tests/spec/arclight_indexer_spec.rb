@@ -54,11 +54,11 @@ describe 'ArclightIndexer' do
     }
   end
 
-  describe "#repositories_updated_action" do
+  describe '#repositories_updated_action' do
     let(:published_repo) { { 'record' => { 'publish' => true } } }
     let(:unpublished_repo) { { 'record' => { 'name' => 'unpublished_repo', 'publish' => false } } }
 
-    it "deletes all collections in unpublished repositories" do
+    it 'deletes all collections in unpublished repositories' do
       indexer.repositories_updated_action([unpublished_repo])
       delete_request = JSON.parse(http_request_log.first[:request].body)
       commit_request = JSON.parse(http_request_log.last[:request].body)
@@ -67,7 +67,7 @@ describe 'ArclightIndexer' do
       expect(commit_request.dig('commit', 'softCommit')).to eq(false)
     end
 
-    it "leaves published repositories alone" do
+    it 'leaves published repositories alone' do
       indexer.repositories_updated_action([published_repo])
 
       expect(http_request_log).to be_empty
