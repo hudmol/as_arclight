@@ -38,8 +38,6 @@ class ArclightIndexer < PeriodicIndexer
     state_class = Object.const_get(AppConfig[:index_state_class])
     index_state = state || state_class.new("indexer_arclight_state")
 
-    
-
     super(backend, index_state, name)
 
     # Set up our JSON schemas now that we know the JSONModels have been loaded
