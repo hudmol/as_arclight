@@ -25,7 +25,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('level_ssim',             [@json['level'].capitalize])
     map_field('unitid_ssm',             [resource_id(@json)])
     map_field('unitid_tesim',           [resource_id(@json)])
-    map_field('normalized_date_ssm',    @json['dates'].map{|d| format_date(d)})
+    map_field('normalized_date_ssm',    [@json['dates'].map{|d| format_date(d)}.first]) # this can only be a single value as there's a solrCopy into single-value field (so take the first)
     map_field('normalized_title_ssm',   [collection_title(@json)])
     map_field('collection_title_tesim', [collection_title(@json)])
     map_field('collection_ssim',        [collection_title(@json)])
