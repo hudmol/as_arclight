@@ -107,6 +107,10 @@ module Arclight
             map_field("#{note}_html_tesm",
                       @map["#{note}_tesm"].map{|n| n.split(/\n+/)}.flatten)
 
+            if note == 'acqinfo'
+              map_field("#{note}_ssim", @map["#{note}_tesim"])
+            end
+
           elsif type == 'singlepart'
             suffix = type == 'abstract' ? 'tesim' : 'tesm'
 
