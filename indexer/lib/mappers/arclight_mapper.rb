@@ -87,6 +87,7 @@ module Arclight
         'prefercite' => 'multipart',
         'processinfo' => 'multipart',
         'scopecontent' => 'multipart',
+        'separatedmaterial' => 'multipart',
         'userestrict' => 'multipart',
         'abstract' => 'singlepart',
         'odd' => 'multipart'
