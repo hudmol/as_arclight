@@ -174,11 +174,12 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def map_children(waypoints_json, resource_uri, parent_doc_id, parent_uri)
-    fetched_child_records = JSONModel(:archival_object)
-      .all(:id_set => waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))}.join(","),
-           'resolve[]' => Arclight::Mapper.archival_object_mapper.resolves)
-      .map {|json| [json.uri, json.to_hash(:trusted)]}
-      .to_h
+    fetched_child_records =
+      fetch_records(:archival_object,
+                    waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))},
+                    Arclight::Mapper.archival_object_mapper.resolves)
+        .map {|json| [json.uri, json.to_hash(:trusted)]}
+        .to_h
 
     waypoints_json.each do |waypoint_record|
       record_uri = waypoint_record.fetch('uri')
@@ -310,9 +311,9 @@ class ArclightIndexer < PeriodicIndexer
     indexed_count = 0
     deleted_count = 0
     fetched_resource_records =
-      JSONModel(:resource)
-        .all(:id_set => @db[:resource].select_map(:uri).map{|resource_uri| JSONModel(:resource).id_for(resource_uri)}.join(","),
-             'resolve[]' => Arclight::Mapper.resource_mapper.resolves)
+      fetch_records(:resource,
+                    @db[:resource].select_map(:uri).map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
+                    Arclight::Mapper.resource_mapper.resolves)
         .map {|json| [json.uri, json.to_hash(:trusted)]}
         .to_h
 
