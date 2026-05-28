@@ -55,7 +55,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
     map_field('date_range_isim',        @json['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
 
-    map_field('names_coll_ssim',        @json['linked_agents'].select{|a| a['role'] == 'subject'}.map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
+    map_field('names_coll_ssim',        @json['linked_agents'].map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('names_ssim',             @json['linked_agents'].map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('corpname_ssim',          @json['linked_agents'].select{|a| a['role'] == 'subject' && a['_resolved']['jsonmodel_type'] == 'agent_corporate_entity'}
                                                               .map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
