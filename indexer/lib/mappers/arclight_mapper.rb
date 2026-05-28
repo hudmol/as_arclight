@@ -128,6 +128,8 @@ module Arclight
                         .select{|s| s['publish']}
                         .map{|s| s['items'] ? s['items'].join(', ') : s['content']})
 
+            map_field("#{note}_tesim", @map["#{note}_tesm"])
+
             map_field("#{note}_html_tesm",
                       @json['notes'].select{|n| n['type'] == note && n['publish']}.map{|n|
                         n['subnotes'].select{|s| s['publish']}.map{|psn|
