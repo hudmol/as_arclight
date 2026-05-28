@@ -63,12 +63,12 @@ class Arclight::ResourceMapper < Arclight::Mapper
                                                               .map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
 
     map_field('language_ssim',          @json['lang_materials'].map{|lm|
-                                          out = lm['notes'].map{|n| n['content']}.flatten
-                                          if las = lm.dig('language_and_script', 'language')
-                                            out.unshift(I18n.t('enumerations.language_iso639_2.' + las))
-                                          end
-                                          out
-                                        }.flatten)
+                                               out = lm['notes'].map{|n| n['content']}.flatten.map{|s| s.split(/[,.]/)}.flatten.map(&:strip).reject(&:empty?)
+                                               if (las = lm.dig('language_and_script', 'language'))
+                                                 out.unshift(I18n.t('enumerations.language_iso639_2.' + las))
+                                               end
+                                               out
+                                             }.flatten.uniq)
 
     map_field('total_component_count_is',@json['_total_components'])
     map_field('online_item_count_is',   @json['_online_item_count'])
