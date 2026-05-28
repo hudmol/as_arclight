@@ -48,8 +48,8 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('extent_ssm',             @json['extents'].map{|e| e['container_summary'] || "#{e['number']} #{I18n.t('enumerations.extent_extent_type.' + e['extent_type'], :default => e['extent_type'])}"})
     map_field('extent_tesim',           @map['extent_ssm'])
 
-    map_field('genreform_ssim',         @json['subjects'].select{|s| s['publish']}.map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'genre_form'}.map{|t| t['term']})
-    map_field('geogname_ssim',          @json['subjects'].select{|s| s['publish']}.map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'geographic'}.map{|t| t['term']})
+    map_field('genreform_ssim',         @json['subjects'].select{|s| s['_resolved']['publish']}.map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'genre_form'}.map{|t| t['term']})
+    map_field('geogname_ssim',          @json['subjects'].select{|s| s['_resolved']['publish']}.map{|s| s['_resolved']['terms']}.flatten.select{|t| t['term_type'] == 'geographic'}.map{|t| t['term']})
     map_field('geogname_ssm',           @map['geogname_ssim'])
     map_field('places_ssim',            @map['geogname_ssim'])
 
