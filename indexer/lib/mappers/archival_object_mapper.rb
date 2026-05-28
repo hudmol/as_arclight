@@ -51,6 +51,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   end
 
   def map
+    map_field('_nest_path_',                 @json['_nest_path'])
     map_field('ref_ssi',                     archival_object_id(@json))
     map_field('ref_ssm',                     [archival_object_id(@json), archival_object_id(@json)]) # the traject mapping duplicates so here we are
     map_field('id',                          ao_id(@json))

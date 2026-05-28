@@ -9,6 +9,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
   end
 
   def map
+    map_field('_nest_path_',            '/')
     map_field('id',                     resource_id(@json))
     map_field('title_ssm',              [@json['title']])
     map_field('title_html_tesm',        [@json['title']])
