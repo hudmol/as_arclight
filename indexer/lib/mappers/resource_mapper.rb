@@ -42,7 +42,9 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
     map_field('access_subjects_ssim',   @json['subjects'].select{|s| s.dig('_resolved', 'terms', 0, 'term_type') == 'topical'}.map{|s| s['_resolved']['title']})
     map_field('access_subjects_ssm',    @map['access_subjects_ssim'])
-    map_field('has_online_content_ssim',[@json['_online_item_count'] > 0])
+
+    map_field('has_online_content_ssim',["Online access"]) if @json['_online_item_count'] > 0
+
     map_field('extent_ssm',             @json['extents'].map{|e| e['container_summary'] || "#{e['number']} #{I18n.t('enumerations.extent_extent_type.' + e['extent_type'], :default => e['extent_type'])}"})
     map_field('extent_tesim',           @map['extent_ssm'])
 

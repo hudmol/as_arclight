@@ -124,7 +124,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
       }.compact
     )
 
-    map_field('has_online_content_ssim', [!published_digital_object_instances.empty?])
+    map_field('has_online_content_ssim', ["Online access"]) unless published_digital_object_instances.empty?
 
     iiif_text = []
 
