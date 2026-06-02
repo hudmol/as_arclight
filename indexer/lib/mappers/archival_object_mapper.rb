@@ -68,6 +68,9 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('unitdate_inclusive_ssm',      @json['dates'].select{|d| d['date_type'] == 'inclusive'}.map{|d| format_date(d)})
     map_field('unitdate_other_ssim',         @json['dates'].select{|d| !['bulk', 'inclusive'].include?(d['date_type'])}.map{|d| format_date(d)})
 
+    map_field('extent_ssm',                  @json['extents'].map{|e| e['container_summary'] || "#{e['number']} #{I18n.t('enumerations.extent_extent_type.' + e['extent_type'], :default => e['extent_type'])}"})
+    map_field('extent_tesim',                @map['extent_ssm'])
+
     map_field('component_level_isim',        [ancestors.length])
     map_field('parent_ids_ssim',             [resource_id(resource), ancestors[1..-1].map{|a| ao_id(a)}].flatten)
     map_field('parent_ssi',                  @map['parent_ids_ssim'].last)
