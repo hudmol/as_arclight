@@ -75,6 +75,8 @@ Optional configuration:
     - If set, should be one of `:record_pristine` or
       `:record_candidate`.  See the "Testing Your Mappings" section
       below for more information.
+*  AppConfig[:include_dadocm_required_fields]
+    - If true then map DadoCM required fields for digital objects
 
 
 Example configuration:

@@ -130,9 +130,22 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('has_online_content_ssim', ["Online access"]) unless published_digital_object_instances.empty?
 
     iiif_text = []
+    dado_fields = []
 
     published_digital_object_instances.each do |instance|
       digital_object = instance.dig('digital_object', '_resolved')
+
+      if AppConfig.has_key?(:include_dadocm_required_fields) && AppConfig[:include_dadocm_required_fields]
+        if representative_file_version = digital_object['representative_file_version']
+          dado_fields << {
+            :dado_action_ssm => representative_file_version['xlink_show_attribute'],
+            :dado_identifier_ssm => representative_file_version['file_uri'],
+            :dado_label_tesim => digital_object['title'],
+            :dado_type_ssm => digital_object['digital_object_type'] ? I18n.t("enumerations.digital_object_digital_object_type.#{digital_object[:digital_object_type]}", :default => digital_object['digital_object_type'])
+                                                                    : 'unset'
+          }
+        end
+      end
 
       digital_object.fetch('file_versions', []).each do |file_version|
         decoded_uri = URI.decode_www_form_component(file_version.fetch('file_uri', ''))
@@ -171,6 +184,14 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     end
 
     map_field('text', iiif_text)
+
+    unless dado_fields.empty?
+      # FIXME: the solr fields are multis, but the existing mapping has single values
+      # so just taking the first for now.
+      dado_fields.first.each do |k,v|
+        map_field(k, v)
+      end
+    end
 
     map_notes
   end
