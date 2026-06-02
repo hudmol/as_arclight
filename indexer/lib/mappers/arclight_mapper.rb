@@ -112,13 +112,13 @@ module Arclight
             end
 
           elsif type == 'singlepart'
-            suffix = type == 'abstract' ? 'tesim' : 'tesm'
+            suffix = note == 'abstract' ? 'tesim' : 'tesm'
 
             map_field("#{note}_#{suffix}",
                       @json['notes'].select{|n| n['type'] == note && n['publish']}
                         .map{|s| s['content'].join("\n")})
 
-            map_field("#{note}_html_#{suffix}",
+            map_field("#{note}_html_tesm",
                       @map["#{note}_#{suffix}"].map{|n| '<p>' + n + '</p>'})
 
           elsif type == 'orderedlist'
