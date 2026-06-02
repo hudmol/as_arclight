@@ -79,12 +79,10 @@ Optional configuration:
     - If true then map DadoCM required fields for digital objects
 
 
-Example configuration:
+Example minimal configuration:
 ```
     AppConfig[:as_arclight_solr_url] = "http://localhost:8983/solr/blacklight-core"
     AppConfig[:as_arclight_indexing_frequency_seconds] = 30
-    AppConfig[:as_arclight_resource_id_prefix] = 'XXX'
-    AppConfig[:as_arclight_archival_object_id_prefix] = 'XXX'
 ```
 
 The plugin will check the configuration on start up and raise an exception if
@@ -110,6 +108,14 @@ creating a plugin that registers its own mappers.
     as defined in config/repositories.yml. So, if the name of the repository
     gets changed in ArchivesSpace it will need to be changed to match in
     Arclight. This will require reindexing the whole repository.
+
+
+## Run the unit tests
+
+The plugin has a suite of unit tests. Run them like this:
+```
+    ./tests/run_tests.sh
+```
 
 
 ## Testing Your Mappings
