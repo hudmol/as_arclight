@@ -60,151 +60,160 @@ def puts_truncated(s)
 end
 
 def compare_files(args, old_file, new_file)
-  dbfile = Tempfile.new
+  found_change = false
 
-  Sequel.connect("jdbc:sqlite:#{dbfile.path}") do |db|
-    db.create_table(:hierarchy) do
-      primary_key :id
-      String :file_id
-      String :parent_id
-      String :child_id
-    end
-
-    db.create_table(:record_value) do
-      primary_key :id
-      String :file_id
-      String :record_id
-      String :key
-      Blob :value
-    end
-
-    db.add_index(:hierarchy, [:file_id, :parent_id, :child_id])
-    db.add_index(:hierarchy, [:file_id, :child_id])
-    db.add_index(:record_value, [:file_id, :record_id, :key])
-
-    [["old", old_file], ["new", new_file]].each do |file, path|
-      content = File.read(path)
-      content = '[]' if content.empty?
-
-      records = JSON.parse(content)
-
-      load_hierarchy(db, file, records)
-
-      records.each do |record|
-        load_record_values(db, file, record)
-      end
-    end
-
-    ## Compare hierarchy
-    db[:hierarchy].filter(file_id: "old").each do |old_parent_child|
-      if db[:hierarchy]
-           .filter(file_id: "new")
-           .filter(parent_id: old_parent_child.fetch(:parent_id))
-           .filter(child_id: old_parent_child.fetch(:child_id))
-           .count == 0
-        puts "\n-Parent/child relationship only in #{args.pristine_label}: parent=#{old_parent_child.fetch(:parent_id)} child=#{old_parent_child.fetch(:child_id)}"
-      end
-    end
-
-    db[:hierarchy].filter(file_id: "new").each do |new_parent_child|
-      if db[:hierarchy]
-           .filter(file_id: "old")
-           .filter(parent_id: new_parent_child.fetch(:parent_id))
-           .filter(child_id: new_parent_child.fetch(:child_id))
-           .count == 0
-        puts "\n+Parent/child relationship only in #{args.candidate_label}: parent=#{new_parent_child.fetch(:parent_id)} child=#{new_parent_child.fetch(:child_id)}"
-      end
-    end
-
-
-    ## Compare values
-    db[:record_value].filter(file_id: "old").each do |old_record_value|
-      if db[:hierarchy].filter(parent_id: old_record_value.fetch(:record_id)).filter(file_id: "new").count == 0 &&
-         db[:hierarchy].filter(child_id: old_record_value.fetch(:record_id)).filter(file_id: "new").count == 0
-        # Already failed the hierarchy check
-        next
+  Tempfile.create do |dbfile|
+    Sequel.connect("jdbc:sqlite:#{dbfile.path}") do |db|
+      db.create_table(:hierarchy) do
+        primary_key :id
+        String :file_id
+        String :parent_id
+        String :child_id
       end
 
-      matched_row = db[:record_value]
-                      .filter(file_id: "new")
-                      .filter(record_id: old_record_value.fetch(:record_id))
-                      .filter(key: old_record_value.fetch(:key))
-                      .first
+      db.create_table(:record_value) do
+        primary_key :id
+        String :file_id
+        String :record_id
+        String :key
+        Blob :value
+      end
 
-      if !matched_row
-        if old_record_value.fetch(:value) != '[]'
-          puts "\n--- Record::#{old_record_value.fetch(:record_id)} field missing in #{args.candidate_label}: '#{old_record_value.fetch(:key)}'"
-          puts "+++ Record::#{old_record_value.fetch(:record_id)} (missing)"
-          puts "@@ -1,1 +1,1 @@"
-          puts_truncated("-Sample from #{args.pristine_label}: #{old_record_value.fetch(:value)}")
-          puts_truncated("+(missing from #{args.candidate_label})")
+      db.add_index(:hierarchy, [:file_id, :parent_id, :child_id])
+      db.add_index(:hierarchy, [:file_id, :child_id])
+      db.add_index(:record_value, [:file_id, :record_id, :key])
+
+      [["old", old_file], ["new", new_file]].each do |file, path|
+        content = File.read(path)
+        content = '[]' if content.empty?
+
+        records = JSON.parse(content)
+
+        load_hierarchy(db, file, records)
+
+        records.each do |record|
+          load_record_values(db, file, record)
+        end
+      end
+
+      ## Compare hierarchy
+      db[:hierarchy].filter(file_id: "old").each do |old_parent_child|
+        if db[:hierarchy]
+             .filter(file_id: "new")
+             .filter(parent_id: old_parent_child.fetch(:parent_id))
+             .filter(child_id: old_parent_child.fetch(:child_id))
+             .count == 0
+          found_change = true
+          puts "\n-Parent/child relationship only in #{args.pristine_label}: parent=#{old_parent_child.fetch(:parent_id)} child=#{old_parent_child.fetch(:child_id)}"
+        end
+      end
+
+      db[:hierarchy].filter(file_id: "new").each do |new_parent_child|
+        if db[:hierarchy]
+             .filter(file_id: "old")
+             .filter(parent_id: new_parent_child.fetch(:parent_id))
+             .filter(child_id: new_parent_child.fetch(:child_id))
+             .count == 0
+          found_change = true
+          puts "\n+Parent/child relationship only in #{args.candidate_label}: parent=#{new_parent_child.fetch(:parent_id)} child=#{new_parent_child.fetch(:child_id)}"
+        end
+      end
+
+
+      ## Compare values
+      db[:record_value].filter(file_id: "old").each do |old_record_value|
+        if db[:hierarchy].filter(parent_id: old_record_value.fetch(:record_id)).filter(file_id: "new").count == 0 &&
+           db[:hierarchy].filter(child_id: old_record_value.fetch(:record_id)).filter(file_id: "new").count == 0
+          # Already failed the hierarchy check
+          next
         end
 
-        next
-      end
+        matched_row = db[:record_value]
+                        .filter(file_id: "new")
+                        .filter(record_id: old_record_value.fetch(:record_id))
+                        .filter(key: old_record_value.fetch(:key))
+                        .first
 
-      old_value = old_record_value.fetch(:value)
-      new_value = matched_row.fetch(:value)
+        if !matched_row
+          if old_record_value.fetch(:value) != '[]'
+            found_change = true
+            puts "\n--- Record::#{old_record_value.fetch(:record_id)} field missing in #{args.candidate_label}: '#{old_record_value.fetch(:key)}'"
+            puts "+++ Record::#{old_record_value.fetch(:record_id)} (missing)"
+            puts "@@ -1,1 +1,1 @@"
+            puts_truncated("-Sample from #{args.pristine_label}: #{old_record_value.fetch(:value)}")
+            puts_truncated("+(missing from #{args.candidate_label})")
+          end
 
-      if old_value != new_value
-        puts "\n--- Record::#{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
-        puts "+++ Record::#{old_record_value.fetch(:record_id)} (mismatched)"
-        puts "@@ -1,1 +1,1 @@"
-
-        mismatch_char = (0..[old_value.length, new_value.length].min).find {|i| old_value[i] != new_value[i]}
-
-        ellipses = "... "
-
-        context_size = (MAX_WIDTH / 2) - ellipses.length
-
-        context_start = [0, mismatch_char - context_size].max
-
-        old_substring = old_value[context_start...]
-        new_substring = new_value[context_start...]
-
-        offset = context_start
-
-        if context_start > 0
-          old_substring = "#{ellipses}#{old_substring}"
-          new_substring = "#{ellipses}#{new_substring}"
-
-          offset -= ellipses.length
+          next
         end
 
-        puts_truncated("-#{args.pristine_label} snippet:  #{old_substring}")
-        candidate_prefix = "#{args.candidate_label} snippet: "
-        puts_truncated("+#{candidate_prefix}#{new_substring}")
-        puts (" " * candidate_prefix.length ) + (" " * (mismatch_char - offset + 1)) + "^ character #{mismatch_char + 1}"
-      end
-    end
+        old_value = old_record_value.fetch(:value)
+        new_value = matched_row.fetch(:value)
 
-    db[:record_value].filter(file_id: "new").each do |new_record_value|
-      if db[:hierarchy].filter(parent_id: new_record_value.fetch(:record_id)).filter(file_id: "old").count == 0 &&
-         db[:hierarchy].filter(child_id: new_record_value.fetch(:record_id)).filter(file_id: "old").count == 0
-        # Already failed the hierarchy check
-        next
-      end
-
-      matched_row = db[:record_value]
-                      .filter(file_id: "old")
-                      .filter(record_id: new_record_value.fetch(:record_id))
-                      .filter(key: new_record_value.fetch(:key))
-                      .first
-
-      if !matched_row
-        if new_record_value.fetch(:value) != '[]'
-          puts "\n--- Record::#{new_record_value.fetch(:record_id)} (missing)"
-          puts "+++ Record::#{new_record_value.fetch(:record_id)} field missing in #{args.pristine_label}: '#{new_record_value.fetch(:key)}'"
+        if old_value != new_value
+          found_change = true
+          puts "\n--- Record::#{old_record_value.fetch(:record_id)} has mismatch in value for field '#{old_record_value.fetch(:key)}':"
+          puts "+++ Record::#{old_record_value.fetch(:record_id)} (mismatched)"
           puts "@@ -1,1 +1,1 @@"
 
-          puts_truncated("-(missing from #{args.pristine_label}): #{new_record_value.fetch(:value)}")
-          puts_truncated("+Sample from #{args.candidate_label}: #{new_record_value.fetch(:value)}")
+          mismatch_char = (0..[old_value.length, new_value.length].min).find {|i| old_value[i] != new_value[i]}
+
+          ellipses = "... "
+
+          context_size = (MAX_WIDTH / 2) - ellipses.length
+
+          context_start = [0, mismatch_char - context_size].max
+
+          old_substring = old_value[context_start...]
+          new_substring = new_value[context_start...]
+
+          offset = context_start
+
+          if context_start > 0
+            old_substring = "#{ellipses}#{old_substring}"
+            new_substring = "#{ellipses}#{new_substring}"
+
+            offset -= ellipses.length
+          end
+
+          puts_truncated("-#{args.pristine_label} snippet:  #{old_substring}")
+          candidate_prefix = "#{args.candidate_label} snippet: "
+          puts_truncated("+#{candidate_prefix}#{new_substring}")
+          puts (" " * candidate_prefix.length ) + (" " * (mismatch_char - offset + 1)) + "^ character #{mismatch_char + 1}"
+        end
+      end
+
+      db[:record_value].filter(file_id: "new").each do |new_record_value|
+        if db[:hierarchy].filter(parent_id: new_record_value.fetch(:record_id)).filter(file_id: "old").count == 0 &&
+           db[:hierarchy].filter(child_id: new_record_value.fetch(:record_id)).filter(file_id: "old").count == 0
+          # Already failed the hierarchy check
+          next
         end
 
-        next
+        matched_row = db[:record_value]
+                        .filter(file_id: "old")
+                        .filter(record_id: new_record_value.fetch(:record_id))
+                        .filter(key: new_record_value.fetch(:key))
+                        .first
+
+        if !matched_row
+          if new_record_value.fetch(:value) != '[]'
+            found_change = true
+            puts "\n--- Record::#{new_record_value.fetch(:record_id)} (missing)"
+            puts "+++ Record::#{new_record_value.fetch(:record_id)} field missing in #{args.pristine_label}: '#{new_record_value.fetch(:key)}'"
+            puts "@@ -1,1 +1,1 @@"
+
+            puts_truncated("-(missing from #{args.pristine_label}): #{new_record_value.fetch(:value)}")
+            puts_truncated("+Sample from #{args.candidate_label}: #{new_record_value.fetch(:value)}")
+          end
+
+          next
+        end
       end
     end
   end
+
+  found_change
 end
 
 Args = Struct.new(:old_path, :new_path, :pristine_alias, :candidate_alias) do
@@ -295,17 +304,20 @@ def main
   end
 
   if old_path.is_a?(String)
-    compare_files(args, old_path, new_path)
-    exit
+    found_change = compare_files(args, old_path, new_path)
+    exit (found_change ? 1 : 0)
   end
 
   old_paths = old_path.sort_by {|f| File.basename(f)}
   new_paths = new_path.sort_by {|f| File.basename(f)}
 
+  found_change = false
+
   loop do
     break if old_paths.empty? && new_paths.empty?
 
     if old_paths.empty?
+      found_change = true
       new_paths.each do |path|
         puts "\nFile only appeared in #{args.candidate_label} and was not checked: #{path}"
       end
@@ -314,6 +326,7 @@ def main
     end
 
     if new_paths.empty?
+      found_change = true
       old_paths.each do |path|
         puts "\nFile only appeared in #{args.pristine_label} and was not checked: #{path}"
       end
@@ -322,18 +335,21 @@ def main
     end
 
     if File.basename(old_paths[0]) == File.basename(new_paths[0])
-      compare_files(old_paths[0], new_paths[0])
+      found_change |= compare_files(args, old_paths[0], new_paths[0])
       old_paths.shift
       new_paths.shift
     elsif File.basename(old_paths[0]) < File.basename(new_paths[0])
       puts "\nFile only appeared in #{args.pristine_label} and was not checked: #{old_paths[0]}"
+      found_change = true
       old_paths.shift
     else
       puts "\nFile only appeared in #{args.candidate_label} and was not checked: #{new_paths[0]}"
+      found_change = true
       new_paths.shift
     end
   end
 
+  exit (found_change ? 1 : 0)
 end
 
 
