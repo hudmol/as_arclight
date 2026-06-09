@@ -1,0 +1,4599 @@
+{
+  "@context": "http://iiif.io/api/presentation/3/context.json",
+  "provider": [
+    {
+      "id": "https://example.org",
+      "type": "Agent",
+      "label": {
+        "en": [
+          "Test Document"
+        ]
+      },
+      "logo": [
+        {
+          "id": "https://example.org/logo.png",
+          "type": "Image",
+          "format": "image/png"
+        }
+      ]
+    }
+  ],
+  "id": "https://example.org/123/manifest.json",
+  "type": "Manifest",
+  "label": {
+    "en": [
+      "Correspondence and notes, Undated"
+    ]
+  },
+  "metadata": [
+    {
+      "label": {
+        "en": [
+          "resource_type"
+        ]
+      },
+      "value": {
+        "en": [
+          "Document"
+        ]
+      }
+    },
+    {
+      "label": {
+        "en": [
+          "preservation_package"
+        ]
+      },
+      "value": {
+        "en": [
+          "ABC123"
+        ]
+      }
+    },
+    {
+      "label": {
+        "en": [
+          "date_uploaded"
+        ]
+      },
+      "value": {
+        "en": [
+          "2025-09-18T10:11:22.322580-04:00"
+        ]
+      }
+    }
+  ],
+  "requiredStatement": {
+    "label": {
+      "en": [
+        "Attribution"
+      ]
+    },
+    "value": {
+      "en": [
+        "<span>Example attribution</span>"
+      ]
+    }
+  },
+  "rendering": [
+    {
+      "id": "https://example.org/123/content.txt",
+      "type": "Text",
+      "label": {
+        "en": [
+          "Download Text transcription"
+        ]
+      },
+      "format": "text/plain"
+    },
+    {
+      "id": "https://example.org/123/test.pdf",
+      "type": "Text",
+      "label": {
+        "en": [
+          "test.pdf"
+        ]
+      },
+      "format": "application/pdf"
+    }
+  ],
+  "service": [
+    {
+      "id": "https://example.org/search/123",
+      "type": "SearchService",
+      "label": {
+        "en": [
+          "Content Search"
+        ]
+      },
+      "profile": "http://iiif.io/api/search/1/search"
+    }
+  ],
+  "rights": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "behavior": [
+    "individuals"
+  ],
+  "items": [
+    {
+      "id": "https://example.org/123/canvas/p1",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100254.ptif"
+        ]
+      },
+      "height": 4203,
+      "width": 2893,
+      "rendering": [
+        {
+          "id": "https://example.org/123/2025-09-16T100254.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "thumbnail": [
+        {
+          "id": "https://example.org/123/thumbnail.jpg",
+          "type": "Image",
+          "height": 300,
+          "width": 206,
+          "format": "image/jpeg"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p1/1",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100254",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100254.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4203,
+                "width": 2893,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-2025-09-16T100254.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p2",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100314.ptif"
+        ]
+      },
+      "height": 4401,
+      "width": 3392,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100314.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p2/2",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100314",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100314.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4401,
+                "width": 3392,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100314.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p3",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100357.ptif"
+        ]
+      },
+      "height": 4404,
+      "width": 3396,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100357.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p3/3",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100357",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100357.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4404,
+                "width": 3396,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100357.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p4",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100421.ptif"
+        ]
+      },
+      "height": 4391,
+      "width": 3380,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100421.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p4/4",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100421",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100421.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4391,
+                "width": 3380,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100421.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p4"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p5",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100514.ptif"
+        ]
+      },
+      "height": 4383,
+      "width": 3367,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100514.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p5/5",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100514",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100514.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4383,
+                "width": 3367,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100514.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p6",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100618.ptif"
+        ]
+      },
+      "height": 4212,
+      "width": 3179,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100618.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p6/6",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100618",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100618.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4212,
+                "width": 3179,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100618.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p7",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100638.ptif"
+        ]
+      },
+      "height": 4399,
+      "width": 3397,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100638.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p7/7",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100638",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100638.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4399,
+                "width": 3397,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100638.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p8",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100739.ptif"
+        ]
+      },
+      "height": 4023,
+      "width": 3195,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100739.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p8/8",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100739",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100739.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4023,
+                "width": 3195,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100739.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p9",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100758.ptif"
+        ]
+      },
+      "height": 4032,
+      "width": 3197,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100758.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p9/9",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100758",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100758.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4032,
+                "width": 3197,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100758.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p9"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p10",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100816.ptif"
+        ]
+      },
+      "height": 4381,
+      "width": 3364,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100816.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p10/10",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100816",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100816.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4381,
+                "width": 3364,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100816.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p11",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100850.ptif"
+        ]
+      },
+      "height": 4384,
+      "width": 3368,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100850.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p11/11",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100850",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100850.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4384,
+                "width": 3368,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100850.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p11"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p12",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100914.ptif"
+        ]
+      },
+      "height": 4024,
+      "width": 3196,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100914.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p12/12",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100914",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100914.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4024,
+                "width": 3196,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100914.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p12"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p13",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T100954.ptif"
+        ]
+      },
+      "height": 4419,
+      "width": 3416,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T100954.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p13/13",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T100954",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100954.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4419,
+                "width": 3416,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T100954.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p13"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p14",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101015.ptif"
+        ]
+      },
+      "height": 4008,
+      "width": 3189,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101015.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p14/14",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101015",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101015.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4008,
+                "width": 3189,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101015.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p14"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p15",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101039.ptif"
+        ]
+      },
+      "height": 4009,
+      "width": 3189,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101039.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p15/15",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101039",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101039.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4009,
+                "width": 3189,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101039.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p15"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p16",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101108.ptif"
+        ]
+      },
+      "height": 4415,
+      "width": 3420,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101108.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p16/16",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101108",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101108.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4415,
+                "width": 3420,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101108.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p16"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p17",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101129.ptif"
+        ]
+      },
+      "height": 3616,
+      "width": 2395,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101129.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p17/17",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101129",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101129.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3616,
+                "width": 2395,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101129.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p17"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p18",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101147.ptif"
+        ]
+      },
+      "height": 3620,
+      "width": 2395,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101147.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p18/18",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101147",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101147.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3620,
+                "width": 2395,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101147.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p18"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p19",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101206.ptif"
+        ]
+      },
+      "height": 3619,
+      "width": 2396,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101206.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p19/19",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101206",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101206.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3619,
+                "width": 2396,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101206.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p19"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p20",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101226.ptif"
+        ]
+      },
+      "height": 4391,
+      "width": 3375,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101226.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p20/20",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101226",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101226.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4391,
+                "width": 3375,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101226.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p20"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p21",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101306.ptif"
+        ]
+      },
+      "height": 4399,
+      "width": 3371,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101306.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p21/21",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101306",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101306.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4399,
+                "width": 3371,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101306.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p21"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p22",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101613.ptif"
+        ]
+      },
+      "height": 4020,
+      "width": 3207,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101613.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p22/22",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101613",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101613.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4020,
+                "width": 3207,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101613.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p22"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p23",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101631.ptif"
+        ]
+      },
+      "height": 4025,
+      "width": 3205,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101631.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p23/23",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101631",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101631.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4025,
+                "width": 3205,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101631.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p23"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p24",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101705.ptif"
+        ]
+      },
+      "height": 4397,
+      "width": 3391,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101705.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p24/24",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101705",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101705.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4397,
+                "width": 3391,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101705.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p24"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p25",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101743.ptif"
+        ]
+      },
+      "height": 4396,
+      "width": 3361,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101743.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p25/25",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101743",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101743.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4396,
+                "width": 3361,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101743.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p25"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p26",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101810.ptif"
+        ]
+      },
+      "height": 4396,
+      "width": 3375,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101810.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p26/26",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101810",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101810.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4396,
+                "width": 3375,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101810.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p26"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p27",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101852.ptif"
+        ]
+      },
+      "height": 4021,
+      "width": 3211,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101852.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p27/27",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101852",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101852.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4021,
+                "width": 3211,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101852.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p27"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p28",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101913.ptif"
+        ]
+      },
+      "height": 4224,
+      "width": 2915,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101913.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p28/28",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101913",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101913.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4224,
+                "width": 2915,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101913.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p28"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p29",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T101931.ptif"
+        ]
+      },
+      "height": 4228,
+      "width": 2913,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T101931.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p29/29",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T101931",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101931.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4228,
+                "width": 2913,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T101931.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p29"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p30",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102016.ptif"
+        ]
+      },
+      "height": 4403,
+      "width": 3408,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102016.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p30/30",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102016",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102016.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4403,
+                "width": 3408,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102016.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p31",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102035.ptif"
+        ]
+      },
+      "height": 4403,
+      "width": 3388,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102035.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p31/31",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102035",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102035.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4403,
+                "width": 3388,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102035.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p31"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p32",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102112.ptif"
+        ]
+      },
+      "height": 4404,
+      "width": 3385,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102112.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p32/32",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102112",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102112.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4404,
+                "width": 3385,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102112.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p32"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p33",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102133.ptif"
+        ]
+      },
+      "height": 4405,
+      "width": 3380,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102133.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p33/33",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102133",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102133.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4405,
+                "width": 3380,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102133.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p33"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p34",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102156.ptif"
+        ]
+      },
+      "height": 4404,
+      "width": 3395,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102156.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p34/34",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102156",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102156.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4404,
+                "width": 3395,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102156.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p34"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p35",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102226.ptif"
+        ]
+      },
+      "height": 4405,
+      "width": 3388,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102226.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p35/35",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102226",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102226.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4405,
+                "width": 3388,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102226.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p35"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p36",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102311.ptif"
+        ]
+      },
+      "height": 1109,
+      "width": 2504,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102311.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p36/36",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102311",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102311.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 1109,
+                "width": 2504,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102311.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p36"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p37",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102341.ptif"
+        ]
+      },
+      "height": 4400,
+      "width": 3368,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102341.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p37/37",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102341",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102341.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4400,
+                "width": 3368,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102341.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p37"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p38",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102406.ptif"
+        ]
+      },
+      "height": 4387,
+      "width": 3369,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102406.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p38/38",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102406",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102406.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4387,
+                "width": 3369,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102406.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p38"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p39",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102433.ptif"
+        ]
+      },
+      "height": 4400,
+      "width": 3357,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102433.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p39/39",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102433",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102433.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4400,
+                "width": 3357,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102433.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p39"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p40",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102454.ptif"
+        ]
+      },
+      "height": 4404,
+      "width": 3389,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102454.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p40/40",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102454",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102454.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4404,
+                "width": 3389,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102454.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p40"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p41",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102515.ptif"
+        ]
+      },
+      "height": 4025,
+      "width": 3193,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102515.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p41/41",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102515",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102515.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4025,
+                "width": 3193,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102515.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p41"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p42",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102534.ptif"
+        ]
+      },
+      "height": 4028,
+      "width": 3195,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102534.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p42/42",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102534",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102534.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4028,
+                "width": 3195,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102534.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p42"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p43",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102556.ptif"
+        ]
+      },
+      "height": 4011,
+      "width": 3188,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102556.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p43/43",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102556",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102556.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4011,
+                "width": 3188,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102556.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p43"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p44",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102630.ptif"
+        ]
+      },
+      "height": 3945,
+      "width": 3201,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102630.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p44/44",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102630",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102630.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3945,
+                "width": 3201,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102630.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p44"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p45",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102654.ptif"
+        ]
+      },
+      "height": 3948,
+      "width": 3201,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102654.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p45/45",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102654",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102654.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3948,
+                "width": 3201,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102654.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p45"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p46",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102718.ptif"
+        ]
+      },
+      "height": 4408,
+      "width": 3393,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102718.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p46/46",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102718",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102718.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4408,
+                "width": 3393,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102718.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p46"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p47",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102742.ptif"
+        ]
+      },
+      "height": 4409,
+      "width": 3395,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102742.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p47/47",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102742",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102742.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4409,
+                "width": 3395,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102742.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p47"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p48",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102804.ptif"
+        ]
+      },
+      "height": 4409,
+      "width": 3340,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102804.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p48/48",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102804",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102804.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4409,
+                "width": 3340,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102804.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p48"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p49",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102844 0001.ptif"
+        ]
+      },
+      "height": 4487,
+      "width": 3309,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102844%200001.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p49/49",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102844%200001",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200001.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4487,
+                "width": 3309,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200001.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p49"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p50",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102844 0002.ptif"
+        ]
+      },
+      "height": 4511,
+      "width": 3276,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102844%200002.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p50/50",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102844%200002",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200002.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4511,
+                "width": 3276,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200002.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p50"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p51",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102844 0003.ptif"
+        ]
+      },
+      "height": 4485,
+      "width": 3312,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102844%200003.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p51/51",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102844%200003",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200003.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4485,
+                "width": 3312,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200003.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p51"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p52",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102844 0004.ptif"
+        ]
+      },
+      "height": 4484,
+      "width": 3324,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102844%200004.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p52/52",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102844%200004",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200004.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4484,
+                "width": 3324,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102844%200004.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p52"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p53",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102936 0001.ptif"
+        ]
+      },
+      "height": 4208,
+      "width": 3177,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102936%200001.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p53/53",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102936%200001",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102936%200001.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4208,
+                "width": 3177,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102936%200001.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p53"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p54",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102936 0002.ptif"
+        ]
+      },
+      "height": 4225,
+      "width": 3173,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102936%200002.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p54/54",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102936%200002",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102936%200002.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4225,
+                "width": 3173,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102936%200002.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p54"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p55",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T102936 0003.ptif"
+        ]
+      },
+      "height": 4220,
+      "width": 3179,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T102936%200003.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p55/55",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T102936%200003",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102936%200003.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4220,
+                "width": 3179,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T102936%200003.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p55"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p56",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103029.ptif"
+        ]
+      },
+      "height": 4212,
+      "width": 3145,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103029.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p56/56",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103029",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103029.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4212,
+                "width": 3145,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103029.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p56"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p57",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103049.ptif"
+        ]
+      },
+      "height": 4209,
+      "width": 3148,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103049.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p57/57",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103049",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103049.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4209,
+                "width": 3148,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103049.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p57"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p58",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103110.ptif"
+        ]
+      },
+      "height": 4213,
+      "width": 3149,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103110.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p58/58",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103110",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103110.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4213,
+                "width": 3149,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103110.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p58"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p59",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0001.ptif"
+        ]
+      },
+      "height": 4220,
+      "width": 3201,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200001.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p59/59",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200001",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200001.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4220,
+                "width": 3201,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200001.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p59"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p60",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0002.ptif"
+        ]
+      },
+      "height": 4219,
+      "width": 3203,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200002.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p60/60",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200002",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200002.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4219,
+                "width": 3203,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200002.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p60"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p61",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0003.ptif"
+        ]
+      },
+      "height": 4023,
+      "width": 3193,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200003.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p61/61",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200003",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200003.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4023,
+                "width": 3193,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200003.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p61"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p62",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0004.ptif"
+        ]
+      },
+      "height": 4020,
+      "width": 3189,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200004.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p62/62",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200004",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200004.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4020,
+                "width": 3189,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200004.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p62"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p63",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0005.ptif"
+        ]
+      },
+      "height": 4020,
+      "width": 3193,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200005.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p63/63",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200005",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200005.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4020,
+                "width": 3193,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200005.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p63"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p64",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0006.ptif"
+        ]
+      },
+      "height": 4023,
+      "width": 3196,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200006.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p64/64",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200006",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200006.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4023,
+                "width": 3196,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200006.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p64"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p65",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0007.ptif"
+        ]
+      },
+      "height": 4019,
+      "width": 3195,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200007.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p65/65",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200007",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200007.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4019,
+                "width": 3195,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200007.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p65"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p66",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103143 0008.ptif"
+        ]
+      },
+      "height": 4024,
+      "width": 3180,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103143%200008.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p66/66",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103143%200008",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200008.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4024,
+                "width": 3180,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103143%200008.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p66"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p67",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103244.ptif"
+        ]
+      },
+      "height": 4495,
+      "width": 3308,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103244.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p67/67",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103244",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103244.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4495,
+                "width": 3308,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103244.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p67"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p68",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103310 0001.ptif"
+        ]
+      },
+      "height": 4013,
+      "width": 3184,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103310%200001.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p68/68",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103310%200001",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200001.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4013,
+                "width": 3184,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200001.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p68"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p69",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103310 0002.ptif"
+        ]
+      },
+      "height": 4011,
+      "width": 3184,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103310%200002.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p69/69",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103310%200002",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200002.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4011,
+                "width": 3184,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200002.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p69"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p70",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103310 0003.ptif"
+        ]
+      },
+      "height": 4011,
+      "width": 3189,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103310%200003.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p70/70",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103310%200003",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200003.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4011,
+                "width": 3189,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200003.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p70"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p71",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103310 0004.ptif"
+        ]
+      },
+      "height": 4020,
+      "width": 3180,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103310%200004.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p71/71",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103310%200004",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200004.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4020,
+                "width": 3180,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200004.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p71"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p72",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103310 0005.ptif"
+        ]
+      },
+      "height": 4011,
+      "width": 3185,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103310%200005.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p72/72",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103310%200005",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200005.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4011,
+                "width": 3185,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200005.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p72"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p73",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103310 0006.ptif"
+        ]
+      },
+      "height": 4009,
+      "width": 3193,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103310%200006.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p73/73",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103310%200006",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200006.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4009,
+                "width": 3193,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103310%200006.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p73"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p74",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103352.ptif"
+        ]
+      },
+      "height": 3405,
+      "width": 2208,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103352.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p74/74",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103352",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103352.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3405,
+                "width": 2208,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103352.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p74"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p75",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103410.ptif"
+        ]
+      },
+      "height": 3403,
+      "width": 2207,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103410.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p75/75",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103410",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103410.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 3403,
+                "width": 2207,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103410.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p75"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p76",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103432.ptif"
+        ]
+      },
+      "height": 4428,
+      "width": 3344,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103432.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p76/76",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103432",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103432.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4428,
+                "width": 3344,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103432.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p76"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p77",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103455.ptif"
+        ]
+      },
+      "height": 4439,
+      "width": 3428,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103455.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p77/77",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103455",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103455.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4439,
+                "width": 3428,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103455.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p77"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p78",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103621.ptif"
+        ]
+      },
+      "height": 4383,
+      "width": 3365,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103621.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p78/78",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103621",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103621.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4383,
+                "width": 3365,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103621.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p78"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p79",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103649.ptif"
+        ]
+      },
+      "height": 4401,
+      "width": 3369,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103649.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p79/79",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103649",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103649.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4401,
+                "width": 3369,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103649.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p79"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p80",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103709.ptif"
+        ]
+      },
+      "height": 4008,
+      "width": 3184,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103709.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p80/80",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103709",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103709.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4008,
+                "width": 3184,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103709.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p80"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p81",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103741 0001.ptif"
+        ]
+      },
+      "height": 4489,
+      "width": 3277,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103741%200001.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p81/81",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103741%200001",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200001.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4489,
+                "width": 3277,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200001.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p81"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p82",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103741 0002.ptif"
+        ]
+      },
+      "height": 4485,
+      "width": 3269,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103741%200002.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p82/82",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103741%200002",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200002.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4485,
+                "width": 3269,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200002.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p82"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p83",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103741 0003.ptif"
+        ]
+      },
+      "height": 4493,
+      "width": 3257,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103741%200003.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p83/83",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103741%200003",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200003.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4493,
+                "width": 3257,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200003.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p83"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p84",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103741 0004.ptif"
+        ]
+      },
+      "height": 4496,
+      "width": 3257,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103741%200004.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p84/84",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103741%200004",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200004.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4496,
+                "width": 3257,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103741%200004.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p84"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p85",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103838 0001.ptif"
+        ]
+      },
+      "height": 4021,
+      "width": 3205,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103838%200001.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p85/85",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103838%200001",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103838%200001.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4021,
+                "width": 3205,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103838%200001.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p85"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/123/canvas/p86",
+      "type": "Canvas",
+      "label": {
+        "en": [
+          "2025-09-16T103838 0002.ptif"
+        ]
+      },
+      "height": 4025,
+      "width": 3207,
+      "rendering": [
+        {
+          "id": "https://example.org/123/hocr/2025-09-16T103838%200002.hocr",
+          "type": "Text",
+          "label": {
+            "en": [
+              "HOCR data (OCR)"
+            ]
+          },
+          "format": "text/vnd.hocr+html",
+          "profile": "http://kba.cloud/hocr-spec/1.2/"
+        }
+      ],
+      "items": [
+        {
+          "id": "https://example.org/123/page/p86/86",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/123/annotation/2025-09-16T103838%200002",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103838%200002.ptif/full/max/0/default.jpg",
+                "type": "Image",
+                "height": 4025,
+                "width": 3207,
+                "service": [
+                  {
+                    "id": "https://example.org/iiif/3/123-ptif%2F2025-09-16T103838%200002.ptif",
+                    "type": "ImageService3",
+                    "profile": "level1"
+                  }
+                ],
+                "format": "image/tiff"
+              },
+              "target": "https://example.org/123/canvas/p86"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
