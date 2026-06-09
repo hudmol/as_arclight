@@ -79,6 +79,10 @@ class IIIFClient
         CacheEntry.new(uri.to_s, json, Time.now.to_i)
       end
 
+      def close
+        @connection.close
+      end
+
       private
 
       def compress(string)
@@ -128,10 +132,6 @@ class IIIFClient
 
           stmt.execute_update("CREATE INDEX IF NOT EXISTS idx_cache_expiration_time ON cache (expiration_time)")
         end
-      end
-
-      def close
-        @connection.close
       end
     end
 
