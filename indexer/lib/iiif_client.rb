@@ -39,7 +39,7 @@ class IIIFClient
 
       if json.fetch('@context').to_s =~ %r{/3/}
         iiif_version = 3
-      elsif json.fetch('@context').to_s =~ %r{/2/} || json.fetch('@type').to_s.downcase == 'sc:manifest'
+      elsif json.fetch('@context').to_s =~ %r{/2/} || json.fetch('@type', '').to_s.downcase == 'sc:manifest'
         iiif_version = 2
       else
         raise Errors::UnknownManifestVersion.new
