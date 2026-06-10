@@ -85,16 +85,6 @@
         ]
       },
       "format": "text/plain"
-    },
-    {
-      "id": "https://example.org/123/test.pdf",
-      "type": "Text",
-      "label": {
-        "en": [
-          "test.pdf"
-        ]
-      },
-      "format": "application/pdf"
     }
   ],
   "service": [

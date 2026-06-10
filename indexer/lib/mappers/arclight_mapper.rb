@@ -93,7 +93,7 @@ module Arclight
         'odd' => 'multipart'
       }.each do |note, type|
 
-        if @json['notes'].find{|n| n['type'] == note && n['publish']}
+        if ASUtils.wrap(@json['notes']).find{|n| n['type'] == note && n['publish']}
           map_field("#{note}_heading_ssm",  [I18n.t('enumerations._note_types.' + note)])
 
           if type == 'multipart'

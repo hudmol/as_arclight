@@ -1,0 +1,3 @@
+This is content from the text file.
+
+This is a test of the IIIF content. This content is meant to be used in testing the IIIF manifest generation and parsing functionality. The content includes various elements that are commonly found in IIIF manifests, such as metadata, annotations, and image resources.

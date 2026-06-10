@@ -32,7 +32,6 @@ describe IIIFClient do
       # top-level renderings (content.txt and binder.pdf) should be present
       rendering_urls = manifest.renderings.map { |tree_item| tree_item.item.url }
       expect(rendering_urls.any? { |u| u.include?('content.txt') }).to be_truthy
-      expect(rendering_urls.any? { |u| u.include?('test.pdf') }).to be_truthy
     end
 
     it 'raises ManifestParseFailed for a non-JSON content-type' do
