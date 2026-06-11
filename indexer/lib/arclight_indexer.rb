@@ -310,15 +310,15 @@ class ArclightIndexer < PeriodicIndexer
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
-    fetched_resource_records =
-      fetch_records(:resource,
-                    @db[:resource].select_map(:uri).map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
-                    Arclight::Mapper.resource_mapper.resolves)
-        .map {|json| [json.uri, json.to_hash(:trusted)]}
-        .to_h
 
-    @db[:resource].select_map(:uri).each do |resource_uri|
-      resource_json = fetched_resource_records.fetch(resource_uri)
+    fetch_records(:resource,
+                  @db[:resource].select_map(:uri).map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
+                  Arclight::Mapper.resource_mapper.resolves)
+      .each do |resource|
+
+      resource_uri = resource.uri
+      resource_json = resource.to_hash(:trusted)
+
       resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
       mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
