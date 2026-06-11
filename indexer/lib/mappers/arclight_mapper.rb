@@ -150,7 +150,7 @@ module Arclight
     end
 
     def format_date(date)
-      date['expression'] || (date['begin'][0,4] + (date['end'] ? "-#{date['end'][0,4]}" : ''))
+      date['expression'] || ((date['begin'] ? date['begin'][0,4] : '') + (date['end'] ? "-#{date['end'][0,4]}" : ''))
     end
 
     def json
