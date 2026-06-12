@@ -149,15 +149,32 @@ module Arclight
       end
     end
 
+    def find_year_bounds(date)
+      if date['begin'] || date['end']
+        [date.fetch('begin', date['end'])[0,4], date.fetch('end', date['begin'])[0,4]]
+      else
+        [nil, nil]
+      end
+    end
+
     def format_date(date)
-      date['expression'] || ((date['begin'] ? date['begin'][0,4] : '') + (date['end'] ? "-#{date['end'][0,4]}" : ''))
+      if date['expression']
+        date['expression']
+      else
+        begin_year, end_year = find_year_bounds(date)
+        if begin_year
+          [begin_year, end_year].uniq.join('-')
+        else
+          # this case can't happen - dates need at least one of: expression, begin or end
+          ''
+        end
+      end
     end
 
     def format_date_range(dates)
       dates.map{|d|
-        if d['begin'] || d['end']
-          begin_year = d.fetch('begin', d['end'])[0,4]
-          end_year = d.fetch('end', d['begin'])[0,4]
+        begin_year, end_year = find_year_bounds(d)
+        if begin_year
           (begin_year..end_year).to_a
         else
           nil
