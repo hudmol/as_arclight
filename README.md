@@ -48,8 +48,14 @@ ArchivesSpace's data directory.
 ## Configuration
 
 Required configuration:
-*  AppConfig[:as_arclight_solr_url]
-    - The URL of an Arclight Solr instance, or an array of Solr URLs
+*  AppConfig[:as_arclight_solr_targets]
+    - An array of hashes containing the definitions of Solr instances to target.
+      Each hash must have a :url key containing the URL of the Solr instance.
+      A definition may also optionally include:
+        - :label - a name for the instance. This will appear in the logs in place of the url
+        - :user - the username for basic authentication
+        - :pass - the password for basic authentication
+
 *  AppConfig[:as_arclight_indexing_frequency_seconds]
     - Number of seconds to wait between indexing runs
 
@@ -81,8 +87,24 @@ Optional configuration:
 
 Example minimal configuration:
 ```
-    AppConfig[:as_arclight_solr_url] = "http://localhost:8983/solr/blacklight-core"
+    AppConfig[:as_arclight_solr_targets] = [{:url => "http://localhost:8983/solr/blacklight-core"}]
     AppConfig[:as_arclight_indexing_frequency_seconds] = 30
+```
+
+Example target configuration including as label and basic authentication:
+```
+    AppConfig[:as_arclight_solr_targets] = [
+        {
+            :label => 'Minimal Solr target',
+            :url => "http://localhost:8983/solr/blacklight-core"
+        },
+        {
+            :label => 'Solr target with label and basic auth',
+            :url => "http://authenticated_solr_host.com:8983/solr/blacklight-core",
+            :user => 'solr',
+            :pass => 'SolrRocks'
+        }
+    ]
 ```
 
 The plugin will check the configuration on start up and raise an exception if

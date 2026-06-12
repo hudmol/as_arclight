@@ -9,27 +9,89 @@ class ArclightIndexer < PeriodicIndexer
     attr_accessor :data_dir
   end
 
-  # some fancy footwork to support multiple solr_urls
-  # the send_commit method takes no arguments and sends the commit
-  # to whatever #solr_url returns, so we need to make sure we get the
-  # solr_url we are currently working with
-  def run_for_solr_url(solr_url, &block)
-    begin
-      Thread.current[:arclight_indexer_solr_url_override] = solr_url
-      block.call
-    ensure
-      Thread.current[:arclight_indexer_solr_url_override] = nil
+  SolrTarget = Struct.new(:url, :label, :user, :pass) do
+    def parsed_url
+      @parsed_url ||= URI.parse(url)
+    end
+
+    def name
+      label || url
+    end
+
+    def basic_auth_enabled?
+      user && pass
     end
   end
 
+  def solr_targets
+    @targets ||= AppConfig[:as_arclight_solr_targets].map do |target|
+      SolrTarget.new(target[:url],
+                     target[:label],
+                     target[:user],
+                     target[:pass])
+    end
+  end
+
+  # #send_commit calls #solr_url which, by default, returns the AS solr url
+  # so we need to override it so that it returns our current solr url - see #run_for_target
   # solr_url is sometimes called when our override isn't set
   # if that is the case, then just return the first one
   def solr_url
-    Thread.current[:arclight_indexer_solr_url_override] || self.solr_urls.first
+    Thread.current[:arclight_indexer_solr_url_override] || solr_targets.first.parsed_url
   end
 
-  def solr_urls
-    [AppConfig[:as_arclight_solr_url]].flatten.map{|url| URI.parse(url)}
+  # overriding to get a hook to set basic auth on a send_commit call
+  def do_http_request(url, req)
+    # only set the AS session header if we're not talking to Solr
+    unless Thread.current[:arclight_indexer_solr_url_override]
+      req['X-ArchivesSpace-Session'] = @current_session
+    end
+
+    if Thread.current[:arclight_indexer_solr_username] && Thread.current[:arclight_indexer_solr_password]
+      req.basic_auth(Thread.current[:arclight_indexer_solr_username], Thread.current[:arclight_indexer_solr_password])
+    end
+
+    opts = {
+      :read_timeout => AppConfig[:indexer_solr_timeout_seconds].to_i
+    }
+
+    ASHTTP.start_uri(url, opts) do |http|
+      http.request(req)
+    end
+  rescue Timeout::Error
+    FakeSolrTimeoutResponse.new(req)
+  end
+
+  def request_for_target(target)
+    req = Net::HTTP::Post.new("#{target.parsed_url.path}/update")
+    req['Content-Type'] = 'application/json'
+
+    if target.basic_auth_enabled?
+      req.basic_auth(target.user, target.pass)
+    end
+
+    req
+  end
+
+  # some fancy footwork to support multiple solr targets
+  # the send_commit method takes no arguments and sends the commit
+  # to whatever #solr_url returns, so we need to make sure we get the
+  # solr_url we are currently working with
+  # this also allows us to set basic auth creds - see #do_http_request override above
+  def run_for_target(target, &block)
+    begin
+      Thread.current[:arclight_indexer_solr_url_override] = target.parsed_url
+      if target.basic_auth_enabled?
+        Thread.current[:arclight_indexer_solr_username] = target.user
+        Thread.current[:arclight_indexer_solr_password] = target.pass
+      end
+
+      block.call
+    ensure
+      Thread.current[:arclight_indexer_solr_url_override] = nil
+      Thread.current[:arclight_indexer_solr_username] = nil
+      Thread.current[:arclight_indexer_solr_password] = nil
+    end
   end
 
   ARCLIGHT_RESOLVES = AppConfig[:record_inheritance_resolves]
@@ -269,22 +331,21 @@ class ArclightIndexer < PeriodicIndexer
       File.rename(output_file + ".tmp", output_file)
     end
 
-    Log.debug "as_arclight plugin: Dump complete, sending to Solrs ..."
+    Log.debug "as_arclight plugin: Dump complete, sending to Solr targets ..."
 
     begin
-      solr_urls.each do |solr_url|
-        req = Net::HTTP::Post.new("#{solr_url.path}/update")
-        req['Content-Type'] = 'application/json'
+      solr_targets.each do |target|
+        req = request_for_target(target)
         req['Content-Length'] = File.size(temp_file_path)
 
         stream = File.open(temp_file_path, "rb")
 
         begin
           req.body_stream = stream
-          resp = do_http_request(solr_url, req)
+          resp = do_http_request(target.parsed_url, req)
 
           unless resp.code == '200'
-            Log.error "as_arclight plugin: Error when streaming doc for #{uri} to #{solr_url}: #{resp.body}"
+            Log.error "as_arclight plugin: Error when streaming doc for #{uri} to #{target.name}: #{resp.body}"
             next
           end
         ensure
@@ -292,13 +353,13 @@ class ArclightIndexer < PeriodicIndexer
         end
 
         if resp.code == '200'
-          run_for_solr_url(solr_url) do
+          run_for_target(target) do
             send_commit
           end
 
-          log "Indexed #{uri} to #{solr_url}"
+          log "Indexed #{uri} to #{target.name}"
         else
-          Log.error "as_arclight plugin: Error commiting index doc for #{uri} to #{solr_url}: #{resp.body}"
+          Log.error "as_arclight plugin: Error commiting index doc for #{uri} to #{target.name}: #{resp.body}"
         end
       end
     ensure
@@ -341,23 +402,22 @@ class ArclightIndexer < PeriodicIndexer
       else
         Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published"
 
-        solr_urls.each do |solr_url|
-          req = Net::HTTP::Post.new("#{solr_url.path}/update")
-          req['Content-Type'] = 'application/json'
+        solr_targets.each do |target|
+          req = request_for_target(target)
           delete_json = {'delete' => {'id' => mapper.doc_id}}.to_json
           req['Content-Length'] = delete_json.length
           req.body = delete_json
-          resp = do_http_request(solr_url, req)
+          resp = do_http_request(target.parsed_url, req)
 
           if resp.code == '200'
-            run_for_solr_url(solr_url) do
+            run_for_target(target) do
               send_commit
             end
 
-            log "Deleted #{resource_uri} from #{solr_url}"
+            log "Deleted #{resource_uri} from #{target.name}"
             deleted_count += 1
           else
-            Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{solr_url}: #{resp.body}"
+            Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{target.name}: #{resp.body}"
           end
         end
       end
@@ -375,20 +435,19 @@ class ArclightIndexer < PeriodicIndexer
     updated_repositories.each do |repository|
 
       if !repository['record']['publish']
-        solr_urls.each do |solr_url|
-          req = Net::HTTP::Post.new("#{solr_url.path}/update")
-          req['Content-Type'] = 'application/json'
+        solr_targets.each do |target|
+          req = request_for_target(target)
 
           delete_request = {:delete => {'query' => "repository_ssim:\"#{repository['record']['name']}\""}}
           req.body = delete_request.to_json
-          response = do_http_request(solr_url, req)
+          response = do_http_request(target.parsed_url, req)
           if response.code == '200'
-            run_for_solr_url(solr_url) do
+            run_for_target(target) do
               send_commit
             end
-            log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{solr_url}"
+            log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
           else
-            Log.error "as_arclight plugin: failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{solr_url}: #{response.body}"
+            Log.error "as_arclight plugin: failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{target.name}: #{response.body}"
           end
         end
       end

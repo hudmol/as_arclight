@@ -151,39 +151,38 @@ describe 'ArclightIndexer' do
   end
 
   describe '#solr_url' do
+    let(:target_a) { ArclightIndexer::SolrTarget.new('http://solr-a.example/core') }
+    let(:target_b) { ArclightIndexer::SolrTarget.new('http://solr-b.example/core') }
+
     before(:each) do
-      allow(indexer).to receive(:solr_urls).and_return([
-                                                         URI.parse('http://solr-a.example/core'),
-                                                         URI.parse('http://solr-b.example/core')
-                                                       ])
+      allow(indexer).to receive(:solr_targets).and_return([ target_a, target_b ])
     end
 
     it 'returns the first configured solr_url when no override is set' do
-      expect(indexer.solr_url.to_s).to eq('http://solr-a.example/core')
+      expect(indexer.solr_url.to_s).to eq(target_a.url)
     end
 
-    it 'returns the override inside a run_for_solr_url block' do
-      override = URI.parse('http://solr-b.example/core')
-      indexer.run_for_solr_url(override) do
-        expect(indexer.solr_url.to_s).to eq('http://solr-b.example/core')
+    it 'returns the override inside a run_for_target block' do
+      indexer.run_for_target(target_b) do
+        expect(indexer.solr_url.to_s).to eq(target_b.url)
       end
     end
 
-    it 'clears the override after run_for_solr_url completes' do
-      indexer.run_for_solr_url(URI.parse('http://solr-b.example/core')) do
+    it 'clears the override after run_for_target completes' do
+      indexer.run_for_target(target_b) do
       end
 
-      expect(indexer.solr_url.to_s).to eq('http://solr-a.example/core')
+      expect(indexer.solr_url.to_s).to eq(target_a.url)
     end
 
     it 'clears the override even if the block raises' do
       expect {
-        indexer.run_for_solr_url(URI.parse('http://solr-b.example/core')) do
+        indexer.run_for_target(target_b) do
           raise 'boom'
         end
       }.to raise_error('boom')
 
-      expect(indexer.solr_url.to_s).to eq('http://solr-a.example/core')
+      expect(indexer.solr_url.to_s).to eq(target_a.url)
     end
   end
 end

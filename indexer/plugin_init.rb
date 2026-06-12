@@ -5,8 +5,18 @@ require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar
 # config check
 bad = []
 
-unless AppConfig.has_key?(:as_arclight_solr_url)
-  bad.push("as_arclight plugin requires AppConfig[:as_arclight_solr_url] to be set. Example: http://localhost:8983/solr/blacklight-core")
+if AppConfig.has_key?(:as_arclight_solr_targets)
+  if AppConfig[:as_arclight_solr_targets].is_a?(Array)
+    AppConfig[:as_arclight_solr_targets].each_with_index do |target, ix|
+      unless target.has_key?(:url)
+        bad.push("as_arclight plugin requires each target definition to include a url. Target #{ix + 1} lacks one.")
+      end
+    end
+  else
+    bad.push("as_arclight plugin requires AppConfig[:as_arclight_solr_targets] to be an array of hashes containing target configurations")
+  end
+else
+  bad.push("as_arclight plugin requires AppConfig[:as_arclight_solr_targets] to be set. Minimal example: [{:url => 'http://localhost:8983/solr/blacklight-core'}]")
 end
 
 unless AppConfig.has_key?(:as_arclight_indexing_frequency_seconds)
