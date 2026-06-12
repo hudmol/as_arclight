@@ -153,6 +153,18 @@ module Arclight
       date['expression'] || ((date['begin'] ? date['begin'][0,4] : '') + (date['end'] ? "-#{date['end'][0,4]}" : ''))
     end
 
+    def format_date_range(dates)
+      dates.map{|d|
+        if d['begin'] || d['end']
+          begin_year = d.fetch('begin', d['end'])[0,4]
+          end_year = d.fetch('end', d['begin'])[0,4]
+          (begin_year..end_year).to_a
+        else
+          nil
+        end
+      }.flatten.compact.sort.uniq
+    end
+
     def json
       @map.to_json
     end

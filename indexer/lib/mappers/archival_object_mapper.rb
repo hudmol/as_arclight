@@ -97,7 +97,8 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
                                                               .map{|n| n['subnotes'].select{|s| s['publish']}
                                                               .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")})
 
-    map_field('date_range_isim',             resource['dates'].map{|d| (d['begin'][0,4]..(d['end'] || d['begin'])[0,4]).to_a}.flatten.uniq)
+    map_field('date_range_isim',             format_date_range(@json['dates']))
+
     map_field('normalized_date_ssm',         @map['date_range_isim'].length == 1 ? @map['date_range_isim'].first : [@map['date_range_isim'].first, @map['date_range_isim'].last].join('-'))
 
     map_field('containers_ssim',             @json['instances'].select{|i| i['sub_container']}

@@ -53,15 +53,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('geogname_ssm',           @map['geogname_ssim'])
     map_field('places_ssim',            @map['geogname_ssim'])
 
-    map_field('date_range_isim',        @json['dates'].map{|d|
-                                                             if d['begin'] || d['end']
-                                                               begin_year = d.fetch('begin', d['end'])[0,4]
-                                                               end_year = d.fetch('end', d['begin'])[0,4]
-                                                               (begin_year..end_year).to_a
-                                                             else
-                                                               nil
-                                                             end
-                                                           }.flatten.compact.sort.uniq)
+    map_field('date_range_isim',        format_date_range(@json['dates']))
 
     map_field('names_coll_ssim',        @json['linked_agents'].map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('names_ssim',             @json['linked_agents'].map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
