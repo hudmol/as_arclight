@@ -6,6 +6,7 @@ require 'simplecov'
 SimpleCov.start do
   root File.absolute_path(File.join(File.dirname(__FILE__), ".."))
   add_filter '/spec/'
+  add_filter 'indexer/plugin_init.rb'
 end
 
 FileUtils.mkdir_p(ENV['APPCONFIG_DATA_DIRECTORY'] = '/tmp/as_arclight_test_data')
