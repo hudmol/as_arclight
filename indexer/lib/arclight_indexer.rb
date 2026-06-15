@@ -164,6 +164,12 @@ class ArclightIndexer < PeriodicIndexer
 
   def flag_for_indexing(*uris)
     uris.each do |uri|
+      # make sure uri is a ref to a resource
+      parsed_ref = JSONModel.parse_reference(uri)
+      unless parsed_ref && parsed_ref[:type] == 'resource'
+        next
+      end
+
       begin
         @db[:resource].insert(:uri => uri)
       rescue Sequel::UniqueConstraintViolation
@@ -190,7 +196,7 @@ class ArclightIndexer < PeriodicIndexer
         elsif reference[:type] == 'archival_object'
           flag_for_indexing(record['record']['resource']['ref'])
         elsif reference[:type] == 'top_container'
-          flag_for_indexing(*(record['record']['collection'].map{|c| c['ref']}))
+          flag_for_indexing(*(record['record']['collection'].map{|c| c['ref']}.select{|ref| JSONModel.parse_reference(ref)[:type] == 'resource'}))
         end
       else
         Log.error "as_arclight plugin: Indexer couldn't parse uri #{record['uri']}"
