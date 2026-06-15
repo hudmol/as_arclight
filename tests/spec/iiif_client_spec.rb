@@ -148,9 +148,9 @@ describe IIIFClient do
       expect(results.first.error).to be_a(IIIFClient::Errors::HTTPError)
     end
 
-    it 'honours the charset declared in the content-type header' do
+    it 'honors the charset declared in the content-type header' do
       r = rendering('Text', 'text/plain', 'http://example/c.txt')
-      body = (+"caf\xe9")  # raw latin-1 bytes, unfrozen so force_encoding can mutate it
+      body = "caf\xe9"
       response = IIIFClient::HTTPResponse.new('200', { 'content-type' => ['text/plain; charset=ISO-8859-1'] }, body)
       allow(client).to receive(:fetch_url).and_return(response)
 
