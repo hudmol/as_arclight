@@ -1,3 +1,5 @@
+require 'stringio'
+
 describe 'ArclightIndexer' do
   before(:all) do
     mock_enum_source = Object.new.tap do |o|
@@ -183,6 +185,342 @@ describe 'ArclightIndexer' do
       }.to raise_error('boom')
 
       expect(indexer.solr_url.to_s).to eq(target_a.url)
+    end
+  end
+
+  describe 'Solr authentication' do
+    let(:auth_target) { ArclightIndexer::SolrTarget.new('http://solr.example/core', 'Solr', 'user', 'secret') }
+    let(:noauth_target) { ArclightIndexer::SolrTarget.new('http://solr.example/core') }
+
+    describe ArclightIndexer::SolrTarget do
+      it 'reports basic auth enabled only when both user and pass are present' do
+        expect(auth_target.basic_auth_enabled?).to be_truthy
+        expect(noauth_target.basic_auth_enabled?).to be_falsey
+        expect(ArclightIndexer::SolrTarget.new('http://x', 'l', 'user', nil).basic_auth_enabled?).to be_falsey
+        expect(ArclightIndexer::SolrTarget.new('http://x', 'l', nil, 'pass').basic_auth_enabled?).to be_falsey
+      end
+
+      it 'uses the label as its name, falling back to the url' do
+        expect(auth_target.name).to eq('Solr')
+        expect(noauth_target.name).to eq('http://solr.example/core')
+      end
+    end
+
+    describe '#request_for_target' do
+      it 'posts to the /update path with a JSON content type and no auth by default' do
+        req = indexer.request_for_target(noauth_target)
+
+        expect(req.path).to eq('/core/update')
+        expect(req['Content-Type']).to eq('application/json')
+        expect(req['Authorization']).to be_nil
+      end
+
+      it 'adds basic auth when the target has credentials' do
+        req = indexer.request_for_target(auth_target)
+
+        expect(req['Authorization']).to eq('Basic ' + Base64.strict_encode64('user:secret'))
+      end
+    end
+
+    describe '#do_http_request' do
+      before(:each) do
+        # The shared before(:each) stubs do_http_request entirely; here we want the real thing.
+        allow(indexer).to receive(:do_http_request).and_call_original
+        stub_const('ASHTTP', double('ASHTTP'))
+        allow(ASHTTP).to receive(:start_uri).and_return(double('response', code: '200'))
+      end
+
+      it 'applies the basic auth credentials set up by run_for_target' do
+        req = Net::HTTP::Post.new('/core/update')
+
+        indexer.run_for_target(auth_target) do
+          indexer.do_http_request(auth_target.parsed_url, req)
+        end
+
+        expect(req['Authorization']).to eq('Basic ' + Base64.strict_encode64('user:secret'))
+        # talking to Solr, so the AS session header should not be set
+        expect(req['X-ArchivesSpace-Session']).to be_nil
+      end
+
+      it 'sets the AS session header (and no basic auth) when no solr override is active' do
+        indexer.instance_variable_set(:@current_session, 'session-token')
+        req = Net::HTTP::Post.new('/core/update')
+
+        indexer.do_http_request(noauth_target.parsed_url, req)
+
+        expect(req['X-ArchivesSpace-Session']).to eq('session-token')
+        expect(req['Authorization']).to be_nil
+      end
+    end
+  end
+
+  describe '#final_doc_rules' do
+    # final_doc_rules registers a document_prepare_hook; capture the block so we can drive it.
+    def capture_prepare_hook
+      hook = nil
+      allow(indexer).to receive(:add_document_prepare_hook) { |&blk| hook = blk }
+      indexer.final_doc_rules
+      hook
+    end
+
+    it 'remerges json, restores the title, and strips ancestor/internal data for inheritance types' do
+      allow(RecordInheritance).to receive(:has_type?).and_return(true)
+      allow(RecordInheritance).to receive(:merge).and_return({ 'merged' => true })
+
+      hook = capture_prepare_hook
+
+      doc = { 'primary_type' => 'archival_object' }
+      record = {
+        'record' => {
+          'title' => 'My Title',
+          'ancestors' => [{ '_resolved' => {} }],
+          'instances' => [
+            {
+              'sub_container' => {
+                'top_container' => {
+                  '_resolved' => {
+                    'internal_note' => 'secret',
+                    'container_profile' => { '_resolved' => { 'notes' => ['private'] } }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+
+      hook.call(doc, record)
+
+      expect(JSON.parse(doc['json'])).to eq('merged' => true)
+      expect(doc['title']).to eq('My Title')
+      expect(record['record']).not_to have_key('ancestors')
+
+      resolved_tc = record['record']['instances'][0]['sub_container']['top_container']['_resolved']
+      expect(resolved_tc).not_to have_key('internal_note')
+      expect(resolved_tc['container_profile']['_resolved']).not_to have_key('notes')
+    end
+
+    it 'leaves documents whose type is not inheritance-managed untouched' do
+      allow(RecordInheritance).to receive(:has_type?).and_return(false)
+
+      hook = capture_prepare_hook
+
+      doc = { 'primary_type' => 'agent_person' }
+      hook.call(doc, { 'record' => {} })
+
+      expect(doc).not_to have_key('json')
+      expect(doc).not_to have_key('title')
+    end
+  end
+
+  describe 'tree mapping' do
+    let(:resource_uri) { '/repositories/2/resources/123' }
+
+    # A stand-in mapper so we don't have to build a fully-resolved archival object.
+    let(:fake_ao_mapper) do
+      Class.new do
+        def self.resolves
+          []
+        end
+
+        def initialize(json)
+          @json = json
+        end
+
+        def json
+          JSON.dump('id' => @json['uri'], 'child_count' => @json['_child_count'])
+        end
+      end
+    end
+
+    def ao_record(uri)
+      rec = Object.new
+      rec.define_singleton_method(:uri) { uri }
+      rec.define_singleton_method(:to_hash) { |*| { 'uri' => uri } }
+      rec
+    end
+
+    before(:each) do
+      allow(Arclight::Mapper).to receive(:archival_object_mapper).and_return(fake_ao_mapper)
+    end
+
+    describe '#map_children' do
+      let(:ao_uri) { '/repositories/2/archival_objects/5' }
+
+      it 'inserts a document row for each waypoint child' do
+        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
+
+        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 0 }], resource_uri, nil, nil)
+
+        rows = db[:document].all
+        expect(rows.size).to eq(1)
+        expect(rows.first[:resource_uri]).to eq(resource_uri)
+        expect(rows.first[:parent_id]).to be_nil
+        expect(JSON.parse(rows.first[:json])).to include('id' => ao_uri, 'child_count' => 0)
+      end
+
+      it 'recurses into grandchildren when a child has its own children' do
+        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
+        child_waypoints = { 'waypoints' => 1 }
+        allow(JSONModel::HTTP).to receive(:get_json).and_return(child_waypoints)
+        allow(indexer).to receive(:map_waypoints)
+
+        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 3 }], resource_uri, nil, nil)
+
+        inserted_id = db[:document].select_map(:id).first
+        expect(indexer).to have_received(:map_waypoints).with(child_waypoints, resource_uri, inserted_id, ao_uri)
+      end
+
+      it 'skips recursion when the child node was deleted out from under us' do
+        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
+        allow(JSONModel::HTTP).to receive(:get_json).and_return(nil)
+        allow(indexer).to receive(:map_waypoints)
+
+        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 1 }], resource_uri, nil, nil)
+
+        expect(indexer).not_to have_received(:map_waypoints)
+      end
+    end
+
+    describe '#map_waypoints' do
+      it 'fetches and maps each waypoint page' do
+        allow(JSONModel::HTTP).to receive(:get_json).and_return([{ 'uri' => 'x', 'child_count' => 0 }])
+        allow(indexer).to receive(:map_children)
+
+        indexer.map_waypoints({ 'waypoints' => 2 }, resource_uri, 7, 'parent-uri')
+
+        expect(JSONModel::HTTP).to have_received(:get_json).twice
+        expect(indexer).to have_received(:map_children).twice
+      end
+
+      it 'does nothing when there are no waypoints' do
+        allow(indexer).to receive(:map_children)
+
+        indexer.map_waypoints({ 'waypoints' => 0 }, resource_uri, 7, 'parent-uri')
+
+        expect(indexer).not_to have_received(:map_children)
+      end
+    end
+  end
+
+  describe '#stream_doc' do
+    it 'writes a leaf document verbatim' do
+      id = db[:document].insert(:json => '{"id":"root"}')
+      io = StringIO.new
+
+      indexer.stream_doc(id, io)
+
+      expect(io.string).to eq('{"id":"root"}')
+    end
+
+    it 'nests child documents under a components array' do
+      root = db[:document].insert(:json => '{"a":1}')
+      db[:document].insert(:parent_id => root, :json => '{"b":2}')
+      db[:document].insert(:parent_id => root, :json => '{"c":3}')
+      io = StringIO.new
+
+      indexer.stream_doc(root, io)
+
+      expect(io.string).to eq('{"a":1,"components":[{"b":2},{"c":3}]}')
+    end
+
+    it 'recurses through multiple levels of nesting' do
+      root = db[:document].insert(:json => '{"a":1}')
+      child = db[:document].insert(:parent_id => root, :json => '{"b":2}')
+      db[:document].insert(:parent_id => child, :json => '{"c":3}')
+      io = StringIO.new
+
+      indexer.stream_doc(root, io)
+
+      expect(io.string).to eq('{"a":1,"components":[{"b":2,"components":[{"c":3}]}]}')
+    end
+  end
+
+  describe '#stream_nested_doc' do
+    let(:target) { ArclightIndexer::SolrTarget.new('http://solr.example/core') }
+
+    before(:each) do
+      allow(indexer).to receive(:solr_targets).and_return([target])
+      allow(indexer).to receive(:send_commit)
+      allow(indexer).to receive(:log)
+      allow(indexer).to receive(:self_test_mode).and_return(nil)
+    end
+
+    it 'streams the doc to each solr target and commits on a 200 response' do
+      root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+
+      indexer.stream_nested_doc(root, 'test-uri')
+
+      expect(http_request_log.size).to eq(1)
+      expect(http_request_log.first[:request]['Content-Type']).to eq('application/json')
+      expect(indexer).to have_received(:send_commit)
+    end
+  end
+
+  describe '#index_round_complete' do
+    let(:target) { ArclightIndexer::SolrTarget.new('http://solr.example/core') }
+    let(:repository) { double('repository', repo_code: 'repo1') }
+    let(:resource_uri) { '/repositories/2/resources/123' }
+
+    let(:fake_resource_mapper) do
+      Class.new do
+        def self.resolves
+          []
+        end
+
+        def initialize(json)
+          @json = json
+        end
+
+        def json
+          '{"id":"resource_doc"}'
+        end
+
+        def doc_id
+          'resource_doc'
+        end
+      end
+    end
+
+    def resource_record(uri, publish)
+      rec = Object.new
+      rec.define_singleton_method(:uri) { uri }
+      rec.define_singleton_method(:to_hash) { |*| { 'uri' => uri, 'publish' => publish } }
+      rec
+    end
+
+    before(:each) do
+      allow(indexer).to receive(:solr_targets).and_return([target])
+      allow(indexer).to receive(:send_commit)
+      allow(indexer).to receive(:log)
+      allow(Arclight::Mapper).to receive(:resource_mapper).and_return(fake_resource_mapper)
+      # arclight_extras and tree/root lookups
+      allow(JSONModel::HTTP).to receive(:get_json).and_return({})
+    end
+
+    it 'indexes a published resource and clears it from the work queue' do
+      db[:resource].insert(:uri => resource_uri)
+      allow(indexer).to receive(:fetch_records).and_return([resource_record(resource_uri, true)])
+      allow(indexer).to receive(:map_waypoints)
+      allow(indexer).to receive(:stream_nested_doc)
+
+      indexer.index_round_complete(repository)
+
+      expect(indexer).to have_received(:map_waypoints)
+      expect(indexer).to have_received(:stream_nested_doc).with(anything, resource_uri)
+      expect(db[:resource].select_map(:uri)).to be_empty
+    end
+
+    it 'deletes an unpublished resource from each solr target' do
+      db[:resource].insert(:uri => resource_uri)
+      allow(indexer).to receive(:fetch_records).and_return([resource_record(resource_uri, false)])
+
+      indexer.index_round_complete(repository)
+
+      delete_request = JSON.parse(http_request_log.first[:request].body)
+      expect(delete_request.dig('delete', 'id')).to eq('resource_doc')
+      expect(indexer).to have_received(:send_commit)
+      expect(db[:resource].select_map(:uri)).to be_empty
     end
   end
 end
