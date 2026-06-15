@@ -65,7 +65,7 @@ describe Arclight::ArchivalObjectMapper do
   context 'IIIF integration and rendering extraction' do
     it 'lets IIIFClient#fetch_manifest parse the manifest fixture, and uses extract_rendering_text to pull TXT contents' do
       # read the manifest fixture; use this as the HTTP body returned by fetch_url
-      manifest_body = File.read(fixture_path('example_iiif_manifest.json')).force_encoding('UTF-8')
+      manifest_body = File.read(fixture_path('example_v3_iiif_manifest.json')).force_encoding('UTF-8')
 
       # read content fixtures we want extract_rendering_text to return
       txt_content = File.read(fixture_path('example_iiif_content.txt'), mode: 'rb')
@@ -93,7 +93,7 @@ describe Arclight::ArchivalObjectMapper do
 
       # Build an archival object JSON with one published digital object instance whose file_versions
       # contain an encoded manifest URL (the mapper will decode and scan for a manifest URL)
-      manifest_url = URI.encode_www_form_component("http://example.org/fixtures/example_iiif_manifest.json")
+      manifest_url = URI.encode_www_form_component("http://example.org/fixtures/example_v3_iiif_manifest.json")
 
       archival_json = minimal_archival_json({
                                               'instances' => [
