@@ -38,12 +38,13 @@ class IIIFClient
 
     def parse_rendering(tree)
       if ['@id', 'format'].all?{|attr| tree[attr]}
+
         IIIFRendering.from_hash(
           type: tree.fetch('@type', nil),
           format: tree.fetch('format'),
           url: tree.fetch('@id'),
           profile: nil,
-          labels: [tree.fetch('label')].compact
+          labels: [tree.fetch('label', nil)].compact
         )
       else
         nil
