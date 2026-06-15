@@ -1,6 +1,13 @@
 require 'tempfile'
 require 'fileutils'
 
+require 'simplecov'
+
+SimpleCov.start do
+  root File.absolute_path(File.join(File.dirname(__FILE__), ".."))
+  add_filter '/spec/'
+end
+
 FileUtils.mkdir_p(ENV['APPCONFIG_DATA_DIRECTORY'] = '/tmp/as_arclight_test_data')
 
 archivesspace_dir = ENV.fetch('ARCHIVESSPACE')

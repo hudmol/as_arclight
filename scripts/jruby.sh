@@ -46,4 +46,4 @@ else
     extra_args=()
 fi
 
-java "${extra_args[@]}" -cp "$jruby_jars/lib/*" org.jruby.Main ${1+"$@"} 2> >(grep -v 'extensions are not built' >&2)
+java "${extra_args[@]}" -cp "$jruby_jars/lib/*" org.jruby.Main --debug ${1+"$@"} 2> >(grep -v 'extensions are not built' >&2)
