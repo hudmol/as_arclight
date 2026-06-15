@@ -83,6 +83,8 @@ Optional configuration:
       below for more information.
 *  AppConfig[:include_dadocm_required_fields]
     - If true then map DadoCM required fields for digital objects
+*  AppConfig[:as_arclight_reset_queue_on_start]
+    - If true then the resource table will be emptied on start up
 
 
 Example minimal configuration:

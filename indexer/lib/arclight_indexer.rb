@@ -117,6 +117,11 @@ class ArclightIndexer < PeriodicIndexer
 
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
+
+    if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
+      Log.warn 'as_arclight plugin: Resetting queue!'
+      @db[:resource].delete
+    end
   end
 
   def init_schema
