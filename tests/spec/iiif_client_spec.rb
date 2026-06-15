@@ -150,8 +150,7 @@ describe IIIFClient do
 
     it 'honors the charset declared in the content-type header' do
       r = rendering('Text', 'text/plain', 'http://example/c.txt')
-      body = "caf\xe9"
-      response = IIIFClient::HTTPResponse.new('200', { 'content-type' => ['text/plain; charset=ISO-8859-1'] }, body)
+      response = IIIFClient::HTTPResponse.new('200', { 'content-type' => ['text/plain; charset=ISO-8859-1'] }, "Body")
       allow(client).to receive(:fetch_url).and_return(response)
 
       results = []
