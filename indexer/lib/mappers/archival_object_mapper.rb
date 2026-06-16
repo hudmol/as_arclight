@@ -178,6 +178,9 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
           iiif.extract_rendering_text(renderings) do |rendering_text|
             if rendering_text.is_success?
               iiif_text << rendering_text.text.strip
+            else
+              Log.info "as_arclight plugin: failure while extracting renderings from IIIF manifest #{manifest_uri}"
+              Log.info "as_arclight plugin: error was #{rendering_text.error}"
             end
           end
         end

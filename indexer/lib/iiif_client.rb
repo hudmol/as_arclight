@@ -55,7 +55,10 @@ class IIIFClient
         json: json
       )
     else
-      raise Errors::HTTPError.new("Unexpected HTTP response", response)
+      raise Errors::HTTPError.new(
+              "Unexpected HTTP response (status=%s; url=%s)" % [response.status, url],
+              response
+            )
     end
   end
 
@@ -92,7 +95,12 @@ class IIIFClient
 
         yield ExtractRenderingTextResult.new(true, rendering, response, extractor.extract(body_text), nil)
       else
-        yield ExtractRenderingTextResult.new(false, rendering, response, nil, Errors::HTTPError.new("Unexpected HTTP response", response))
+        error = Errors::HTTPError.new(
+          "Unexpected HTTP response (status=%s; url=%s)" % [response.status, rendering.url],
+          response
+        )
+
+        yield ExtractRenderingTextResult.new(false, rendering, response, nil, error)
       end
     end
   end

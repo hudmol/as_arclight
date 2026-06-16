@@ -101,6 +101,18 @@ describe IIIFClient do
         client.fetch_manifest('http://example/manifest.json')
       }.to raise_error(IIIFClient::Errors::UnknownManifestVersion)
     end
+
+    it 'raises an HTTPError whose message names the failing status and url' do
+      response = IIIFClient::HTTPResponse.new('404', {}, 'not found')
+      allow(client).to receive(:fetch_url).and_return(response)
+
+      expect {
+        client.fetch_manifest('http://example/missing.json')
+      }.to raise_error(
+        IIIFClient::Errors::HTTPError,
+        'Unexpected HTTP response (status=404; url=http://example/missing.json)'
+      )
+    end
   end
 
   describe '#extract_rendering_text' do
@@ -146,6 +158,21 @@ describe IIIFClient do
       expect(results.first.is_success?).to be_falsey
       expect(results.first.text).to be_nil
       expect(results.first.error).to be_a(IIIFClient::Errors::HTTPError)
+    end
+
+    it 'includes the failing status and rendering url in the failure error message' do
+      r = rendering('Text', 'text/plain', 'http://example/c.txt')
+      response = IIIFClient::HTTPResponse.new('503', {}, 'boom')
+      allow(client).to receive(:fetch_url).and_return(response)
+
+      results = []
+      client.extract_rendering_text([r]) { |res| results << res }
+
+      expect(results.first.error.message).to eq(
+        'Unexpected HTTP response (status=503; url=http://example/c.txt)'
+      )
+      # the originating response should still be attached to the error for inspection
+      expect(results.first.error.response).to eq(response)
     end
 
     it 'honors the charset declared in the content-type header' do

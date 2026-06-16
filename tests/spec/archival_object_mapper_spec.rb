@@ -63,6 +63,28 @@ describe Arclight::ArchivalObjectMapper do
   end
 
   context 'IIIF integration and rendering extraction' do
+
+    def ao_json_with_iiif_manifest(manifest_url)
+      minimal_archival_json({
+                              'instances' => [
+                                {
+                                  'digital_object' => {
+                                    '_resolved' => {
+                                      'title' => 'Digital Object 1',
+                                      'publish' => true,
+                                      'representative_file_version' => { 'file_uri' => manifest_url },
+                                      'file_versions' => [
+                                        { 'file_uri' => manifest_url }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            })
+    end
+
+
+
     it 'lets IIIFClient#fetch_manifest parse the manifest fixture, and uses extract_rendering_text to pull TXT contents' do
       # read the manifest fixture; use this as the HTTP body returned by fetch_url
       manifest_body = File.read(fixture_path('example_v3_iiif_manifest.json')).force_encoding('UTF-8')
@@ -95,22 +117,7 @@ describe Arclight::ArchivalObjectMapper do
       # contain an encoded manifest URL (the mapper will decode and scan for a manifest URL)
       manifest_url = URI.encode_www_form_component("http://example.org/fixtures/example_v3_iiif_manifest.json")
 
-      archival_json = minimal_archival_json({
-                                              'instances' => [
-                                                {
-                                                  'digital_object' => {
-                                                    '_resolved' => {
-                                                      'title' => 'Digital Object 1',
-                                                      'publish' => true,
-                                                      'representative_file_version' => { 'file_uri' => manifest_url },
-                                                      'file_versions' => [
-                                                        { 'file_uri' => manifest_url }
-                                                      ]
-                                                    }
-                                                  }
-                                                }
-                                              ]
-                                            })
+      archival_json = ao_json_with_iiif_manifest(manifest_url)
 
       mapper = Arclight::ArchivalObjectMapper.new(archival_json)
       mapped = JSON.parse(mapper.json)
@@ -126,6 +133,39 @@ describe Arclight::ArchivalObjectMapper do
 
       # has_online_content_ssim should indicate online access
       expect(mapped['has_online_content_ssim']).to include('Online access')
+    end
+
+    it 'logs the failing manifest uri and error when a rendering cannot be extracted' do
+      manifest_body = File.read(fixture_path('example_v3_iiif_manifest.json')).force_encoding('UTF-8')
+
+      allow_any_instance_of(IIIFClient).to receive(:fetch_url).and_return(
+        IIIFClient::HTTPResponse.new('200', { 'content-type' => ['application/json'] }, manifest_body)
+      )
+
+      # Force every rendering to come back as a failure result carrying an HTTPError
+      error = IIIFClient::Errors::HTTPError.new('Unexpected HTTP response (status=500; url=https://example.org/123/content.txt)')
+      allow_any_instance_of(IIIFClient).to receive(:extract_rendering_text) do |_iiif, renderings, &block|
+        renderings.each do |r|
+          block.call(IIIFClient::ExtractRenderingTextResult.new(false, r, nil, nil, error))
+        end
+      end
+
+      manifest_url = URI.encode_www_form_component('http://example.org/fixtures/example_v3_iiif_manifest.json')
+      decoded_manifest_uri = 'http://example.org/fixtures/example_v3_iiif_manifest.json'
+
+      archival_json = ao_json_with_iiif_manifest(manifest_url)
+
+      allow(Log).to receive(:info)
+
+      mapper = Arclight::ArchivalObjectMapper.new(archival_json)
+      JSON.parse(mapper.json)
+
+      expect(Log).to have_received(:info)
+        .with(/failure while extracting renderings from IIIF manifest #{Regexp.escape(decoded_manifest_uri)}/)
+        .at_least(:once)
+      expect(Log).to have_received(:info)
+        .with(/error was #{Regexp.escape(error.message)}/)
+        .at_least(:once)
     end
   end
 
