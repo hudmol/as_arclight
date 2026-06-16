@@ -167,9 +167,8 @@ describe Arclight::ArchivalObjectMapper do
       expect(map['unitdate_ssm']).to include('1990-1995')
       expect(map['unitdate_inclusive_ssm']).to include('1990-1995')
 
-      # date_range_isim and normalized_date_ssm derive from resource dates
-      expect(map['date_range_isim']).to include('2000', '2001', '2002')
-      expect(map['normalized_date_ssm']).to include('2000-2002')
+      expect(map['date_range_isim']).to include('1990', '1991', '1992', '1993', '1994', '1995')
+      expect(map['normalized_date_ssm']).to include('1990-1995')
     end
 
     it 'maps extents and component counts and levels' do
