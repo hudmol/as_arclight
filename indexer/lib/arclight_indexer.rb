@@ -116,6 +116,8 @@ class ArclightIndexer < PeriodicIndexer
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
 
+    @failed_index_retry_delay_seconds = AppConfig[:as_arclight_failed_index_retry_delay_seconds] rescue 300
+
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
       Log.warn 'as_arclight plugin: Resetting queue!'
       @db[:resource].delete
@@ -142,6 +144,13 @@ class ArclightIndexer < PeriodicIndexer
       Integer :parent_id
       blob :json
     end
+
+    unless @db[:resource].columns.include?(:next_retry_time)
+      @db.alter_table(:resource) do
+        add_column :next_retry_time, :Bignum
+      end
+    end
+
   end
 
   def fetch_records(type, ids, resolve)
@@ -387,40 +396,53 @@ class ArclightIndexer < PeriodicIndexer
     end
 
     fetch_records(:resource,
-                  @db[:resource].select_map(:uri).map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
+                  @db[:resource]
+                    .where{(next_retry_time =~ nil) | (next_retry_time <= Time.now.to_i)}
+                    .select_map(:uri)
+                    .map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
                   Arclight::Mapper.resource_mapper.resolves)
       .each do |resource|
 
-      resource_uri = resource.uri
-      resource_json = resource.to_hash(:trusted)
+      begin
+        resource_uri = resource.uri
+        resource_json = resource.to_hash(:trusted)
 
-      resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
-      mapper = Arclight::Mapper.resource_mapper.new(resource_json)
+        resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
+        mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
-      if resource_json['publish'] && !resource_json['suppressed']
-        Log.debug "as_arclight plugin: Preparing resource #{resource_uri}"
+        if resource_json['publish'] && !resource_json['suppressed']
+          Log.debug "as_arclight plugin: Preparing resource #{resource_uri}"
 
-        resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
+          resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
-        root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
+          root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
 
-        map_waypoints(root_json, resource_uri, resource_doc_id, nil)
+          map_waypoints(root_json, resource_uri, resource_doc_id, nil)
 
-        Log.debug "as_arclight plugin: Generated index docs for #{resource_uri}"
+          Log.debug "as_arclight plugin: Generated index docs for #{resource_uri}"
 
-        stream_nested_doc(resource_doc_id, resource_uri)
+          stream_nested_doc(resource_doc_id, resource_uri)
 
-        @db[:document].filter(:resource_uri => resource_uri).delete
+          @db[:document].filter(:resource_uri => resource_uri).delete
 
-        indexed_count += 1
-      else
-        Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published or suppressed"
-        send_delete_for_resource(resource_uri)
-        send_commit_to_all_targets
+          indexed_count += 1
+        else
+          Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published or suppressed"
+          send_delete_for_resource(resource_uri)
+          send_commit_to_all_targets
+        end
+
+        @db[:resource].filter(:uri => resource_uri).delete
+        resource_count += 1
+      rescue => e
+        next_retry_time = Time.now.to_i + @failed_index_retry_delay_seconds
+
+        Log.error "as_arclight plugin: Error indexing resource #{resource_uri}: #{e}"
+        Log.error "as_arclight plugin: This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
+        Log.exception(e)
+
+        @db[:resource].filter(:uri => resource_uri).update(:next_retry_time => next_retry_time)
       end
-
-      @db[:resource].filter(:uri => resource_uri).delete
-      resource_count += 1
     end
 
     if resource_count > 0

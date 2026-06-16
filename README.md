@@ -61,11 +61,11 @@ Required configuration:
 
 Optional configuration:
 *  AppConfig[:as_arclight_resource_id_prefix]
-    - a string to prefix a Resource's ID with when mapping
+    - A string to prefix a Resource's ID with when mapping
 *  AppConfig[:as_arclight_archival_object_id_prefix]
-    - a string to prefix an Archival Object's ID with when mapping
+    - A string to prefix an Archival Object's ID with when mapping
 *  AppConfig[:as_arclight_iiif_min_cache_seconds]
-    - the minimum number of seconds to cache a URL's contents when
+    - The minimum number of seconds to cache a URL's contents when
       fetching IIIF resources.  If unset, relies on the IIIF server's
       `Expires` and `Cache-Control` headers for guidance, defaulting
       to never caching.
@@ -85,7 +85,10 @@ Optional configuration:
     - If true then map DadoCM required fields for digital objects
 *  AppConfig[:as_arclight_reset_queue_on_start]
     - If true then the resource table will be emptied on start up
-
+*  AppConfig[:as_arclight_failed_index_retry_delay_seconds]
+    - If indexing a Resource record fails for some reason, it will be
+      retried periodically until it succeeds. This setting controls
+      the number of seconds between retries (default: 300 seconds)
 
 Example minimal configuration:
 ```
