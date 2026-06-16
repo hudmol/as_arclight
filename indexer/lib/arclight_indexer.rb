@@ -24,11 +24,11 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def solr_targets
-    @targets ||= AppConfig[:as_arclight_solr_targets].map do |toot|
-      SolrTarget.new(toot[:url],
-                     toot[:label],
-                     toot[:user],
-                     toot[:pass])
+    @targets ||= AppConfig[:as_arclight_solr_targets].map do |target|
+      SolrTarget.new(target[:url],
+                     target[:label],
+                     target[:user],
+                     target[:pass])
     end
   end
 
