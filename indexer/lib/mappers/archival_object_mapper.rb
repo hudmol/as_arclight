@@ -163,7 +163,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
           manifest.annotations.each do |annotation|
             annotation.item.body.each do |b|
-              iiif_text << body
+              iiif_text << b.value
             end
           end
 

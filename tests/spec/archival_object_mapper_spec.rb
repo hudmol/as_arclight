@@ -167,6 +167,37 @@ describe Arclight::ArchivalObjectMapper do
         .with(/error was #{Regexp.escape(error.message)}/)
         .at_least(:once)
     end
+
+    it 'collects supplementing annotation text into the text field' do
+      annotation = IIIFClient::IIIFAnnotation.from_hash(
+        id: 'anno-1',
+        type: 'Annotation',
+        motivation: 'supplementing',
+        body: [IIIFClient::IIIFText.new('en', 'Transcribed annotation text')],
+        target: 'https://example.org/123/canvas/1'
+      )
+
+      manifest = IIIFClient::Manifest.from_hash(
+        version: 3,
+        metadata: [],
+        renderings: [],
+        annotations: [IIIFClient::TreeItem.new(['annotations', 0], annotation)],
+        json: {}
+      )
+
+      allow_any_instance_of(IIIFClient).to receive(:fetch_manifest).and_return(manifest)
+
+      manifest_url = URI.encode_www_form_component('http://example.org/fixtures/example_v3_iiif_manifest.json')
+      archival_json = ao_json_with_iiif_manifest(manifest_url)
+
+      mapper = nil
+      expect {
+        mapper = Arclight::ArchivalObjectMapper.new(archival_json)
+      }.not_to raise_error
+
+      mapped = JSON.parse(mapper.json)
+      expect(mapped['text']).to include('Transcribed annotation text')
+    end
   end
 
   context 'mapping of core archival object fields' do
