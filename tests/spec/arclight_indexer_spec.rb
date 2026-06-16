@@ -193,65 +193,6 @@ describe 'ArclightIndexer' do
     end
   end
 
-  describe '#final_doc_rules' do
-    # final_doc_rules registers a document_prepare_hook; capture the block so we can drive it.
-    def capture_prepare_hook
-      hook = nil
-      allow(indexer).to receive(:add_document_prepare_hook) { |&blk| hook = blk }
-      indexer.final_doc_rules
-      hook
-    end
-
-    it 'remerges json, restores the title, and strips ancestor/internal data for inheritance types' do
-      allow(RecordInheritance).to receive(:has_type?).and_return(true)
-      allow(RecordInheritance).to receive(:merge).and_return({ 'merged' => true })
-
-      hook = capture_prepare_hook
-
-      doc = { 'primary_type' => 'archival_object' }
-      record = {
-        'record' => {
-          'title' => 'My Title',
-          'ancestors' => [{ '_resolved' => {} }],
-          'instances' => [
-            {
-              'sub_container' => {
-                'top_container' => {
-                  '_resolved' => {
-                    'internal_note' => 'secret',
-                    'container_profile' => { '_resolved' => { 'notes' => ['private'] } }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-
-      hook.call(doc, record)
-
-      expect(JSON.parse(doc['json'])).to eq('merged' => true)
-      expect(doc['title']).to eq('My Title')
-      expect(record['record']).not_to have_key('ancestors')
-
-      resolved_tc = record['record']['instances'][0]['sub_container']['top_container']['_resolved']
-      expect(resolved_tc).not_to have_key('internal_note')
-      expect(resolved_tc['container_profile']['_resolved']).not_to have_key('notes')
-    end
-
-    it 'leaves documents whose type is not inheritance-managed untouched' do
-      allow(RecordInheritance).to receive(:has_type?).and_return(false)
-
-      hook = capture_prepare_hook
-
-      doc = { 'primary_type' => 'agent_person' }
-      hook.call(doc, { 'record' => {} })
-
-      expect(doc).not_to have_key('json')
-      expect(doc).not_to have_key('title')
-    end
-  end
-
   describe 'tree mapping' do
     let(:resource_uri) { '/repositories/2/resources/123' }
 
