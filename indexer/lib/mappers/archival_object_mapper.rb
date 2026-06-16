@@ -184,7 +184,8 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
       end
     end
 
-    map_field('text', iiif_text)
+    # Clean up any invalid chars and ensure we get UTF-8
+    map_field('text', iiif_text.map {|text| text.scrub("?").encode('UTF-8', undef: :replace, replace: '?')})
 
     unless dado_fields.empty?
       # FIXME: the solr fields are multis, but the existing mapping has single values
