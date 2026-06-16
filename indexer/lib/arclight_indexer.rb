@@ -1,5 +1,4 @@
 require 'sequel'
-require 'record_inheritance'
 
 require_relative 'mappers/arclight_mapper'
 require_relative 'iiif_client'
@@ -96,16 +95,13 @@ class ArclightIndexer < PeriodicIndexer
     req
   end
 
-  ARCLIGHT_RESOLVES = AppConfig[:record_inheritance_resolves]
+  ARCLIGHT_RESOLVES = AppConfig.has_key?(:as_arclight_resolves) ? AppConfig[:as_arclight_resolves] : []
 
   def initialize(backend = nil, state = nil, name)
     state_class = Object.const_get(AppConfig[:index_state_class])
     index_state = state || state_class.new("indexer_arclight_state")
 
     super(backend, index_state, name)
-
-    # Set up our JSON schemas now that we know the JSONModels have been loaded
-    RecordInheritance.prepare_schemas
 
     @time_to_sleep = AppConfig[:as_arclight_indexing_frequency_seconds].to_i
     @thread_count = 1
@@ -149,12 +145,7 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def fetch_records(type, ids, resolve)
-    records = JSONModel(type).all(:id_set => ids.join(","), 'resolve[]' => resolve)
-    if RecordInheritance.has_type?(type)
-      RecordInheritance.merge(records, :direct_only => true)
-    else
-      records
-    end
+    JSONModel(type).all(:id_set => ids.join(","), 'resolve[]' => resolve)
   end
 
   def self.get_indexer(state = nil, name = "Arclight Indexer")
@@ -228,45 +219,6 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def configure_doc_rules
-  end
-
-  # FIXME: this is straight from the pui indexer. it might be right, but needs a check
-  # Run the final doc rules after all the hooks have been added
-  # This allows plugins to access ancestor data in PUI records before it is removed
-  def final_doc_rules
-    # this runs after the hooks in indexer_common, so we can overwrite with confidence
-    add_document_prepare_hook {|doc, record|
-      if RecordInheritance.has_type?(doc['primary_type'])
-        # special handling for json because we need to include indirectly inherited
-        # fields too - the json sent to indexer_common only has directly inherited
-        # fields because only they should be indexed.
-        # so we remerge without the :direct_only flag, and we remove the ancestors
-        doc['json'] = ASUtils.to_json(RecordInheritance.merge(record['record'],
-                                                              :remove_ancestors => true))
-
-        # special handling for title because it is populated from display_string
-        # in indexer_common and display_string is not changed in the merge process
-        doc['title'] = record['record']['title'] if record['record']['title']
-
-        # special handling for fullrecord because we don't want the ancestors indexed.
-        # we're now done with the ancestors, so we can just delete them from the record
-        record['record'].delete('ancestors')
-        # we don't want container_profile or top_container notes indexed for the public either
-        if record['record']['instances']
-          record['record']['instances'].each do |instance|
-            if instance['sub_container'] && instance['sub_container']['top_container']
-              top_container = instance['sub_container']['top_container']
-              if top_container['_resolved']
-                top_container['_resolved'].delete('internal_note')
-                if top_container['_resolved']['container_profile'] && top_container['_resolved']['container_profile']['_resolved']
-                  top_container['_resolved']['container_profile']['_resolved'].delete('notes')
-                end
-              end
-            end
-          end
-        end
-      end
-    }
   end
 
   def map_children(waypoints_json, resource_uri, parent_doc_id, parent_uri)
