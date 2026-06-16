@@ -248,7 +248,7 @@ class IIIFClient
 
     if response.nil?
       Log.error "as_arclight plugin: Permanent failure during HTTP request - GET #{url}: #{last_error}"
-      return HTTPResponse.new('499', {}, 'Request failure: #{last_error}')
+      return HTTPResponse.new('499', {}, "Request failure: #{last_error}")
     end
 
     case response
