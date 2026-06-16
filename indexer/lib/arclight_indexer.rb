@@ -427,7 +427,10 @@ class ArclightIndexer < PeriodicIndexer
 
           indexed_count += 1
         else
-          Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published or suppressed"
+          Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is either not published or suppressed"
+
+          unpublished_count += 1
+
           send_delete_for_resource(resource_uri)
           send_commit_to_all_targets
         end
