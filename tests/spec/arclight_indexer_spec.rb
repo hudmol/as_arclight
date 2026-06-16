@@ -153,38 +153,8 @@ describe 'ArclightIndexer' do
   end
 
   describe '#solr_url' do
-    let(:target_a) { ArclightIndexer::SolrTarget.new('http://solr-a.example/core') }
-    let(:target_b) { ArclightIndexer::SolrTarget.new('http://solr-b.example/core') }
-
-    before(:each) do
-      allow(indexer).to receive(:solr_targets).and_return([ target_a, target_b ])
-    end
-
-    it 'returns the first configured solr_url when no override is set' do
-      expect(indexer.solr_url.to_s).to eq(target_a.url)
-    end
-
-    it 'returns the override inside a run_for_target block' do
-      indexer.run_for_target(target_b) do
-        expect(indexer.solr_url.to_s).to eq(target_b.url)
-      end
-    end
-
-    it 'clears the override after run_for_target completes' do
-      indexer.run_for_target(target_b) do
-      end
-
-      expect(indexer.solr_url.to_s).to eq(target_a.url)
-    end
-
-    it 'clears the override even if the block raises' do
-      expect {
-        indexer.run_for_target(target_b) do
-          raise 'boom'
-        end
-      }.to raise_error('boom')
-
-      expect(indexer.solr_url.to_s).to eq(target_a.url)
+    it 'raises if called' do
+      expect { indexer.solr_url }.to raise_error("as_arclight plugin: unexpected call to #solr_url!")
     end
   end
 
@@ -219,37 +189,6 @@ describe 'ArclightIndexer' do
         req = indexer.request_for_target(auth_target)
 
         expect(req['Authorization']).to eq('Basic ' + Base64.strict_encode64('user:secret'))
-      end
-    end
-
-    describe '#do_http_request' do
-      before(:each) do
-        # The shared before(:each) stubs do_http_request entirely; here we want the real thing.
-        allow(indexer).to receive(:do_http_request).and_call_original
-        stub_const('ASHTTP', double('ASHTTP'))
-        allow(ASHTTP).to receive(:start_uri).and_return(double('response', code: '200'))
-      end
-
-      it 'applies the basic auth credentials set up by run_for_target' do
-        req = Net::HTTP::Post.new('/core/update')
-
-        indexer.run_for_target(auth_target) do
-          indexer.do_http_request(auth_target.parsed_url, req)
-        end
-
-        expect(req['Authorization']).to eq('Basic ' + Base64.strict_encode64('user:secret'))
-        # talking to Solr, so the AS session header should not be set
-        expect(req['X-ArchivesSpace-Session']).to be_nil
-      end
-
-      it 'sets the AS session header (and no basic auth) when no solr override is active' do
-        indexer.instance_variable_set(:@current_session, 'session-token')
-        req = Net::HTTP::Post.new('/core/update')
-
-        indexer.do_http_request(noauth_target.parsed_url, req)
-
-        expect(req['X-ArchivesSpace-Session']).to eq('session-token')
-        expect(req['Authorization']).to be_nil
       end
     end
   end
