@@ -32,34 +32,57 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  # #send_commit calls #solr_url which, by default, returns the AS solr url
-  # so we need to override it so that it returns our current solr url - see #run_for_target
-  # solr_url is sometimes called when our override isn't set
-  # if that is the case, then just return the first one
+  # this should never be called, so raise if it is
   def solr_url
-    Thread.current[:arclight_indexer_solr_url_override] || solr_targets.first.parsed_url
+    raise "as_arclight plugin: unexpected call to #solr_url!"
   end
 
-  # overriding to get a hook to set basic auth on a send_commit call
-  def do_http_request(url, req)
-    # only set the AS session header if we're not talking to Solr
-    unless Thread.current[:arclight_indexer_solr_url_override]
-      req['X-ArchivesSpace-Session'] = @current_session
-    end
+  def send_commit(type = :hard)
+    # we decide when to send commits!
+  end
 
-    if Thread.current[:arclight_indexer_solr_username] && Thread.current[:arclight_indexer_solr_password]
-      req.basic_auth(Thread.current[:arclight_indexer_solr_username], Thread.current[:arclight_indexer_solr_password])
+  def send_commit_to_all_targets
+    solr_targets.each do |target|
+      send_commit_for_target(target)
     end
+  end
 
-    opts = {
-      :read_timeout => AppConfig[:indexer_solr_timeout_seconds].to_i
-    }
+  def send_commit_for_target(target)
+    req = request_for_target(target)
+    req.body = {:commit => {"softCommit" => false }}.to_json
+    resp = do_http_request(target.parsed_url, req)
 
-    ASHTTP.start_uri(url, opts) do |http|
-      http.request(req)
+    if resp.code == '200'
+      Log.debug "as_arclight plugin: Sent commit to #{target.name}"
+      true
+    else
+      if resp.body =~ /exceeded limit of maxWarmingSearchers/
+        Log.warn "as_arclight plugin: Solr response when sending commit to #{target.name} -- #{response.body}"
+        true
+      else
+        Log.error "as_arclight plugin: Error when committing to #{target.name} -- #{response.body}"
+        false
+      end
     end
-  rescue Timeout::Error
-    FakeSolrTimeoutResponse.new(req)
+  end
+
+  # this is called from #handle_deletes which is called at the end of #run_index_round
+  # so, we don't want to delete anything in here - just flag for delete
+  def delete_records(records, opts = {})
+    return if records.empty?
+
+    records.each do |uri|
+      if parsed_uri = JSONModel.parse_reference(uri)
+        if parsed_uri[:type] == 'resource'
+          flag_for_delete(uri)
+        elsif parsed_uri[:type] == 'archival_object'
+          # nothing to do - the resource's mtime will be bumped by the delete
+          Log.debug "as_arclight plugin: ignoring deleted archival_object #{uri} - its resource will be reindexed"
+        else
+          # any other record type is also ignoreable
+        end
+      end
+    end
   end
 
   def request_for_target(target)
@@ -71,27 +94,6 @@ class ArclightIndexer < PeriodicIndexer
     end
 
     req
-  end
-
-  # some fancy footwork to support multiple solr targets
-  # the send_commit method takes no arguments and sends the commit
-  # to whatever #solr_url returns, so we need to make sure we get the
-  # solr_url we are currently working with
-  # this also allows us to set basic auth creds - see #do_http_request override above
-  def run_for_target(target, &block)
-    begin
-      Thread.current[:arclight_indexer_solr_url_override] = target.parsed_url
-      if target.basic_auth_enabled?
-        Thread.current[:arclight_indexer_solr_username] = target.user
-        Thread.current[:arclight_indexer_solr_password] = target.pass
-      end
-
-      block.call
-    ensure
-      Thread.current[:arclight_indexer_solr_url_override] = nil
-      Thread.current[:arclight_indexer_solr_username] = nil
-      Thread.current[:arclight_indexer_solr_password] = nil
-    end
   end
 
   ARCLIGHT_RESOLVES = AppConfig[:record_inheritance_resolves]
@@ -126,6 +128,11 @@ class ArclightIndexer < PeriodicIndexer
 
   def init_schema
     @db.create_table?(:resource) do
+      primary_key :id
+      String :uri, :null => false, :unique => true
+    end
+
+    @db.create_table?(:deleted_resource) do
       primary_key :id
       String :uri, :null => false, :unique => true
     end
@@ -175,6 +182,22 @@ class ArclightIndexer < PeriodicIndexer
       rescue Sequel::UniqueConstraintViolation
         # this is ok - just means some other record implicated
         # in the resource has already flagged it
+      end
+    end
+  end
+
+  def flag_for_delete(*uris)
+    uris.each do |uri|
+      # make sure uri is a ref to a resource
+      parsed_ref = JSONModel.parse_reference(uri)
+      unless parsed_ref && parsed_ref[:type] == 'resource'
+        next
+      end
+
+      begin
+        @db[:deleted_resource].insert(:uri => uri)
+      rescue Sequel::UniqueConstraintViolation
+        # this is ok and shoudn't happen - a record can only be deleted once
       end
     end
   end
@@ -364,11 +387,9 @@ class ArclightIndexer < PeriodicIndexer
         end
 
         if resp.code == '200'
-          run_for_target(target) do
-            send_commit
+          if send_commit_for_target(target)
+            log "Indexed #{uri} to #{target.name}"
           end
-
-          log "Indexed #{uri} to #{target.name}"
         else
           Log.error "as_arclight plugin: Error commiting index doc for #{uri} to #{target.name}: #{resp.body}"
         end
@@ -378,10 +399,39 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
+  def send_delete_for_resource(resource_uri)
+    delete_json = {'delete' => {'query' => "archivesspace_uri_ssi:\"#{resource_uri}\""}}.to_json
+    delete_length = delete_json.length
+
+    solr_targets.each do |target|
+      req = request_for_target(target)
+      req['Content-Length'] = delete_length
+      req.body = delete_json
+      resp = do_http_request(target.parsed_url, req)
+
+      if resp.code != '200'
+        Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{target.name}: #{resp.body}"
+      end
+    end
+  end
+
   def index_round_complete(repository)
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
+
+    @db[:deleted_resource].select_map(:uri).each do |resource_uri|
+      Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it has been deleted in ArchivesSpace"
+      send_delete_for_resource(resource_uri)
+      deleted_count += 1
+      resource_count += 1
+      @db[:resource].filter(:uri => resource_uri).delete
+      @db[:deleted_resource].filter(:uri => resource_uri).delete
+    end
+
+    if deleted_count > 0
+      send_commit_to_all_targets
+    end
 
     fetch_records(:resource,
                   @db[:resource].select_map(:uri).map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
@@ -412,25 +462,8 @@ class ArclightIndexer < PeriodicIndexer
         indexed_count += 1
       else
         Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published"
-
-        solr_targets.each do |target|
-          req = request_for_target(target)
-          delete_json = {'delete' => {'id' => mapper.doc_id}}.to_json
-          req['Content-Length'] = delete_json.length
-          req.body = delete_json
-          resp = do_http_request(target.parsed_url, req)
-
-          if resp.code == '200'
-            run_for_target(target) do
-              send_commit
-            end
-
-            log "Deleted #{resource_uri} from #{target.name}"
-            deleted_count += 1
-          else
-            Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{target.name}: #{resp.body}"
-          end
-        end
+        send_delete_for_resource(resource_uri)
+        send_commit_for_target(target)
       end
 
       @db[:resource].filter(:uri => resource_uri).delete
@@ -453,10 +486,9 @@ class ArclightIndexer < PeriodicIndexer
           req.body = delete_request.to_json
           response = do_http_request(target.parsed_url, req)
           if response.code == '200'
-            run_for_target(target) do
-              send_commit
+            if send_commit_for_target(target)
+              log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
             end
-            log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
           else
             Log.error "as_arclight plugin: failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{target.name}: #{response.body}"
           end
