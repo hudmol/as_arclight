@@ -430,7 +430,7 @@ describe 'ArclightIndexer' do
 
     before(:each) do
       allow(indexer).to receive(:solr_targets).and_return([target])
-      allow(indexer).to receive(:send_commit)
+      allow(indexer).to receive(:send_commit_to_all_targets)
       allow(indexer).to receive(:log)
       allow(Arclight::Mapper).to receive(:resource_mapper).and_return(fake_resource_mapper)
       # arclight_extras and tree/root lookups
@@ -457,8 +457,8 @@ describe 'ArclightIndexer' do
       indexer.index_round_complete(repository)
 
       delete_request = JSON.parse(http_request_log.first[:request].body)
-      expect(delete_request.dig('delete', 'id')).to eq('resource_doc')
-      expect(indexer).to have_received(:send_commit)
+      expect(delete_request.dig('delete', 'query')).to eq("archivesspace_uri_ssi:\"#{resource_uri}\"")
+      expect(indexer).to have_received(:send_commit_to_all_targets)
       expect(db[:resource].select_map(:uri)).to be_empty
     end
   end
