@@ -380,7 +380,7 @@ describe 'ArclightIndexer' do
 
     before(:each) do
       allow(indexer).to receive(:solr_targets).and_return([target])
-      allow(indexer).to receive(:send_commit)
+      allow(indexer).to receive(:send_commit_for_target)
       allow(indexer).to receive(:log)
       allow(indexer).to receive(:self_test_mode).and_return(nil)
     end
@@ -389,10 +389,9 @@ describe 'ArclightIndexer' do
       root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
 
       indexer.stream_nested_doc(root, 'test-uri')
-
       expect(http_request_log.size).to eq(1)
       expect(http_request_log.first[:request]['Content-Type']).to eq('application/json')
-      expect(indexer).to have_received(:send_commit)
+      expect(indexer).to have_received(:send_commit_for_target)
     end
   end
 
