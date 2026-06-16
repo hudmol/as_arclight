@@ -24,11 +24,11 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def solr_targets
-    @targets ||= AppConfig[:as_arclight_solr_targets].map do |target|
-      SolrTarget.new(target[:url],
-                     target[:label],
-                     target[:user],
-                     target[:pass])
+    @targets ||= AppConfig[:as_arclight_solr_targets].map do |toot|
+      SolrTarget.new(toot[:url],
+                     toot[:label],
+                     toot[:user],
+                     toot[:pass])
     end
   end
 
@@ -419,6 +419,7 @@ class ArclightIndexer < PeriodicIndexer
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
+    unpublished_count = 0
 
     @db[:deleted_resource].select_map(:uri).each do |resource_uri|
       Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it has been deleted in ArchivesSpace"
@@ -461,9 +462,9 @@ class ArclightIndexer < PeriodicIndexer
 
         indexed_count += 1
       else
-        Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published"
+        Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is not published or suppressed"
         send_delete_for_resource(resource_uri)
-        send_commit_for_target(target)
+        send_commit_to_all_targets
       end
 
       @db[:resource].filter(:uri => resource_uri).delete
@@ -471,7 +472,7 @@ class ArclightIndexer < PeriodicIndexer
     end
 
     if resource_count > 0
-      log "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count} for repository #{repository.repo_code}"
+      log "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
     end
   end
 
