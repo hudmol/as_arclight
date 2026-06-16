@@ -444,7 +444,7 @@ class ArclightIndexer < PeriodicIndexer
       resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
       mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
-      if resource_json['publish']
+      if resource_json['publish'] && !resource_json['suppressed']
         Log.debug "as_arclight plugin: Preparing resource #{resource_uri}"
 
         resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
