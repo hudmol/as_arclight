@@ -283,9 +283,8 @@ describe Arclight::ArchivalObjectMapper do
       mapper = Arclight::ArchivalObjectMapper.new(archival_json)
       map = JSON.parse(mapper.json)
 
-      # Expect parent access restrict HTML and userestrict HTML to be present
-      expect(map['parent_access_restrict_tesm'].first).to include('<p>Restricted content</p>')
-      expect(map['parent_access_terms_tesm'].first).to include('<p>Contact archives for permission</p>')
+      expect(map['parent_access_restrict_tesm'].first).to include('Restricted content')
+      expect(map['parent_access_terms_tesm'].first).to include('Contact archives for permission')
     end
 
     it 'maps containers from instances with sub_container' do

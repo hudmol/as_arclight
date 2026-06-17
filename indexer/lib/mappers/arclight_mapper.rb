@@ -74,7 +74,7 @@ module Arclight
     end
 
     def collection_title(json)
-      EADToHTML.convert(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
+      EADToHTML.strip_markup(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
     end
 
     # FIXME: refactor?
@@ -123,10 +123,14 @@ module Arclight
                       @json['notes']
                         .select{|n| n['type'] == note && n['publish']}
                         .map{|s| s['content'].join("\n")}
-                        .map{|s| EADToHTML.convert(s)})
+                        .map{|s| EADToHTML.strip_markup(s)})
 
             map_field("#{note}_html_tesm",
-                      @map["#{note}_#{suffix}"].map{|n| '<p>' + n + '</p>'})
+                      @json['notes']
+                        .select{|n| n['type'] == note && n['publish']}
+                        .map{|s| s['content'].join("\n")}
+                        .map{|n| '<p>' + n + '</p>'}
+                        .map{|s| EADToHTML.convert(s)})
 
           elsif type == 'orderedlist'
             map_field("#{note}_tesm",
@@ -135,7 +139,7 @@ module Arclight
                         .map{|n| n['subnotes']}.flatten
                         .select{|s| s['publish']}
                         .map{|s| s['items'] ? s['items'].join(', ') : s['content']}
-                        .map{|s| EADToHTML.convert(s)})
+                        .map{|s| EADToHTML.strip_markup(s)})
 
             map_field("#{note}_tesim", @map["#{note}_tesm"])
 

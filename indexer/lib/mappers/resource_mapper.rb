@@ -13,10 +13,11 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('archivesspace_uri_ssi',  @json['uri']) # mapping the resource's uri as a hook to delete it when the resource is deleted
 
     title_html = EADToHTML.convert(@json['title'])
+    title_no_html = EADToHTML.strip_markup(@json['title'])
 
-    map_field('title_ssm',              [title_html])
+    map_field('title_ssm',              [title_no_html])
     map_field('title_html_tesm',        [title_html])
-    map_field('title_tesim',            [title_html])
+    map_field('title_tesim',            [title_no_html])
     map_field('title_filing_ssi',       @json['finding_aid_filing_title'])
     map_field('ead_ssi',                resource_id(@json))
 
@@ -47,7 +48,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
                                                          .select{|s| s['publish']}
                                                          .map{|s| s['content'].split(/\n+/)}}
                                               .flatten
-                                              .map{|s| EADToHTML.convert(s)})
+                                              .map{|s| EADToHTML.strip_markup(s)})
 
     map_field('access_subjects_ssim',   @json['subjects'].select{|s| s.dig('_resolved', 'terms', 0, 'term_type') == 'topical'}.map{|s| s['_resolved']['title']})
     map_field('access_subjects_ssm',    @map['access_subjects_ssim'])
@@ -86,7 +87,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
                                               out
                                             }.flatten.uniq
-                                            .map{|s| EADToHTML.convert(s)})
+                                            .map{|s| EADToHTML.strip_markup(s)})
 
     map_field('total_component_count_is',@json['_total_components'])
     map_field('online_item_count_is',   @json['_online_item_count'])

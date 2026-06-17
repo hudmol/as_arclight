@@ -1,6 +1,12 @@
 class EADToHTML
   RENDER_ATTRIBUTE_VALUES = [ 'altrender', 'bold', 'bolddoublequote', 'bolditalic', 'boldsinglequote', 'boldsmcaps', 'boldunderline', 'doublequote', 'italic', 'nonproport', 'singlequote', 'smcaps', 'sub', 'super', 'underline']
 
+  def self.strip_markup(content)
+    return if content.nil?
+
+    content.gsub(/<.+?>/, '')
+  end
+
   def self.convert(content)
     return if content.nil?
 

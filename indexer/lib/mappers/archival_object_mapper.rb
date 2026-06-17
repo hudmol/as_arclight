@@ -60,13 +60,14 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('ref_ssm',                     [archival_object_id(@json), archival_object_id(@json)]) # the traject mapping duplicates so here we are
     map_field('id',                          ao_id(@json))
 
-    title_html = EADToHTML.convert(@json['title'])
+    title_html = EADToHTML.convert(@json['display_string'])
+    title_no_html = EADToHTML.strip_markup(@json['display_string'])
 
-    map_field('title_filing_ssi',            title_html)
-    map_field('title_ssm',                   [title_html])
-    map_field('title_tesim',                 [title_html])
+    map_field('title_filing_ssi',            title_no_html)
+    map_field('title_ssm',                   [title_no_html])
+    map_field('title_tesim',                 [title_no_html])
     map_field('title_html_tesm',             [title_html])
-    map_field('normalized_title_ssm',        [@json['display_string'].gsub(/<.+?>/, '')])
+    map_field('normalized_title_ssm',        [title_no_html])
 
     map_field('unitid_ssm',                  [archival_object_id(@json), @json['uri']])
 
@@ -83,7 +84,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('parent_ssi',                  @map['parent_ids_ssim'].last)
     map_field('parent_ssim',                 @map['parent_ids_ssim'])
 
-    map_field('parent_unittitles_ssm',       [collection_title(resource), ancestors[1..-1].map{|a| EADToHTML.convert(a['display_string'])}].select{|a| !a.nil?}.flatten)
+    map_field('parent_unittitles_ssm',       [collection_title(resource), ancestors[1..-1].map{|a| EADToHTML.strip_markup(a['display_string'])}].select{|a| !a.nil?}.flatten)
     map_field('parent_unittitles_tesim',     @map['parent_unittitles_ssm'])
 
     map_field('parent_levels_ssm',           ancestors.map{|a| a['level']})
@@ -100,14 +101,14 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
                                                     .select{|n| n['type'] == 'accessrestrict'}
                                                     .map{|n| n['subnotes'].select{|s| s['publish']}
                                                     .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")}
-                                                    .map{|s| EADToHTML.convert(s)})
+                                                    .map{|s| EADToHTML.strip_markup(s)})
 
     map_field('parent_access_terms_tesm',    resource['notes']
                                                     .select{|n| n['type'] == 'userestrict'}
                                                     .map{|n| n['subnotes']
                                                               .select{|s| s['publish']}
                                                               .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")}
-                                                    .map{|s| EADToHTML.convert(s)})
+                                                    .map{|s| EADToHTML.strip_markup(s)})
 
     map_field('date_range_isim',             format_date_range(@json['dates']))
 
@@ -129,7 +130,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field(
       'digital_objects_ssm',
       published_digital_object_instances.map {|i|
-        title = EADToHTML.convert(i.dig('digital_object', '_resolved', 'title'))
+        title = EADToHTML.strip_markup(i.dig('digital_object', '_resolved', 'title'))
         url = i.dig('digital_object', '_resolved', 'representative_file_version', 'file_uri')
 
         if title && url
@@ -153,7 +154,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
           dado_fields << {
             :dado_action_ssm => representative_file_version['xlink_show_attribute'],
             :dado_identifier_ssm => representative_file_version['file_uri'],
-            :dado_label_tesim => EADToHTML.convert(digital_object['title']),
+            :dado_label_tesim => EADToHTML.strip_markup(digital_object['title']),
             :dado_type_ssm => digital_object['digital_object_type'] ? I18n.t("enumerations.digital_object_digital_object_type.#{digital_object['digital_object_type']}", :default => digital_object['digital_object_type'])
                                                                     : 'unset'
           }
