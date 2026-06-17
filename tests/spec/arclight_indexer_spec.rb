@@ -29,8 +29,8 @@ describe 'ArclightIndexer' do
     db[:document].delete
 
     # Silence log output unless an example sets its own expectation.
-    allow(Log).to receive(:debug)
-    allow(Log).to receive(:error)
+    allow(ARCLog).to receive(:debug)
+    allow(ARCLog).to receive(:error)
 
     allow(indexer).to receive(:do_http_request) do |url, request|
       http_request_log.push(:url => url, :request => request)
@@ -419,7 +419,7 @@ describe 'ArclightIndexer' do
     it 'records a failure count and a retry time when indexing raises' do
 
       db[:resource].insert(:uri => resource_uri)
-      allow(Log).to receive(:exception)
+      allow(ARCLog).to receive(:exception)
       allow(indexer).to receive(:fetch_records).and_return([resource_record(resource_uri, true)])
       allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
@@ -433,7 +433,7 @@ describe 'ArclightIndexer' do
 
     it 'accumulates the failure count across repeated indexing failures' do
       db[:resource].insert(:uri => resource_uri, :failure_count => 3)
-      allow(Log).to receive(:exception)
+      allow(ARCLog).to receive(:exception)
       allow(indexer).to receive(:fetch_records).and_return([resource_record(resource_uri, true)])
       allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 

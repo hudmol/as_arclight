@@ -1,4 +1,5 @@
 require 'log'
+require_relative 'lib/arclog'
 
 require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar')
 
@@ -48,7 +49,7 @@ end
 begin
   data_dir = File.join(AppConfig[:data_directory], 'as_arclight')
   Dir.mkdir(data_dir)
-  Log.info "as_arclight plugin: Created data directory at #{data_dir}"
+  ARCLog.info "Created data directory at #{data_dir}"
 rescue Errno::EEXIST => e
   # good!
 rescue => e
@@ -71,11 +72,11 @@ if Object.const_defined?('PeriodicIndexer')
 
   Thread.new do
     begin
-      Log.info("Starting Arclight indexer")
+      ARCLog.info("Starting Arclight indexer")
       indexer.run
     rescue
-      Log.error("Unexpected failure in Arclight indexer: #{$!}")
-      Log.exception($!)
+      ARCLog.error("Unexpected failure in Arclight indexer: #{$!}")
+      ARCLog.exception($!)
     end
   end
 

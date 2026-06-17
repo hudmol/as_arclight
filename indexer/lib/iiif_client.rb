@@ -18,7 +18,7 @@ class IIIFClient
   end
 
   def fetch_manifest(url)
-    Log.debug "as_arclight plugin: Fetching manifest from URL: #{url}"
+    ARCLog.debug "Fetching manifest from URL: #{url}"
 
     response = fetch_url(url, config.max_redirects)
 
@@ -217,7 +217,7 @@ class IIIFClient
       return HTTPResponse.from_json(cache_entry.json)
     end
 
-    Log.debug "as_arclight plugin: Fetching URL #{url}"
+    ARCLog.debug "Fetching URL #{url}"
 
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = (url.scheme == 'https')
@@ -239,7 +239,7 @@ class IIIFClient
         last_error = e
 
         if (retry_count + 1) < config.max_request_retries
-          Log.warn "as_arclight plugin: Failure during HTTP request - GET #{url}: #{e}." +
+          ARCLog.warn "Failure during HTTP request - GET #{url}: #{e}." +
                    "  Will retry (attempt #{retry_count + 1} of #{config.max_request_retries})"
           sleep [2 ** (retry_count + 1), config.max_request_retry_interval_seconds].min
         end
@@ -247,7 +247,7 @@ class IIIFClient
     end
 
     if response.nil?
-      Log.error "as_arclight plugin: Permanent failure during HTTP request - GET #{url}: #{last_error}"
+      ARCLog.error "Permanent failure during HTTP request - GET #{url}: #{last_error}"
       return HTTPResponse.new('499', {}, "Request failure: #{last_error}")
     end
 

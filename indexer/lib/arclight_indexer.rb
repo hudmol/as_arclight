@@ -36,6 +36,13 @@ class ArclightIndexer < PeriodicIndexer
     raise "as_arclight plugin: unexpected call to #solr_url!"
   end
 
+  def log(line)
+    line.gsub!(/Indexed ([0-9])/, 'Scanned \1')
+    line.gsub!(/Running index round/, "Scanning for updated collections")
+
+    ARCLog.info(line)
+  end
+
   def send_commit(type = :hard)
     # we decide when to send commits!
   end
@@ -52,14 +59,14 @@ class ArclightIndexer < PeriodicIndexer
     resp = do_http_request(target.parsed_url, req)
 
     if resp.code == '200'
-      Log.debug "as_arclight plugin: Sent commit to #{target.name}"
+      ARCLog.debug "Sent commit to #{target.name}"
       true
     else
       if resp.body =~ /exceeded limit of maxWarmingSearchers/
-        Log.warn "as_arclight plugin: Solr response when sending commit to #{target.name} -- #{resp.body}"
+        ARCLog.warn "Solr response when sending commit to #{target.name} -- #{response.body}"
         true
       else
-        Log.error "as_arclight plugin: Error when committing to #{target.name} -- #{resp.body}"
+        ARCLog.error "Error when committing to #{target.name} -- #{response.body}"
         false
       end
     end
@@ -76,7 +83,7 @@ class ArclightIndexer < PeriodicIndexer
           flag_for_delete(uri)
         elsif parsed_uri[:type] == 'archival_object'
           # nothing to do - the resource's mtime will be bumped by the delete
-          Log.debug "as_arclight plugin: ignoring deleted archival_object #{uri} - its resource will be reindexed"
+          ARCLog.debug "ignoring deleted archival_object #{uri} - its resource will be reindexed"
         else
           # any other record type is also ignoreable
         end
@@ -108,7 +115,7 @@ class ArclightIndexer < PeriodicIndexer
 
     @db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
     unless File.exist?(@db_path)
-      Log.info 'as_arclight plugin: Initializing db at ' + @db_path
+      ARCLog.info 'Initializing db at ' + @db_path
     end
 
     @db = Sequel.connect("jdbc:sqlite:#{@db_path}")
@@ -121,7 +128,7 @@ class ArclightIndexer < PeriodicIndexer
     @failed_index_max_failures = AppConfig[:as_arclight_failed_index_max_failures] rescue 100
 
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
-      Log.warn 'as_arclight plugin: Resetting queue!'
+      ARCLog.warn 'Resetting queue!'
       @db[:resource].delete
     end
   end
@@ -215,7 +222,7 @@ class ArclightIndexer < PeriodicIndexer
         # skip records in unpublished repos - they are deleted when the repo is indexed
         if (reference[:type] == 'repository' && !record['record']['publish']) ||
             (reference[:type] != 'repository' && !record['record']['repository']['_resolved']['publish'])
-          Log.debug "as_arclight plugin: Skipping record #{record['record']['uri']} because it is in an unpublished repository"
+          ARCLog.debug "Skipping record #{record['record']['uri']} because it is in an unpublished repository"
           next
         end
 
@@ -227,7 +234,7 @@ class ArclightIndexer < PeriodicIndexer
           flag_for_indexing(*(record['record']['collection'].map{|c| c['ref']}.select{|ref| JSONModel.parse_reference(ref)[:type] == 'resource'}))
         end
       else
-        Log.error "as_arclight plugin: Indexer couldn't parse uri #{record['uri']}"
+        ARCLog.error "Indexer couldn't parse uri #{record['uri']}"
       end
     end
   end
@@ -302,7 +309,7 @@ class ArclightIndexer < PeriodicIndexer
     # and this avoids having to load the whole thing into memory
     fh = Tempfile.new('arclight_stream.json')
     temp_file_path = fh.path
-    Log.debug "as_arclight plugin: Dumping nested doc to #{temp_file_path}"
+    ARCLog.debug "Dumping nested doc to #{temp_file_path}"
 
     begin
       fh.write('[')
@@ -326,12 +333,12 @@ class ArclightIndexer < PeriodicIndexer
       output_basename = @db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
       output_file = File.join(self_test_output_dir, output_basename + ".json")
 
-      Log.debug "as_arclight plugin: Writing #{output_file} for further inspection"
+      ARCLog.debug "Writing #{output_file} for further inspection"
       FileUtils.cp(fh.path, output_file + ".tmp")
       File.rename(output_file + ".tmp", output_file)
     end
 
-    Log.debug "as_arclight plugin: Dump complete, sending to Solr targets ..."
+    ARCLog.debug "Dump complete, sending to Solr targets ..."
 
     begin
       solr_targets.each do |target|
@@ -345,7 +352,7 @@ class ArclightIndexer < PeriodicIndexer
           resp = do_http_request(target.parsed_url, req)
 
           unless resp.code == '200'
-            Log.error "as_arclight plugin: Error when streaming doc for #{uri} to #{target.name}: #{resp.body}"
+            ARCLog.error "Error when streaming doc for #{uri} to #{target.name}: #{resp.body}"
             next
           end
         ensure
@@ -357,7 +364,7 @@ class ArclightIndexer < PeriodicIndexer
             log "Indexed #{uri} to #{target.name}"
           end
         else
-          Log.error "as_arclight plugin: Error commiting index doc for #{uri} to #{target.name}: #{resp.body}"
+          ARCLog.error "Error commiting index doc for #{uri} to #{target.name}: #{resp.body}"
         end
       end
     ensure
@@ -376,7 +383,7 @@ class ArclightIndexer < PeriodicIndexer
       resp = do_http_request(target.parsed_url, req)
 
       if resp.code != '200'
-        Log.error "as_arclight plugin: Error deleting #{resource_uri} from #{target.name}: #{resp.body}"
+        ARCLog.error "Error deleting #{resource_uri} from #{target.name}: #{resp.body}"
       end
     end
   end
@@ -388,7 +395,7 @@ class ArclightIndexer < PeriodicIndexer
     unpublished_count = 0
 
     @db[:deleted_resource].select_map(:uri).each do |resource_uri|
-      Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it has been deleted in ArchivesSpace"
+      ARCLog.debug "Ensuring resource #{resource_uri} is not in the Arclight indexes because it has been deleted in ArchivesSpace"
       send_delete_for_resource(resource_uri)
       deleted_count += 1
       resource_count += 1
@@ -403,14 +410,18 @@ class ArclightIndexer < PeriodicIndexer
     # Clear any records that have reached our maximum number of failures
     max_failures = @failed_index_max_failures
     @db[:resource].where { failure_count > max_failures }.each do |failed_resource|
-      Log.debug "as_arclight plugin: Resource #{failed_resource[:uri]} has failed to index #{failed_resource[:failure_count]} times in a row and will be skipped"
+      ARCLog.debug "Resource #{failed_resource[:uri]} has failed to index #{failed_resource[:failure_count]} times in a row and will be skipped"
     end
 
     @db[:resource].where { failure_count > max_failures }.delete
 
+    eligible_resource_ds = @db[:resource]
+                             .where{(next_retry_time =~ nil) | (next_retry_time <= Time.now.to_i)}
+
+    ARCLog.info "There are #{eligible_resource_ds.count} collections in need of indexing"
+
     fetch_records(:resource,
-                  @db[:resource]
-                    .where{(next_retry_time =~ nil) | (next_retry_time <= Time.now.to_i)}
+                  eligible_resource_ds
                     .select_map(:uri)
                     .map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
                   Arclight::Mapper.resource_mapper.resolves)
@@ -424,7 +435,7 @@ class ArclightIndexer < PeriodicIndexer
         mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
         if resource_json['publish'] && !resource_json['suppressed']
-          Log.debug "as_arclight plugin: Preparing resource #{resource_uri}"
+          ARCLog.debug "Preparing resource #{resource_uri}"
 
           resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
@@ -432,7 +443,7 @@ class ArclightIndexer < PeriodicIndexer
 
           map_waypoints(root_json, resource_uri, resource_doc_id, nil)
 
-          Log.debug "as_arclight plugin: Generated index docs for #{resource_uri}"
+          ARCLog.debug "Generated index docs for #{resource_uri}"
 
           stream_nested_doc(resource_doc_id, resource_uri)
 
@@ -440,7 +451,7 @@ class ArclightIndexer < PeriodicIndexer
 
           indexed_count += 1
         else
-          Log.debug "as_arclight plugin: Ensuring resource #{resource_uri} is not in the Arclight indexes because it is either not published or suppressed"
+          ARCLog.debug "Ensuring resource #{resource_uri} is not in the Arclight indexes because it is either not published or suppressed"
 
           unpublished_count += 1
 
@@ -453,9 +464,9 @@ class ArclightIndexer < PeriodicIndexer
       rescue => e
         next_retry_time = Time.now.to_i + @failed_index_retry_delay_seconds
 
-        Log.error "as_arclight plugin: Error indexing resource #{resource_uri}: #{e}"
-        Log.error "as_arclight plugin: This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
-        Log.exception(e)
+        ARCLog.error "Error indexing resource #{resource_uri}: #{e}"
+        ARCLog.error "This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
+        ARCLog.exception(e)
 
         @db[:resource].filter(:uri => resource_uri)
           .update(:next_retry_time => next_retry_time,
@@ -483,7 +494,7 @@ class ArclightIndexer < PeriodicIndexer
               log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
             end
           else
-            Log.error "as_arclight plugin: failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{target.name}: #{response.body}"
+            ARCLog.error "failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{target.name}: #{response.body}"
           end
         end
       end

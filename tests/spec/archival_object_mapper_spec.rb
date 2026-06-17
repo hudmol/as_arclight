@@ -155,17 +155,17 @@ describe Arclight::ArchivalObjectMapper do
 
       archival_json = ao_json_with_iiif_manifest(manifest_url)
 
-      allow(Log).to receive(:error)
+      allow(ARCLog).to receive(:error)
 
       expect {
         mapper = Arclight::ArchivalObjectMapper.new(archival_json)
         JSON.parse(mapper.json)
       }.to raise_error(error)
 
-      expect(Log).to have_received(:error)
+      expect(ARCLog).to have_received(:error)
         .with(/failure while extracting renderings from IIIF manifest #{Regexp.escape(decoded_manifest_uri)}/)
         .at_least(:once)
-      expect(Log).to have_received(:error)
+      expect(ARCLog).to have_received(:error)
         .with(/error was #{Regexp.escape(error.message)}/)
         .at_least(:once)
     end

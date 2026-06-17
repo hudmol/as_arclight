@@ -189,9 +189,9 @@ describe IIIFClient do
 
   describe '#fetch_url' do
     before(:each) do
-      allow(Log).to receive(:debug)
-      allow(Log).to receive(:warn)
-      allow(Log).to receive(:error)
+      allow(ARCLog).to receive(:debug)
+      allow(ARCLog).to receive(:warn)
+      allow(ARCLog).to receive(:error)
     end
 
     it 'raises MaxRedirectsHit once the redirect budget is exhausted' do

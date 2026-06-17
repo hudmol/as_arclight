@@ -36,4 +36,6 @@ Dir.glob(File.join(File.dirname(__FILE__), "spec/*_spec.rb")).each do |spec|
   require spec
 end
 
+$ARCLIGHT_UNIT_TESTS = true
+
 RSpec::Core::Runner.run([])
