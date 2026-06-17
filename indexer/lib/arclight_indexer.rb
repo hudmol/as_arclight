@@ -56,10 +56,10 @@ class ArclightIndexer < PeriodicIndexer
       true
     else
       if resp.body =~ /exceeded limit of maxWarmingSearchers/
-        Log.warn "as_arclight plugin: Solr response when sending commit to #{target.name} -- #{response.body}"
+        Log.warn "as_arclight plugin: Solr response when sending commit to #{target.name} -- #{resp.body}"
         true
       else
-        Log.error "as_arclight plugin: Error when committing to #{target.name} -- #{response.body}"
+        Log.error "as_arclight plugin: Error when committing to #{target.name} -- #{resp.body}"
         false
       end
     end
