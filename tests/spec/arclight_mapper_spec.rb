@@ -152,13 +152,14 @@ describe Arclight::Mapper do
       json = {
         'notes' => [
           {
+            'jsonmodel_type' => 'note_multipart',
             'type' => 'arrangement',
             'publish' => true,
             'subnotes' => [
-              { 'publish' => true, 'items' => %w[First Second] },
-              { 'publish' => true, 'content' => "Para one\nPara two" },
+              { 'jsonmodel_type' => 'note_orderedlist', 'publish' => true, 'items' => %w[First Second] },
+              { 'jsonmodel_type' => 'note_singlepart', 'publish' => true, 'content' => "Para one\nPara two" },
               # a subnote with neither items nor content exercises the empty branch
-              { 'publish' => true }
+              { 'jsonmodel_type' => 'note_notsupported', 'publish' => true }
             ]
           }
         ]
@@ -167,14 +168,14 @@ describe Arclight::Mapper do
       mapper = notes_mapper_class.new(json)
       mapped = JSON.parse(mapper.json)
 
-      expect(mapped['arrangement_tesm']).to include('First, Second')
-      expect(mapped['arrangement_tesm']).to include("Para one\nPara two")
+      expect(mapped['arrangement_tesm']).to include(a_string_including("First\nSecond"))
+      expect(mapped['arrangement_tesm']).to include(a_string_including("Para one\nPara two"))
       expect(mapped['arrangement_tesim']).to eq(mapped['arrangement_tesm'])
 
       html = mapped['arrangement_html_tesm'].join("\n")
-      expect(html).to include('<list type="ordered">')
-      expect(html).to include('<item>First</item>')
-      expect(html).to include('<item>Second</item>')
+      expect(html).to include('<ol>')
+      expect(html).to include('<li>First</li>')
+      expect(html).to include('<li>Second</li>')
       expect(html).to include('<p>Para one</p>')
     end
   end

@@ -19,18 +19,20 @@ describe Arclight::ArchivalObjectMapper do
       'notes' => [
         # accessrestrict note
         {
+          'jsonmodel_type' => 'note_multipart',
           'type' => 'accessrestrict',
           'publish' => true,
           'subnotes' => [
-            { 'content' => 'Restricted content', 'publish' => true }
+            { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Restricted content', 'publish' => true }
           ]
         },
         # userestrict note
         {
+          'jsonmodel_type' => 'note_multipart',
           'type' => 'userestrict',
           'publish' => true,
           'subnotes' => [
-            { 'content' => 'Contact archives for permission', 'publish' => true }
+            { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Contact archives for permission', 'publish' => true }
           ]
         }
       ],

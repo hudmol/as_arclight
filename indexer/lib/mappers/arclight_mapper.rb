@@ -77,90 +77,120 @@ module Arclight
       EADToHTML.strip_markup(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
     end
 
-    # FIXME: refactor?
+    SUPPORTED_NOTE_TYPES = [
+      'accessrestrict',
+      'acqinfo',
+      'arrangement',
+      'bioghist',
+      'custodhist',
+      'physloc',
+      'prefercite',
+      'processinfo',
+      'scopecontent',
+      'separatedmaterial',
+      'userestrict',
+      'abstract',
+      'odd',
+    ]
+
+    MULTIPART_NOTE_TYPES = [
+      'note_bioghist',
+      'note_general_context',
+      'note_legal_status',
+      'note_mandate',
+      'note_multipart',
+      'note_structure_or_genealogy',
+    ]
+
+    SINGLEPART_NOTE_TYPES = [
+      'note_abstract',
+      'note_digital_object',
+      'note_langmaterial',
+      'note_singlepart',
+      'note_text',
+    ]
+
     def map_notes
-      {
-        'accessrestrict' => 'multipart',
-        'acqinfo' => 'multipart',
-        'arrangement' => 'orderedlist',
-        'bioghist' => 'multipart',
-        'custodhist' => 'multipart',
-        'physloc' => 'singlepart',
-        'prefercite' => 'multipart',
-        'processinfo' => 'multipart',
-        'scopecontent' => 'multipart',
-        'separatedmaterial' => 'multipart',
-        'userestrict' => 'multipart',
-        'abstract' => 'singlepart',
-        'odd' => 'multipart'
-      }.each do |note, type|
+      SUPPORTED_NOTE_TYPES.each do |note_type|
+        notes_to_process = ASUtils.wrap(@json['notes'])
+                             .filter{|n| n['type'] == note_type && n['publish']}
 
-        if ASUtils.wrap(@json['notes']).find{|n| n['type'] == note && n['publish']}
-          map_field("#{note}_heading_ssm",  [I18n.t('enumerations._note_types.' + note)])
+        if notes_to_process.length > 0
+          map_field("#{note_type}_heading_ssm",  [I18n.t('enumerations._note_types.' + note_type)])
 
-          if type == 'multipart'
-            map_field("#{note}_tesm",
-                      @json['notes']
-                        .select{|n| n['type'] == note && n['publish']}
-                        .map{|n| n['subnotes']
-                                   .select{|s| s['publish']}
-                                   .map{|s| s['content']}.join("\n")}
-                        .map{|s| EADToHTML.convert(s)})
+          map_field("#{note_type}_tesm",
+                    notes_to_process
+                      .map{|n| render_note(n, strip_markup: true)}
+                      .flatten
+                      .compact)
 
-            map_field("#{note}_tesim", @map["#{note}_tesm"])
+          map_field("#{note_type}_tesim", @map["#{note_type}_tesm"])
 
-            map_field("#{note}_html_tesm",
-                      @map["#{note}_tesm"].map{|n| n.split(/\n+/)}.flatten)
+          map_field("#{note_type}_html_tesm",
+                    notes_to_process
+                      .map{|n| render_note(n)}
+                      .flatten
+                      .compact)
 
-            if note == 'acqinfo'
-              map_field("#{note}_ssim", @map["#{note}_tesim"])
-            end
-
-          elsif type == 'singlepart'
-            suffix = note == 'abstract' ? 'tesim' : 'tesm'
-
-            map_field("#{note}_#{suffix}",
-                      @json['notes']
-                        .select{|n| n['type'] == note && n['publish']}
-                        .map{|s| s['content'].join("\n")}
-                        .map{|s| EADToHTML.strip_markup(s)})
-
-            map_field("#{note}_html_tesm",
-                      @json['notes']
-                        .select{|n| n['type'] == note && n['publish']}
-                        .map{|s| s['content'].join("\n")}
-                        .map{|n| '<p>' + n + '</p>'}
-                        .map{|s| EADToHTML.convert(s)})
-
-          elsif type == 'orderedlist'
-            map_field("#{note}_tesm",
-                      @json['notes']
-                        .select{|n| n['type'] == note && n['publish']}
-                        .map{|n| n['subnotes']}.flatten
-                        .select{|s| s['publish']}
-                        .map{|s| s['items'] ? s['items'].join(', ') : s['content']}
-                        .map{|s| EADToHTML.strip_markup(s)})
-
-            map_field("#{note}_tesim", @map["#{note}_tesm"])
-
-            map_field("#{note}_html_tesm",
-                      @json['notes']
-                        .select{|n| n['type'] == note && n['publish']}.map{|n|
-                          n['subnotes'].select{|s| s['publish']}.map{|psn|
-                            if psn.has_key?('content')
-                              psn['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n")
-                            elsif psn.has_key?('items')
-                              '<list type="ordered">' + "\n" +
-                                psn['items'].map{|i|
-                                  '<item>' + (i.is_a?(Hash) ? "#{i.fetch('label')}: #{i.fetch('value')}" : i) + '</item>'}.join("\n") +
-                                '</list>'
-                            else
-                              ''
-                            end
-                          }.join("\n")
-                        }.map{|s| EADToHTML.convert(s)})
+          if note_type == 'acqinfo'
+            map_field("#{note_type}_ssim", @map["#{note_type}_tesim"])
           end
         end
+      end
+    end
+
+    def render_note(note, opts = {})
+      return if !note['publish']
+
+      case note.fetch('jsonmodel_type')
+      when *MULTIPART_NOTE_TYPES
+        ASUtils.wrap(note['subnotes']).map do |subnote|
+          render_note(subnote, opts)
+        end.flatten
+      when *SINGLEPART_NOTE_TYPES
+        ASUtils.wrap(note['content']).map do |note_text|
+          render_note_text(note_text.split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n"), opts)
+        end
+      when 'note_orderedlist'
+        out = "<ol>\n"
+        ASUtils.wrap(note['items']).map do |item|
+          out += "<li>#{item}</li>\n"
+        end
+        out += "</ol>\n"
+
+        render_note_text(out, opts)
+      when 'note_definedlist'
+        out = "<dl class='deflist'>\n"
+        ASUtils.wrap(note['items']).map do |item|
+          out += "<dt>#{item['label']}</dt>\n"
+          out += "<dd>#{item['value']}</dd>\n"
+        end
+        out += "</dl>\n"
+
+        render_note_text(out, opts)
+      when 'note_chronology'
+        out = "<dl class='deflist'>\n"
+        ASUtils.wrap(note['items']).map do |item|
+          out += "<dt>#{item['event_date']}</dt>\n"
+          out += "<dt>#{item['place']}</dt>\n"
+          item['events'].each do | event |
+            out += "<dd>#{event}</dd>\n"
+          end
+        end
+        out += "</dl>\n"
+
+        render_note_text(out, opts)
+      else
+        ARCLog.warn("Unrecognised note type: #{note.fetch('jsonmodel_type')}")
+        nil
+      end
+    end
+
+    def render_note_text(note_text, opts = {})
+      if opts.fetch(:strip_markup, false)
+        EADToHTML.strip_markup(note_text)
+      else
+        EADToHTML.convert(note_text)
       end
     end
 

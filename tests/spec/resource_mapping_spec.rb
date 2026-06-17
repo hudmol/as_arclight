@@ -412,11 +412,12 @@ describe Arclight::ResourceMapper do
         resource_json = minimal_resource.merge({
           'notes' => [
             {
+              'jsonmodel_type' => 'note_multipart',
               'type' => 'userestrict',
               'publish' => true,
               'subnotes' => [
-                { 'content' => 'Restricted materials', 'publish' => true },
-                { 'content' => 'Contact archives for permission', 'publish' => true }
+                { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Restricted materials', 'publish' => true },
+                { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Contact archives for permission', 'publish' => true }
               ]
             }
           ]
@@ -432,11 +433,12 @@ describe Arclight::ResourceMapper do
         resource_json = minimal_resource.merge({
           'notes' => [
             {
+              'jsonmodel_type' => 'note_multipart',
               'type' => 'userestrict',
               'publish' => true,
               'subnotes' => [
-                { 'content' => 'Published restriction', 'publish' => true },
-                { 'content' => 'Hidden restriction', 'publish' => false }
+                { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Published restriction', 'publish' => true },
+                { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Hidden restriction', 'publish' => false }
               ]
             }
           ]
@@ -454,10 +456,11 @@ describe Arclight::ResourceMapper do
         resource_json = minimal_resource.merge({
           'notes' => [
             {
+              'jsonmodel_type' => 'note_multipart',
               'type' => 'scopecontent',
               'publish' => true,
               'subnotes' => [
-                { 'content' => 'This collection contains letters and documents.', 'publish' => true }
+                { 'jsonmodel_type' => 'note_singlepart', 'content' => 'This collection contains letters and documents.', 'publish' => true }
               ]
             }
           ]
@@ -475,10 +478,11 @@ describe Arclight::ResourceMapper do
         resource_json = minimal_resource.merge({
           'notes' => [
             {
+              'jsonmodel_type' => 'note_multipart',
               'type' => 'acqinfo',
               'publish' => true,
               'subnotes' => [
-                { 'content' => 'Donated in 1995.', 'publish' => true }
+                { 'jsonmodel_type' => 'note_singlepart', 'content' => 'Donated in 1995.', 'publish' => true }
               ]
             }
           ]
@@ -497,6 +501,7 @@ describe Arclight::ResourceMapper do
         resource_json = minimal_resource.merge({
           'notes' => [
             {
+              'jsonmodel_type' => 'note_abstract',
               'type' => 'abstract',
               'publish' => true,
               'content' => ['A brief overview of the collection']
@@ -517,10 +522,11 @@ describe Arclight::ResourceMapper do
         resource_json = minimal_resource.merge({
           'notes' => [
             {
+              'jsonmodel_type' => 'note_multipart',
               'type' => 'arrangement',
               'publish' => true,
               'subnotes' => [
-                { 'items' => ['Series 1: Correspondence', 'Series 2: Photographs'], 'publish' => true }
+                { 'jsonmodel_type' => 'note_orderedlist', 'items' => ['Series 1: Correspondence', 'Series 2: Photographs'], 'publish' => true }
               ]
             }
           ]
@@ -529,8 +535,10 @@ describe Arclight::ResourceMapper do
         map = JSON.parse(mapper.json)
 
         expect(map['arrangement_heading_ssm']).not_to be_empty
-        expect(map['arrangement_tesm']).to include('Series 1: Correspondence, Series 2: Photographs')
-        expect(map['arrangement_html_tesm']).not_to be_empty
+        expect(map['arrangement_tesm']).to include(a_string_including('Series 1: Correspondence'))
+        expect(map['arrangement_tesm']).to include(a_string_including('Series 2: Photographs'))
+        expect(map['arrangement_html_tesm']).to include(a_string_including('<li>Series 1: Correspondence</li>'))
+        expect(map['arrangement_html_tesm']).to include(a_string_including('<li>Series 2: Photographs</li>'))
       end
     end
 
@@ -558,7 +566,7 @@ describe Arclight::ResourceMapper do
           'lang_materials' => [
             {
               'notes' => [
-                { 'content' => 'English, French' }
+                { 'jsonmodel_type' => 'note_langmaterial', 'content' => 'English, French', 'publish' => true }
               ]
             }
           ]
