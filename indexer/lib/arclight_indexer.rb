@@ -169,7 +169,17 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def fetch_records(type, ids, resolve)
-    JSONModel(type).all(:id_set => ids.join(","), 'resolve[]' => resolve)
+    result = {}
+
+    # id_set parameter is limited to :max_page_size so batch requests
+    ids.each_slice(AppConfig[:max_page_size]) do |batch|
+      result.merge!(
+        JSONModel(type).all(:id_set => batch.join(","), 'resolve[]' => resolve)
+          .map {|json| [json.uri, json.to_hash(:trusted)]}
+          .to_h)
+    end
+
+    result
   end
 
   def self.get_indexer(state = nil, name = "Arclight Indexer")
@@ -247,8 +257,6 @@ class ArclightIndexer < PeriodicIndexer
       fetch_records(:archival_object,
                     waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))},
                     Arclight::Mapper.archival_object_mapper.resolves)
-        .map {|json| [json.uri, json.to_hash(:trusted)]}
-        .to_h
 
     waypoints_json.each do |waypoint_record|
       record_uri = waypoint_record.fetch('uri')
@@ -425,12 +433,9 @@ class ArclightIndexer < PeriodicIndexer
                     .select_map(:uri)
                     .map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
                   Arclight::Mapper.resource_mapper.resolves)
-      .each do |resource|
+      .each do |resource_uri, resource_json|
 
       begin
-        resource_uri = resource.uri
-        resource_json = resource.to_hash(:trusted)
-
         resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
         mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
