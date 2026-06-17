@@ -218,3 +218,13 @@ To do that:
         differences in their parent/child relationships
 
       * Differences in the values of corresponding records
+
+## Logging
+
+While the as_arclight indexer is running, it will log to the standard
+ArchivesSpace log file. All logged messages will contain the prefix
+`as_arclight plugin:`, so you can keep an eye on what the plugin is
+doing using a command like:
+
+     tail -f archivesspace.out | grep 'as_arclight plugin:'
+
