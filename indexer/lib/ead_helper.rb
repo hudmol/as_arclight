@@ -1,4 +1,4 @@
-class EADToHTML
+class EADHelper
   RENDER_ATTRIBUTE_VALUES = [ 'altrender', 'bold', 'bolddoublequote', 'bolditalic', 'boldsinglequote', 'boldsmcaps', 'boldunderline', 'doublequote', 'italic', 'nonproport', 'singlequote', 'smcaps', 'sub', 'super', 'underline']
 
   def self.strip_markup(content)
@@ -7,7 +7,7 @@ class EADToHTML
     content.gsub(/<.+?>/, '')
   end
 
-  def self.convert(content)
+  def self.to_html(content)
     return if content.nil?
 
     content.strip!

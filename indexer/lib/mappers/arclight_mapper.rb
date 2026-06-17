@@ -74,7 +74,7 @@ module Arclight
     end
 
     def collection_title(json)
-      EADToHTML.strip_markup(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
+      EADHelper.strip_markup(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
     end
 
     SUPPORTED_NOTE_TYPES = [
@@ -188,9 +188,9 @@ module Arclight
 
     def render_note_text(note_text, opts = {})
       if opts.fetch(:strip_markup, false)
-        EADToHTML.strip_markup(note_text)
+        EADHelper.strip_markup(note_text)
       else
-        EADToHTML.convert(note_text)
+        EADHelper.to_html(note_text)
       end
     end
 

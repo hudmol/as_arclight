@@ -12,8 +12,8 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('id',                     resource_id(@json))
     map_field('archivesspace_uri_ssi',  @json['uri']) # mapping the resource's uri as a hook to delete it when the resource is deleted
 
-    title_html = EADToHTML.convert(@json['title'])
-    title_no_html = EADToHTML.strip_markup(@json['title'])
+    title_html = EADHelper.to_html(@json['title'])
+    title_no_html = EADHelper.strip_markup(@json['title'])
 
     map_field('title_ssm',              [title_no_html])
     map_field('title_html_tesm',        [title_html])
@@ -48,7 +48,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
                                                          .select{|s| s['publish']}
                                                          .map{|s| s['content'].split(/\n+/)}}
                                               .flatten
-                                              .map{|s| EADToHTML.strip_markup(s)})
+                                              .map{|s| EADHelper.strip_markup(s)})
 
     map_field('access_subjects_ssim',   @json['subjects'].select{|s| s.dig('_resolved', 'terms', 0, 'term_type') == 'topical'}.map{|s| s['_resolved']['title']})
     map_field('access_subjects_ssm',    @map['access_subjects_ssim'])
