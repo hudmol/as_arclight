@@ -151,7 +151,8 @@ module Arclight
                               psn['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n")
                             elsif psn.has_key?('items')
                               '<list type="ordered">' + "\n" +
-                                psn['items'].map{|i| '<item>' + i + '</item>'}.join("\n") +
+                                psn['items'].map{|i|
+                                  '<item>' + (i.is_a?(Hash) ? "#{i.fetch('label')}: #{i.fetch('value')}" : i) + '</item>'}.join("\n") +
                                 '</list>'
                             else
                               ''
