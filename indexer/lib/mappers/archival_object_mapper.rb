@@ -24,16 +24,16 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
     if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
       id = AppConfig[:as_arclight_archival_object_id_prefix] + id
-    else
-      # default prefix is _
-      id = '_' + id
     end
 
     id
   end
 
   def ao_id(ao_json)
-    resource_id(resource) + archival_object_id(ao_json)
+    # if no prefix is set then use _ as a delimiter
+    delimiter = AppConfig.has_key?(:as_arclight_archival_object_id_prefix) ? '' : '_'
+
+    resource_id(resource) + delimiter + archival_object_id(ao_json)
   end
 
   def iiif_client
