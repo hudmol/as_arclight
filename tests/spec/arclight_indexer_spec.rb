@@ -150,6 +150,20 @@ describe 'ArclightIndexer' do
 
       expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
     end
+
+    it 'resets the failure count and retry time when a resource is re-flagged' do
+      db[:resource].insert(:uri => '/repositories/2/resources/123',
+                           :failure_count => 7,
+                           :next_retry_time => 99999)
+
+      indexer.index_records([
+                              record_for('/repositories/2/resources/123', 'repository' => published_repo)
+                            ])
+
+      row = db[:resource].first(:uri => '/repositories/2/resources/123')
+      expect(row[:failure_count]).to eq(0)
+      expect(row[:next_retry_time]).to be_nil
+    end
   end
 
   describe '#solr_url' do
@@ -400,6 +414,44 @@ describe 'ArclightIndexer' do
       expect(delete_request.dig('delete', 'query')).to eq("archivesspace_uri_ssi:\"#{resource_uri}\"")
       expect(indexer).to have_received(:send_commit_to_all_targets)
       expect(db[:resource].select_map(:uri)).to be_empty
+    end
+
+    it 'records a failure count and a retry time when indexing raises' do
+
+      db[:resource].insert(:uri => resource_uri)
+      allow(Log).to receive(:exception)
+      allow(indexer).to receive(:fetch_records).and_return([resource_record(resource_uri, true)])
+      allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
+
+      indexer.index_round_complete(repository)
+
+      row = db[:resource].first(:uri => resource_uri)
+      # the resource stays in the queue to be retried later
+      expect(row[:failure_count]).to eq(1)
+      expect(row[:next_retry_time]).not_to be_nil
+    end
+
+    it 'accumulates the failure count across repeated indexing failures' do
+      db[:resource].insert(:uri => resource_uri, :failure_count => 3)
+      allow(Log).to receive(:exception)
+      allow(indexer).to receive(:fetch_records).and_return([resource_record(resource_uri, true)])
+      allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
+
+      indexer.index_round_complete(repository)
+
+      expect(db[:resource].first(:uri => resource_uri)[:failure_count]).to eq(4)
+    end
+
+    it 'drops resources that have exceeded the maximum number of failures' do
+      max = indexer.instance_variable_get(:@failed_index_max_failures)
+      db[:resource].insert(:uri => '/repositories/2/resources/123', :failure_count => max + 1)
+      db[:resource].insert(:uri => '/repositories/2/resources/999', :failure_count => max)
+      allow(indexer).to receive(:fetch_records).and_return([])
+
+      indexer.index_round_complete(repository)
+
+      # the over-limit resource is removed, the at-limit one is kept for another try
+      expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/999'])
     end
   end
 end

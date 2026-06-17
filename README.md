@@ -88,7 +88,11 @@ Optional configuration:
 *  AppConfig[:as_arclight_failed_index_retry_delay_seconds]
     - If indexing a Resource record fails for some reason, it will be
       retried periodically until it succeeds. This setting controls
-      the number of seconds between retries (default: 300 seconds)
+      the number of seconds between retries (default: 3600 seconds [1 hour])
+*  AppConfig[:as_arclight_failed_index_max_failures]
+    - If indexing a Resource record fails for some reason, it will be
+      retried periodically until it succeeds. This setting controls
+      the number of failures we allow before giving up (default: 100)
 
 Example minimal configuration:
 ```

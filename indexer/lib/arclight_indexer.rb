@@ -116,7 +116,9 @@ class ArclightIndexer < PeriodicIndexer
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
 
-    @failed_index_retry_delay_seconds = AppConfig[:as_arclight_failed_index_retry_delay_seconds] rescue 300
+    @failed_index_retry_delay_seconds = AppConfig[:as_arclight_failed_index_retry_delay_seconds] rescue 60 * 60
+
+    @failed_index_max_failures = AppConfig[:as_arclight_failed_index_max_failures] rescue 100
 
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
       Log.warn 'as_arclight plugin: Resetting queue!'
@@ -151,6 +153,12 @@ class ArclightIndexer < PeriodicIndexer
       end
     end
 
+    unless @db[:resource].columns.include?(:failure_count)
+      @db.alter_table(:resource) do
+        add_column :failure_count, :Bignum, :default => 0
+      end
+    end
+
   end
 
   def fetch_records(type, ids, resolve)
@@ -177,12 +185,9 @@ class ArclightIndexer < PeriodicIndexer
         next
       end
 
-      begin
-        @db[:resource].insert(:uri => uri)
-      rescue Sequel::UniqueConstraintViolation
-        # this is ok - just means some other record implicated
-        # in the resource has already flagged it
-      end
+      # Clear any existing rows prior to insert to reset our failure counts
+      @db[:resource].filter(:uri => uri).delete
+      @db[:resource].insert(:uri => uri)
     end
   end
 
@@ -395,6 +400,14 @@ class ArclightIndexer < PeriodicIndexer
       send_commit_to_all_targets
     end
 
+    # Clear any records that have reached our maximum number of failures
+    max_failures = @failed_index_max_failures
+    @db[:resource].where { failure_count > max_failures }.each do |failed_resource|
+      Log.debug "as_arclight plugin: Resource #{failed_resource[:uri]} has failed to index #{failed_resource[:failure_count]} times in a row and will be skipped"
+    end
+
+    @db[:resource].where { failure_count > max_failures }.delete
+
     fetch_records(:resource,
                   @db[:resource]
                     .where{(next_retry_time =~ nil) | (next_retry_time <= Time.now.to_i)}
@@ -444,7 +457,9 @@ class ArclightIndexer < PeriodicIndexer
         Log.error "as_arclight plugin: This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
         Log.exception(e)
 
-        @db[:resource].filter(:uri => resource_uri).update(:next_retry_time => next_retry_time)
+        @db[:resource].filter(:uri => resource_uri)
+          .update(:next_retry_time => next_retry_time,
+                  :failure_count => Sequel.expr(:failure_count) + 1)
       end
     end
 
