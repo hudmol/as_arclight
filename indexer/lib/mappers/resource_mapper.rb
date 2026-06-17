@@ -74,8 +74,9 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
     map_field('language_ssim',          @json['lang_materials'].map{|lm|
                                               out = lm['notes']
-                                                      .map{|n| n['content']}
+                                                      .map{|n| render_note(n, strip_markup: true)}
                                                       .flatten
+                                                      .compact
                                                       .map{|s| s.split(/[,.]/)}
                                                       .flatten
                                                       .map(&:strip)
@@ -86,8 +87,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
                                               end
 
                                               out
-                                            }.flatten.uniq
-                                            .map{|s| EADToHTML.strip_markup(s)})
+                                            }.flatten.uniq)
 
     map_field('total_component_count_is',@json['_total_components'])
     map_field('online_item_count_is',   @json['_online_item_count'])
