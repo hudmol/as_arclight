@@ -20,15 +20,20 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   def archival_object_id(ao_json)
     id = ao_json['ref_id'] || ao_json['component_id'] || ao_json['uri']
 
+    id.tr!('.', '-')
+
     if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
       id = AppConfig[:as_arclight_archival_object_id_prefix] + id
+    else
+      # default prefix is _
+      id = '_' + id
     end
 
     id
   end
 
   def ao_id(ao_json)
-    resource_id(resource) + '_' + archival_object_id(ao_json)
+    resource_id(resource) + archival_object_id(ao_json)
   end
 
   def iiif_client

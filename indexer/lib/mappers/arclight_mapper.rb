@@ -64,6 +64,8 @@ module Arclight
     def resource_id(json)
       id = json['ead_id'] || [0,1,2,3].map{|n| json["id_#{n}"]}.select{|i| !i.nil?}.join('-')
 
+      id.tr!('.', '-')
+
       if AppConfig.has_key?(:as_arclight_resource_id_prefix)
         id = AppConfig[:as_arclight_resource_id_prefix] + id
       end
