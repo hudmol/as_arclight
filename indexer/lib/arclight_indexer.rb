@@ -63,10 +63,10 @@ class ArclightIndexer < PeriodicIndexer
       true
     else
       if resp.body =~ /exceeded limit of maxWarmingSearchers/
-        ARCLog.warn "Solr response when sending commit to #{target.name} -- #{response.body}"
+        ARCLog.warn "Solr response when sending commit to #{target.name} -- #{resp.body}"
         true
       else
-        ARCLog.error "Error when committing to #{target.name} -- #{response.body}"
+        ARCLog.error "Error when committing to #{target.name} -- #{resp.body}"
         false
       end
     end
