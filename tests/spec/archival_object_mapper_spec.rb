@@ -214,8 +214,9 @@ describe Arclight::ArchivalObjectMapper do
       expect(map['ref_ssm']).to be_an(Array)
       expect(map['ref_ssm'].length).to be >= 1
 
-      # id is resource_id(resource) + archival_object_id
+      # id is resource_id(resource) + '_' + archival_object_id if no prefix is set
       expect(map['id']).to be_a(String)
+      expect(map['id']).to eq('res-001_AO-1')
       expect(map['title_ssm']).to eq(['Sample AO Title'])
       expect(map['title_tesim']).to eq(['Sample AO Title'])
       expect(map['title_html_tesm']).to eq(['Sample AO Title'])
