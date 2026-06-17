@@ -1,6 +1,8 @@
 require 'log'
 require_relative 'lib/arclog'
 
+require_relative 'lib/ead_to_html'
+
 require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar')
 
 # config check

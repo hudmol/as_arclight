@@ -74,7 +74,7 @@ module Arclight
     end
 
     def collection_title(json)
-      json['title'] + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
+      EADToHTML.convert(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
     end
 
     # FIXME: refactor?
@@ -100,9 +100,12 @@ module Arclight
 
           if type == 'multipart'
             map_field("#{note}_tesm",
-                      @json['notes'].select{|n| n['type'] == note && n['publish']}
-                        .map{|n| n['subnotes'].select{|s| s['publish']}
-                          .map{|s| s['content']}.join("\n")})
+                      @json['notes']
+                        .select{|n| n['type'] == note && n['publish']}
+                        .map{|n| n['subnotes']
+                                   .select{|s| s['publish']}
+                                   .map{|s| s['content']}.join("\n")}
+                        .map{|s| EADToHTML.convert(s)})
 
             map_field("#{note}_tesim", @map["#{note}_tesm"])
 
@@ -117,35 +120,40 @@ module Arclight
             suffix = note == 'abstract' ? 'tesim' : 'tesm'
 
             map_field("#{note}_#{suffix}",
-                      @json['notes'].select{|n| n['type'] == note && n['publish']}
-                        .map{|s| s['content'].join("\n")})
+                      @json['notes']
+                        .select{|n| n['type'] == note && n['publish']}
+                        .map{|s| s['content'].join("\n")}
+                        .map{|s| EADToHTML.convert(s)})
 
             map_field("#{note}_html_tesm",
                       @map["#{note}_#{suffix}"].map{|n| '<p>' + n + '</p>'})
 
           elsif type == 'orderedlist'
             map_field("#{note}_tesm",
-                      @json['notes'].select{|n| n['type'] == note && n['publish']}
+                      @json['notes']
+                        .select{|n| n['type'] == note && n['publish']}
                         .map{|n| n['subnotes']}.flatten
                         .select{|s| s['publish']}
-                        .map{|s| s['items'] ? s['items'].join(', ') : s['content']})
+                        .map{|s| s['items'] ? s['items'].join(', ') : s['content']}
+                        .map{|s| EADToHTML.convert(s)})
 
             map_field("#{note}_tesim", @map["#{note}_tesm"])
 
             map_field("#{note}_html_tesm",
-                      @json['notes'].select{|n| n['type'] == note && n['publish']}.map{|n|
-                        n['subnotes'].select{|s| s['publish']}.map{|psn|
-                          if psn.has_key?('content')
-                            psn['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n")
-                          elsif psn.has_key?('items')
-                            '<list type="ordered">' + "\n" +
-                              psn['items'].map{|i| '<item>' + i + '</item>'}.join("\n") +
-                              '</list>'
-                          else
-                            ''
-                          end
-                        }.join("\n")
-                      })
+                      @json['notes']
+                        .select{|n| n['type'] == note && n['publish']}.map{|n|
+                          n['subnotes'].select{|s| s['publish']}.map{|psn|
+                            if psn.has_key?('content')
+                              psn['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n")
+                            elsif psn.has_key?('items')
+                              '<list type="ordered">' + "\n" +
+                                psn['items'].map{|i| '<item>' + i + '</item>'}.join("\n") +
+                                '</list>'
+                            else
+                              ''
+                            end
+                          }.join("\n")
+                        }.map{|s| EADToHTML.convert(s)})
           end
         end
       end

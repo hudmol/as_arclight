@@ -11,9 +11,12 @@ class Arclight::ResourceMapper < Arclight::Mapper
   def map
     map_field('id',                     resource_id(@json))
     map_field('archivesspace_uri_ssi',  @json['uri']) # mapping the resource's uri as a hook to delete it when the resource is deleted
-    map_field('title_ssm',              [@json['title']])
-    map_field('title_html_tesm',        [@json['title']])
-    map_field('title_tesim',            [@json['title']])
+
+    title_html = EADToHTML.convert(@json['title'])
+
+    map_field('title_ssm',              [title_html])
+    map_field('title_html_tesm',        [title_html])
+    map_field('title_tesim',            [title_html])
     map_field('title_filing_ssi',       @json['finding_aid_filing_title'])
     map_field('ead_ssi',                resource_id(@json))
 
@@ -38,8 +41,13 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('creator_persname_ssim',  @map['creator_ssm'])
     map_field('creators_ssim',          @map['creator_ssm'])
 
-    map_field('access_terms_ssm',       @json['notes'].select{|n| n['type'] == 'userestrict' && n['publish']}
-                                                      .map{|n| n['subnotes'].select{|s| s['publish']}.map{|s| s['content'].split(/\n+/)}}.flatten)
+    map_field('access_terms_ssm',       @json['notes']
+                                              .select{|n| n['type'] == 'userestrict' && n['publish']}
+                                              .map{|n| n['subnotes']
+                                                         .select{|s| s['publish']}
+                                                         .map{|s| s['content'].split(/\n+/)}}
+                                              .flatten
+                                              .map{|s| EADToHTML.convert(s)})
 
     map_field('access_subjects_ssim',   @json['subjects'].select{|s| s.dig('_resolved', 'terms', 0, 'term_type') == 'topical'}.map{|s| s['_resolved']['title']})
     map_field('access_subjects_ssm',    @map['access_subjects_ssim'])
@@ -64,12 +72,21 @@ class Arclight::ResourceMapper < Arclight::Mapper
                                                               .map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
 
     map_field('language_ssim',          @json['lang_materials'].map{|lm|
-                                               out = lm['notes'].map{|n| n['content']}.flatten.map{|s| s.split(/[,.]/)}.flatten.map(&:strip).reject(&:empty?)
-                                               if (las = lm.dig('language_and_script', 'language'))
-                                                 out.unshift(I18n.t('enumerations.language_iso639_2.' + las))
-                                               end
-                                               out
-                                             }.flatten.uniq)
+                                              out = lm['notes']
+                                                      .map{|n| n['content']}
+                                                      .flatten
+                                                      .map{|s| s.split(/[,.]/)}
+                                                      .flatten
+                                                      .map(&:strip)
+                                                      .reject(&:empty?)
+
+                                              if (las = lm.dig('language_and_script', 'language'))
+                                                out.unshift(I18n.t('enumerations.language_iso639_2.' + las))
+                                              end
+
+                                              out
+                                            }.flatten.uniq
+                                            .map{|s| EADToHTML.convert(s)})
 
     map_field('total_component_count_is',@json['_total_components'])
     map_field('online_item_count_is',   @json['_online_item_count'])
