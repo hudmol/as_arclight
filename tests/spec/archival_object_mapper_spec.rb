@@ -329,4 +329,93 @@ describe Arclight::ArchivalObjectMapper do
       expect(map['creator_sort']).to include('Smith, John')
     end
   end
+
+  context 'resolves and id construction' do
+    it 'resolves the ancestor and related records needed for mapping' do
+      expect(Arclight::ArchivalObjectMapper.resolves)
+        .to include('ancestors', 'top_container', 'instances::digital_object')
+    end
+
+    it 'prepends the configured archival object id prefix when one is set' do
+      allow(AppConfig).to receive(:has_key?).and_call_original
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_prefix).and_return(true)
+      allow(AppConfig).to receive(:[]).and_call_original
+      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_prefix).and_return('AO-PRE-')
+
+      mapper = Arclight::ArchivalObjectMapper.new(minimal_archival_json)
+      map = JSON.parse(mapper.json)
+
+      expect(map['ref_ssi']).to eq('AO-PRE-AO-1')
+      # with a prefix set, the id delimiter is empty
+      expect(map['id']).to eq('res-001AO-PRE-AO-1')
+    end
+  end
+
+  context '#iiif_client request configuration' do
+    let(:mapper) { Arclight::ArchivalObjectMapper.new(minimal_archival_json) }
+
+    def fake_request(uri)
+      headers = {}
+      req = Object.new
+      req.define_singleton_method(:uri) { URI.parse(uri) }
+      req.define_singleton_method(:[]=) { |k, v| headers[k] = v }
+      req.define_singleton_method(:headers) { headers }
+      req
+    end
+
+    it 'memoizes the client across calls' do
+      expect(mapper.iiif_client).to be(mapper.iiif_client)
+    end
+  end
+
+  context 'digital object edge cases' do
+    it 'omits digital objects that are missing a title or file uri' do
+      archival_json = minimal_archival_json({
+        'instances' => [
+          { 'digital_object' => { '_resolved' => { 'title' => 'No URL', 'publish' => true } } }
+        ]
+      })
+
+      mapper = Arclight::ArchivalObjectMapper.new(archival_json)
+      map = JSON.parse(mapper.json)
+
+      expect(map['digital_objects_ssm']).to eq([])
+      # there is still a published digital object, so online content is flagged
+      expect(map['has_online_content_ssim']).to include('Online access')
+    end
+
+    it 'maps dado_* fields when include_dadocm_required_fields is enabled' do
+      allow(AppConfig).to receive(:has_key?).and_call_original
+      allow(AppConfig).to receive(:has_key?).with(:include_dadocm_required_fields).and_return(true)
+      allow(AppConfig).to receive(:[]).and_call_original
+      allow(AppConfig).to receive(:[]).with(:include_dadocm_required_fields).and_return(true)
+
+      archival_json = minimal_archival_json({
+        'instances' => [
+          {
+            'digital_object' => {
+              '_resolved' => {
+                'title' => 'Digitized Item',
+                'publish' => true,
+                'digital_object_type' => 'mixed_materials',
+                'representative_file_version' => {
+                  'file_uri' => 'http://example.org/do/1',
+                  'xlink_show_attribute' => 'embed'
+                },
+                'file_versions' => []
+              }
+            }
+          }
+        ]
+      })
+
+      mapper = Arclight::ArchivalObjectMapper.new(archival_json)
+      map = JSON.parse(mapper.json)
+
+      expect(map['dado_identifier_ssm']).to eq('http://example.org/do/1')
+      expect(map['dado_label_tesim']).to eq('Digitized Item')
+      expect(map['dado_action_ssm']).to eq('embed')
+      expect(map['dado_type_ssm']).to be_a(String)
+    end
+  end
 end

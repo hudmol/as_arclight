@@ -104,5 +104,22 @@ describe IIIFClient::Cache do
         cache.close
       end
     end
+
+    it 'purges expired rows when run_expiration! is called' do
+      cache = IIIFClient::Cache::SQLiteCache.new(@db_path, {})
+      begin
+        uri = URI.parse('http://example/expired.json')
+        # max-age = 1 second, so this row will be expired after a short wait
+        cache.insert_response(uri, make_response(1, '{"gone":true}'))
+
+        sleep 2
+
+        expect { cache.run_expiration! }.not_to raise_error
+        expect(cache.get_cache_entry(uri)).to be_nil
+      ensure
+        cache.close
+      end
+    end
+
   end
 end

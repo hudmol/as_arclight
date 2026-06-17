@@ -268,6 +268,35 @@ describe IIIFClient do
 
       expect(result.status).to eq('499')
     end
+
+    it 'warns, backs off, and retries after a transient failure before succeeding' do
+      allow(config).to receive(:request_cache).and_return(IIIFClient::Cache::NullCache.new)
+      allow(config).to receive(:max_request_retries).and_return(3)
+
+      success = double('net_response',
+                       code: '200',
+                       to_hash: { 'content-type' => ['application/json'] },
+                       body: '{"ok":true}')
+
+      attempts = 0
+      fake_http = double('http').as_null_object
+      allow(fake_http).to receive(:request) do
+        attempts += 1
+        raise Errno::ECONNRESET if attempts == 1
+        success
+      end
+      allow(Net::HTTP).to receive(:new).and_return(fake_http)
+
+      # don't actually sleep through the back-off interval
+      allow(client).to receive(:sleep)
+
+      result = client.send(:fetch_url, 'http://example/x.json', 5)
+
+      expect(attempts).to eq(2)
+      expect(result.status).to eq('200')
+      expect(client).to have_received(:sleep).once
+      expect(ARCLog).to have_received(:warn).with(/Will retry \(attempt 1 of 3\)/)
+    end
   end
 end
 

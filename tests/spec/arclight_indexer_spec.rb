@@ -1,4 +1,5 @@
 require 'stringio'
+require 'tmpdir'
 
 describe 'ArclightIndexer' do
   before(:all) do
@@ -27,6 +28,7 @@ describe 'ArclightIndexer' do
     # :resource table survives across instances, so clear it between examples.
     db[:resource].delete
     db[:document].delete
+    db[:deleted_resource].delete
 
     # Silence log output unless an example sets its own expectation.
     allow(ARCLog).to receive(:debug)
@@ -73,6 +75,20 @@ describe 'ArclightIndexer' do
       indexer.repositories_updated_action([published_repo])
 
       expect(http_request_log).to be_empty
+    end
+
+    it 'logs an error when deleting a private repository fails' do
+      resp = Object.new
+      resp.define_singleton_method(:code) { '500' }
+      resp.define_singleton_method(:body) { 'nope' }
+      allow(indexer).to receive(:do_http_request).and_return(resp)
+
+      indexer.repositories_updated_action([
+        { 'record' => { 'name' => 'priv', 'repo_code' => 'PRIV', 'publish' => false } }
+      ])
+
+      expect(ARCLog).to have_received(:error)
+        .with(/failed to delete Arclight documents in private repository/)
     end
   end
 
@@ -348,6 +364,55 @@ describe 'ArclightIndexer' do
       expect(http_request_log.first[:request]['Content-Type']).to eq('application/json')
       expect(indexer).to have_received(:send_commit_for_target)
     end
+
+    it 'logs a successful index when the commit succeeds' do
+      allow(indexer).to receive(:send_commit_for_target).and_return(true)
+      root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+
+      indexer.stream_nested_doc(root, '/repositories/2/resources/77')
+
+      expect(indexer).to have_received(:log).with(/Indexed .* to/)
+    end
+
+    it 'logs an error when streaming the document to a target fails' do
+      resp = Object.new
+      resp.define_singleton_method(:code) { '500' }
+      resp.define_singleton_method(:body) { 'boom' }
+      allow(indexer).to receive(:do_http_request).and_return(resp)
+      root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+
+      indexer.stream_nested_doc(root, '/repositories/2/resources/88')
+
+      expect(ARCLog).to have_received(:error).with(/Error when streaming doc/)
+    end
+
+    it 'writes a candidate copy of the doc for inspection in record_candidate mode' do
+      Dir.mktmpdir do |dir|
+        allow(indexer).to receive(:self_test_mode).and_return(:record_candidate)
+        allow(AppConfig).to receive(:[]).and_call_original
+        allow(AppConfig).to receive(:[]).with(:as_arclight_test_candidate_directory).and_return(dir)
+
+        root = db[:document].insert(:resource_uri => '/repositories/2/resources/55', :json => '{"id":"root"}')
+        indexer.stream_nested_doc(root, '/repositories/2/resources/55')
+
+        written = Dir.glob(File.join(dir, '*.json'))
+        expect(written.size).to eq(1)
+        expect(File.read(written.first)).to eq('[{"id":"root"}]')
+      end
+    end
+
+    it 'writes a pristine copy of the doc for inspection in record_pristine mode' do
+      Dir.mktmpdir do |dir|
+        allow(indexer).to receive(:self_test_mode).and_return(:record_pristine)
+        allow(AppConfig).to receive(:[]).and_call_original
+        allow(AppConfig).to receive(:[]).with(:as_arclight_test_pristine_directory).and_return(dir)
+
+        root = db[:document].insert(:resource_uri => '/repositories/2/resources/56', :json => '{"id":"root"}')
+        indexer.stream_nested_doc(root, '/repositories/2/resources/56')
+
+        expect(Dir.glob(File.join(dir, '*.json')).size).to eq(1)
+      end
+    end
   end
 
   describe '#index_round_complete' do
@@ -452,6 +517,196 @@ describe 'ArclightIndexer' do
 
       # the over-limit resource is removed, the at-limit one is kept for another try
       expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/999'])
+    end
+
+    it 'sends a delete and a commit for resources removed in ArchivesSpace' do
+      db[:deleted_resource].insert(:uri => resource_uri)
+      allow(indexer).to receive(:fetch_records).and_return([])
+      allow(indexer).to receive(:send_delete_for_resource)
+
+      indexer.index_round_complete(repository)
+
+      expect(indexer).to have_received(:send_delete_for_resource).with(resource_uri)
+      expect(indexer).to have_received(:send_commit_to_all_targets)
+      # the resource is cleared from both the work queue and the deleted queue
+      expect(db[:deleted_resource].select_map(:uri)).to be_empty
+      expect(db[:resource].select_map(:uri)).to be_empty
+    end
+  end
+
+  describe '#delete_records' do
+    before(:each) { allow(indexer).to receive(:flag_for_delete) }
+
+    it 'does nothing for an empty record set' do
+      indexer.delete_records([])
+      expect(indexer).not_to have_received(:flag_for_delete)
+    end
+
+    it 'flags a deleted resource for deletion' do
+      indexer.delete_records(['/repositories/2/resources/123'])
+      expect(indexer).to have_received(:flag_for_delete).with('/repositories/2/resources/123')
+    end
+
+    it 'ignores a deleted archival object - its resource will be reindexed' do
+      indexer.delete_records(['/repositories/2/archival_objects/456'])
+      expect(indexer).not_to have_received(:flag_for_delete)
+    end
+
+    it 'ignores other record types' do
+      indexer.delete_records(['/repositories/2/top_containers/789'])
+      expect(indexer).not_to have_received(:flag_for_delete)
+    end
+  end
+
+  describe '#flag_for_delete' do
+    it 'records a resource uri in the deleted_resource table' do
+      indexer.flag_for_delete('/repositories/2/resources/123')
+      expect(db[:deleted_resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+    end
+
+    it 'skips uris that are not resource references' do
+      indexer.flag_for_delete('/repositories/2/archival_objects/456')
+      expect(db[:deleted_resource].select_map(:uri)).to be_empty
+    end
+
+    it 'silently tolerates the same resource being flagged for deletion twice' do
+      indexer.flag_for_delete('/repositories/2/resources/123')
+      expect {
+        indexer.flag_for_delete('/repositories/2/resources/123')
+      }.not_to raise_error
+      expect(db[:deleted_resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+    end
+  end
+
+  describe '#flag_for_indexing' do
+    it 'ignores uris that are not resource references' do
+      indexer.flag_for_indexing('/repositories/2/archival_objects/456')
+      expect(db[:resource].select_map(:uri)).to be_empty
+    end
+  end
+
+  describe '#index_records error handling' do
+    it 'logs an error when a record uri cannot be parsed' do
+      allow(JSONModel).to receive(:parse_reference).and_return(nil)
+
+      indexer.index_records([record_for('not-a-valid-uri')])
+
+      expect(ARCLog).to have_received(:error).with(/couldn't parse uri/)
+    end
+  end
+
+  describe '#send_commit_for_target' do
+    let(:target) { ArclightIndexer::SolrTarget.new('http://solr.example/core', 'Solr') }
+
+    def stub_commit_response(code, body = '')
+      resp = Object.new
+      resp.define_singleton_method(:code) { code }
+      resp.define_singleton_method(:body) { body }
+      allow(indexer).to receive(:do_http_request).and_return(resp)
+    end
+
+    it 'returns true on a 200 response' do
+      stub_commit_response('200')
+      expect(indexer.send_commit_for_target(target)).to be_truthy
+    end
+
+    it 'treats a maxWarmingSearchers response as a soft success and warns' do
+      allow(ARCLog).to receive(:warn)
+      stub_commit_response('400', 'exceeded limit of maxWarmingSearchers')
+
+      expect(indexer.send_commit_for_target(target)).to be_truthy
+      expect(ARCLog).to have_received(:warn).with(/Solr response when sending commit/)
+    end
+
+    it 'returns false and logs an error on any other failure' do
+      stub_commit_response('500', 'kaboom')
+
+      expect(indexer.send_commit_for_target(target)).to be_falsey
+      expect(ARCLog).to have_received(:error).with(/Error when committing/)
+    end
+  end
+
+  describe '#send_commit_to_all_targets' do
+    it 'sends a commit to every configured target' do
+      targets = [
+        ArclightIndexer::SolrTarget.new('http://a/x'),
+        ArclightIndexer::SolrTarget.new('http://b/y')
+      ]
+      allow(indexer).to receive(:solr_targets).and_return(targets)
+      allow(indexer).to receive(:send_commit_for_target)
+
+      indexer.send_commit_to_all_targets
+
+      expect(indexer).to have_received(:send_commit_for_target).with(targets[0])
+      expect(indexer).to have_received(:send_commit_for_target).with(targets[1])
+    end
+  end
+
+  describe '#send_delete_for_resource' do
+    let(:target) { ArclightIndexer::SolrTarget.new('http://solr.example/core') }
+
+    before(:each) { allow(indexer).to receive(:solr_targets).and_return([target]) }
+
+    it 'logs an error when a target responds with a non-200' do
+      resp = Object.new
+      resp.define_singleton_method(:code) { '503' }
+      resp.define_singleton_method(:body) { 'down' }
+      allow(indexer).to receive(:do_http_request).and_return(resp)
+
+      indexer.send_delete_for_resource('/repositories/2/resources/9')
+
+      expect(ARCLog).to have_received(:error).with(/Error deleting .* from/)
+    end
+  end
+
+  describe 'indexer plumbing' do
+    it '.get_indexer builds an ArclightIndexer instance' do
+      expect(ArclightIndexer.get_indexer(nil, 'plumbing-get-indexer')).to be_a(ArclightIndexer)
+    end
+
+    it '#self_test_mode reads the configured test mode without raising' do
+      expect { indexer.self_test_mode }.not_to raise_error
+    end
+
+    it '#solr_targets builds SolrTarget structs from configuration' do
+      allow(AppConfig).to receive(:[]).and_call_original
+      allow(AppConfig).to receive(:[]).with(:as_arclight_solr_targets).and_return([
+        { :url => 'http://solr/core', :label => 'Primary', :user => 'u', :pass => 'p' }
+      ])
+
+      targets = indexer.solr_targets
+
+      expect(targets.size).to eq(1)
+      expect(targets.first.url).to eq('http://solr/core')
+      expect(targets.first.label).to eq('Primary')
+      expect(targets.first.basic_auth_enabled?).to be_truthy
+    end
+  end
+
+  describe 'database initialization' do
+    it 'empties the resource queue on start when as_arclight_reset_queue_on_start is set' do
+      original = ArclightIndexer.data_dir
+      begin
+        Dir.mktmpdir do |dir|
+          ArclightIndexer.data_dir = dir
+
+          seed = ArclightIndexer.new(nil, nil, 'reset-seed')
+          seed.instance_variable_get(:@db)[:resource].insert(:uri => '/repositories/2/resources/1')
+
+          allow(AppConfig).to receive(:has_key?).and_call_original
+          allow(AppConfig).to receive(:has_key?).with(:as_arclight_reset_queue_on_start).and_return(true)
+          allow(AppConfig).to receive(:[]).and_call_original
+          allow(AppConfig).to receive(:[]).with(:as_arclight_reset_queue_on_start).and_return(true)
+          allow(ARCLog).to receive(:warn)
+
+          rerun = ArclightIndexer.new(nil, nil, 'reset-run')
+
+          expect(rerun.instance_variable_get(:@db)[:resource].select_map(:uri)).to be_empty
+          expect(ARCLog).to have_received(:warn).with(/Resetting queue/)
+        end
+      ensure
+        ArclightIndexer.data_dir = original
+      end
     end
   end
 end
