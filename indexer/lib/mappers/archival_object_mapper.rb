@@ -147,7 +147,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
             :dado_action_ssm => representative_file_version['xlink_show_attribute'],
             :dado_identifier_ssm => representative_file_version['file_uri'],
             :dado_label_tesim => digital_object['title'],
-            :dado_type_ssm => digital_object['digital_object_type'] ? I18n.t("enumerations.digital_object_digital_object_type.#{digital_object[:digital_object_type]}", :default => digital_object['digital_object_type'])
+            :dado_type_ssm => digital_object['digital_object_type'] ? I18n.t("enumerations.digital_object_digital_object_type.#{digital_object['digital_object_type']}", :default => digital_object['digital_object_type'])
                                                                     : 'unset'
           }
         end
