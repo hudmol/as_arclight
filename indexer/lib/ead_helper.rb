@@ -4,7 +4,7 @@ class EADHelper
   def self.strip_markup(content)
     return if content.nil?
 
-    content.gsub(/<.+?>/, '')
+    content.gsub(/<.+?>/, '').strip.chomp
   end
 
   def self.to_html(content)

@@ -149,8 +149,13 @@ module Arclight
         end.flatten
       when *SINGLEPART_NOTE_TYPES
         ASUtils.wrap(note['content']).map do |note_text|
-          render_note_text(note_text.split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n"), opts)
-        end
+          note_text
+            .split(/\n+/)
+            .map{|line| '<p>' + line + '</p>'}
+            .map{|paragraph|
+              render_note_text(paragraph, opts)
+            }
+        end.flatten
       when 'note_orderedlist'
         out = "<ol>\n"
         ASUtils.wrap(note['items']).map do |item|
