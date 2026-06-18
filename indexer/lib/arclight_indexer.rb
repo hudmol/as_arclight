@@ -169,14 +169,19 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def fetch_records(type, ids, resolve)
-    result = {}
+    result = []
 
     # id_set parameter is limited to :max_page_size so batch requests
     ids.each_slice(AppConfig[:max_page_size]) do |batch|
-      result.merge!(
-        JSONModel(type).all(:id_set => batch.join(","), 'resolve[]' => resolve)
-          .map {|json| [json.uri, json.to_hash(:trusted)]}
-          .to_h)
+      JSONModel(type)
+        .all(:id_set => batch.join(","), 'resolve[]' => resolve)
+        .each do |json|
+        if block_given?
+          yield(json)
+        else
+          result << json
+        end
+      end
     end
 
     result
@@ -247,6 +252,9 @@ class ArclightIndexer < PeriodicIndexer
         ARCLog.error "Indexer couldn't parse uri #{record['uri']}"
       end
     end
+  rescue
+    ARCLog.exception($!)
+    raise $!
   end
 
   def configure_doc_rules
@@ -257,6 +265,8 @@ class ArclightIndexer < PeriodicIndexer
       fetch_records(:archival_object,
                     waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))},
                     Arclight::Mapper.archival_object_mapper.resolves)
+        .map{|record| [record.uri, record.to_hash(:trusted)]}
+        .to_h
 
     waypoints_json.each do |waypoint_record|
       record_uri = waypoint_record.fetch('uri')
@@ -432,10 +442,11 @@ class ArclightIndexer < PeriodicIndexer
                   eligible_resource_ds
                     .select_map(:uri)
                     .map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
-                  Arclight::Mapper.resource_mapper.resolves)
-      .each do |resource_uri, resource_json|
-
+                   Arclight::Mapper.resource_mapper.resolves) do |resource_record|
       begin
+        resource_uri = resource_record.uri
+        resource_json = resource_record.to_hash(:trusted)
+
         resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
         mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
@@ -482,6 +493,9 @@ class ArclightIndexer < PeriodicIndexer
     if resource_count > 0
       log "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
     end
+  rescue
+    ARCLog.exception($!)
+    raise $!
   end
 
   def repositories_updated_action(updated_repositories)

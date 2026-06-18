@@ -258,7 +258,7 @@ describe 'ArclightIndexer' do
       let(:ao_uri) { '/repositories/2/archival_objects/5' }
 
       it 'inserts a document row for each waypoint child' do
-        allow(indexer).to receive(:fetch_records).and_return({ ao_uri => ao_record(ao_uri).to_hash })
+        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
 
         indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 0 }], resource_uri, nil, nil)
 
@@ -270,7 +270,7 @@ describe 'ArclightIndexer' do
       end
 
       it 'recurses into grandchildren when a child has its own children' do
-        allow(indexer).to receive(:fetch_records).and_return({ ao_uri => ao_record(ao_uri).to_hash })
+        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
         child_waypoints = { 'waypoints' => 1 }
         allow(JSONModel::HTTP).to receive(:get_json).and_return(child_waypoints)
         allow(indexer).to receive(:map_waypoints)
@@ -282,7 +282,7 @@ describe 'ArclightIndexer' do
       end
 
       it 'skips recursion when the child node was deleted out from under us' do
-        allow(indexer).to receive(:fetch_records).and_return({ ao_uri => ao_record(ao_uri).to_hash })
+        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
         allow(JSONModel::HTTP).to receive(:get_json).and_return(nil)
         allow(indexer).to receive(:map_waypoints)
 
@@ -458,7 +458,7 @@ describe 'ArclightIndexer' do
 
     it 'indexes a published resource and clears it from the work queue' do
       db[:resource].insert(:uri => resource_uri)
-      allow(indexer).to receive(:fetch_records).and_return({ resource_uri => resource_record(resource_uri, true).to_hash })
+      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
       allow(indexer).to receive(:map_waypoints)
       allow(indexer).to receive(:stream_nested_doc)
 
@@ -471,7 +471,7 @@ describe 'ArclightIndexer' do
 
     it 'deletes an unpublished resource from each solr target' do
       db[:resource].insert(:uri => resource_uri)
-      allow(indexer).to receive(:fetch_records).and_return({ resource_uri => resource_record(resource_uri, false).to_hash })
+      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, false))
 
       indexer.index_round_complete(repository)
 
@@ -485,7 +485,7 @@ describe 'ArclightIndexer' do
 
       db[:resource].insert(:uri => resource_uri)
       allow(ARCLog).to receive(:exception)
-      allow(indexer).to receive(:fetch_records).and_return({ resource_uri => resource_record(resource_uri, true).to_hash })
+      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
       allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
       indexer.index_round_complete(repository)
@@ -499,7 +499,7 @@ describe 'ArclightIndexer' do
     it 'accumulates the failure count across repeated indexing failures' do
       db[:resource].insert(:uri => resource_uri, :failure_count => 3)
       allow(ARCLog).to receive(:exception)
-      allow(indexer).to receive(:fetch_records).and_return({ resource_uri => resource_record(resource_uri, true).to_hash })
+      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
       allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
       indexer.index_round_complete(repository)
