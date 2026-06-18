@@ -157,6 +157,12 @@ describe Arclight::Mapper do
             'publish' => true,
             'subnotes' => [
               { 'jsonmodel_type' => 'note_orderedlist', 'publish' => true, 'items' => %w[First Second] },
+              { 'jsonmodel_type' => 'note_definedlist', 'publish' => true, 'items' => [{'label' => 'Label one', 'value' => 'Value one'},
+                                                                                       {'label' => 'Label two', 'value' => 'Value two'}] },
+              { 'jsonmodel_type' => 'note_chronology', 'publish' => true, 'items' => [{'event_date' => 'Date one', 'place' => 'Place one',
+                                                                                        'events' => ['Event one one', 'Event one two']},
+                                                                                      {'event_date' => 'Date two', 'place' => 'Place two',
+                                                                                        'events' => ['Event two one', 'Event two two']}] },
               { 'jsonmodel_type' => 'note_singlepart', 'publish' => true, 'content' => "Para one\nPara two" },
               # a subnote with neither items nor content exercises the empty branch
               { 'jsonmodel_type' => 'note_notsupported', 'publish' => true }
@@ -177,6 +183,22 @@ describe Arclight::Mapper do
       expect(html).to include('<li>First</li>')
       expect(html).to include('<li>Second</li>')
       expect(html).to include('<p>Para one</p>')
+
+      expect(html).to include('<dl class="deflist">')
+      expect(html).to include('<dt>Label one</dt>')
+      expect(html).to include('<dd>Value one</dd>')
+      expect(html).to include('<dt>Label two</dt>')
+      expect(html).to include('<dd>Value two</dd>')
+
+
+      expect(html).to include('<dt>Date one</dt>')
+      expect(html).to include('<dt>Date two</dt>')
+      expect(html).to include('<dt>Place one</dt>')
+      expect(html).to include('<dt>Place two</dt>')
+      expect(html).to include('<dd>Event one one</dd>')
+      expect(html).to include('<dd>Event one two</dd>')
+      expect(html).to include('<dd>Event two one</dd>')
+      expect(html).to include('<dd>Event two two</dd>')
     end
   end
 end
