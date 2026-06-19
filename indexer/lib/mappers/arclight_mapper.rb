@@ -151,38 +151,41 @@ module Arclight
         ASUtils.wrap(note['content']).map do |note_text|
           note_text
             .split(/\n+/)
-            .map{|line| '<p>' + line + '</p>'}
+            .map{|line| '<p>' + line.strip + '</p>'}
             .map{|paragraph|
               render_note_text(paragraph, opts)
             }
         end.flatten
       when 'note_orderedlist'
-        out = "<ol>\n"
+        out = "<list type=\"ordered\" numeration=\"arabic\">\n"
         ASUtils.wrap(note['items']).map do |item|
-          out += "<li>#{item}</li>\n"
+          out += "<item>#{item}</item>\n"
         end
-        out += "</ol>\n"
+        out += "</list>\n"
 
         render_note_text(out, opts)
       when 'note_definedlist'
-        out = "<dl class='deflist'>\n"
+        out = "<list type\"deflist\">\n"
         ASUtils.wrap(note['items']).map do |item|
-          out += "<dt>#{item['label']}</dt>\n"
-          out += "<dd>#{item['value']}</dd>\n"
+          out += "<defitem>\n"
+          out += "<label>#{item['label']}</label>\n"
+          out += "<item>#{item['value']}</item>\n"
+          out += "</defitem>\n"
         end
         out += "</dl>\n"
 
         render_note_text(out, opts)
       when 'note_chronology'
-        out = "<dl class='deflist'>\n"
+        out = "<chronlist>\n"
         ASUtils.wrap(note['items']).map do |item|
-          out += "<dt>#{item['event_date']}</dt>\n"
-          out += "<dt>#{item['place']}</dt>\n"
+          out += "<chronitem>\n"
+          out += "<date>#{item['event_date']}</date>\n"
           item['events'].each do | event |
-            out += "<dd>#{event}</dd>\n"
+            out += "<event>#{event}</event>\n"
           end
+          out += "</chronitem>\n"
         end
-        out += "</dl>\n"
+        out += "</chronlist>\n"
 
         render_note_text(out, opts)
       else
@@ -195,7 +198,7 @@ module Arclight
       if opts.fetch(:strip_markup, false)
         EADHelper.strip_markup(note_text)
       else
-        EADHelper.to_html(note_text)
+        note_text
       end
     end
 

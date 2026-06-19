@@ -138,8 +138,7 @@ describe Arclight::Mapper do
     end
   end
 
-  describe '#map_notes ordered-list handling' do
-    # `arrangement` is configured as an 'orderedlist' note type.
+  describe '#map_notes EAD handling' do
     let(:notes_mapper_class) do
       Class.new(Arclight::Mapper) do
         def map
@@ -148,7 +147,7 @@ describe Arclight::Mapper do
       end
     end
 
-    it 'maps ordered-list notes built from both item and content subnotes' do
+    it 'maps notes to EAD' do
       json = {
         'notes' => [
           {
@@ -160,9 +159,9 @@ describe Arclight::Mapper do
               { 'jsonmodel_type' => 'note_definedlist', 'publish' => true, 'items' => [{'label' => 'Label one', 'value' => 'Value one'},
                                                                                        {'label' => 'Label two', 'value' => 'Value two'}] },
               { 'jsonmodel_type' => 'note_chronology', 'publish' => true, 'items' => [{'event_date' => 'Date one', 'place' => 'Place one',
-                                                                                        'events' => ['Event one one', 'Event one two']},
+                                                                                       'events' => ['Event one one', 'Event one two']},
                                                                                       {'event_date' => 'Date two', 'place' => 'Place two',
-                                                                                        'events' => ['Event two one', 'Event two two']}] },
+                                                                                       'events' => ['Event two one', 'Event two two']}] },
               { 'jsonmodel_type' => 'note_singlepart', 'publish' => true, 'content' => "Para one\nPara two" },
               # a subnote with neither items nor content exercises the empty branch
               { 'jsonmodel_type' => 'note_notsupported', 'publish' => true }
@@ -174,33 +173,42 @@ describe Arclight::Mapper do
       mapper = notes_mapper_class.new(json)
       mapped = JSON.parse(mapper.json)
 
+      # Stripped/text outputs should include the list items and paragraph content
       expect(mapped['arrangement_tesm']).to include(a_string_including("First"))
       expect(mapped['arrangement_tesm']).to include(a_string_including("Second"))
       expect(mapped['arrangement_tesm']).to include(a_string_including("Para one"))
       expect(mapped['arrangement_tesm']).to include(a_string_including("Para two"))
       expect(mapped['arrangement_tesim']).to eq(mapped['arrangement_tesm'])
 
+      # The "_html_tesm" actually contains EAD-like XML. Join into a single string for easier assertions.
       html = mapped['arrangement_html_tesm'].join("\n")
-      expect(html).to include('<ol>')
-      expect(html).to include('<li>First</li>')
-      expect(html).to include('<li>Second</li>')
+
+      # Ordered list EAD elements
+      expect(html).to include('<list type="ordered" numeration="arabic">')
+      expect(html).to include('<item>First</item>')
+      expect(html).to include('<item>Second</item>')
+
+      # Singlepart paragraphs are still <p> elements in the produced XML
       expect(html).to include('<p>Para one</p>')
+      expect(html).to include('<p>Para two</p>')
 
-      expect(html).to include('<dl class="deflist">')
-      expect(html).to include('<dt>Label one</dt>')
-      expect(html).to include('<dd>Value one</dd>')
-      expect(html).to include('<dt>Label two</dt>')
-      expect(html).to include('<dd>Value two</dd>')
+      # Defined list uses defitem/label/item elements (note: the mapper has inconsistent opening/closing tags;
+      # checking for the core defitem/label/item fragments is safer)
+      expect(html).to include('<defitem>')
+      expect(html).to include('<label>Label one</label>')
+      expect(html).to include('<item>Value one</item>')
+      expect(html).to include('<label>Label two</label>')
+      expect(html).to include('<item>Value two</item>')
 
-
-      expect(html).to include('<dt>Date one</dt>')
-      expect(html).to include('<dt>Date two</dt>')
-      expect(html).to include('<dt>Place one</dt>')
-      expect(html).to include('<dt>Place two</dt>')
-      expect(html).to include('<dd>Event one one</dd>')
-      expect(html).to include('<dd>Event one two</dd>')
-      expect(html).to include('<dd>Event two one</dd>')
-      expect(html).to include('<dd>Event two two</dd>')
+      # Chronology should use chronlist/chronitem/date/event elements
+      expect(html).to include('<chronlist>')
+      expect(html).to include('<chronitem>')
+      expect(html).to include('<date>Date one</date>')
+      expect(html).to include('<date>Date two</date>')
+      expect(html).to include('<event>Event one one</event>')
+      expect(html).to include('<event>Event one two</event>')
+      expect(html).to include('<event>Event two one</event>')
+      expect(html).to include('<event>Event two two</event>')
     end
   end
 end

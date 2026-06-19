@@ -12,12 +12,12 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('id',                     resource_id(@json))
     map_field('archivesspace_uri_ssi',  @json['uri']) # mapping the resource's uri as a hook to delete it when the resource is deleted
 
-    title_html = EADHelper.to_html(@json['title'])
-    title_no_html = EADHelper.strip_markup(@json['title'])
+    title_xml = @json['title']
+    title_no_xml = EADHelper.strip_markup(@json['title'])
 
-    map_field('title_ssm',              [title_no_html])
-    map_field('title_html_tesm',        [title_html])
-    map_field('title_tesim',            [title_no_html])
+    map_field('title_ssm',              [title_no_xml])
+    map_field('title_html_tesm',        [title_xml])
+    map_field('title_tesim',            [title_no_xml])
     map_field('title_filing_ssi',       @json['finding_aid_filing_title'])
     map_field('ead_ssi',                resource_id(@json))
 

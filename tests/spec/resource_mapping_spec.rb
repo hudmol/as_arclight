@@ -537,8 +537,8 @@ describe Arclight::ResourceMapper do
         expect(map['arrangement_heading_ssm']).not_to be_empty
         expect(map['arrangement_tesm']).to include(a_string_including('Series 1: Correspondence'))
         expect(map['arrangement_tesm']).to include(a_string_including('Series 2: Photographs'))
-        expect(map['arrangement_html_tesm']).to include(a_string_including('<li>Series 1: Correspondence</li>'))
-        expect(map['arrangement_html_tesm']).to include(a_string_including('<li>Series 2: Photographs</li>'))
+        expect(map['arrangement_html_tesm']).to include(a_string_including('<item>Series 1: Correspondence</item>'))
+        expect(map['arrangement_html_tesm']).to include(a_string_including('<item>Series 2: Photographs</item>'))
       end
     end
 
