@@ -188,6 +188,47 @@ describe 'ArclightIndexer' do
     end
   end
 
+  describe 'ArclightIndexer::SolrTarget' do
+    it 'populates solr_targets from AppConfig' do
+      allow(AppConfig).to receive(:has_key?).and_call_original
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_solr_targets).and_return(true)
+      allow(AppConfig).to receive(:[]).and_call_original
+      allow(AppConfig).to receive(:[]).with(:as_arclight_solr_targets).and_return(
+        [
+         { :label => 'target one', :url => 'http://solr.example/core_one' },
+         { :label => 'target two', :url => 'http://solr.example/core_two' },
+         { :url => 'http://solr.example/core_three' },
+         { :label => 'target four', :url => 'http://solr.example/core_four', :user => 'auth_user', :pass => 'auth_pass' },
+        ]
+      )
+
+      expect(indexer.solr_targets.length).to eq(4)
+      expect(indexer.solr_targets[0].label).to eq('target one')
+      expect(indexer.solr_targets[0].name).to eq('target one')
+      expect(indexer.solr_targets[0].parsed_url).to be_a(URI)
+      expect(indexer.solr_targets[0].parsed_url.path).to eq('/core_one')
+      expect(indexer.solr_targets[0].basic_auth_enabled?).to eq(false)
+
+      expect(indexer.solr_targets[1].label).to eq('target two')
+      expect(indexer.solr_targets[1].name).to eq('target two')
+      expect(indexer.solr_targets[1].parsed_url).to be_a(URI)
+      expect(indexer.solr_targets[1].parsed_url.path).to eq('/core_two')
+      expect(indexer.solr_targets[1].basic_auth_enabled?).to eq(false)
+
+      expect(indexer.solr_targets[2].name).to eq('http://solr.example/core_three')
+      expect(indexer.solr_targets[2].basic_auth_enabled?).to eq(false)
+
+      expect(indexer.solr_targets[3].label).to eq('target four')
+      expect(indexer.solr_targets[3].name).to eq('target four')
+      expect(indexer.solr_targets[3].parsed_url).to be_a(URI)
+      expect(indexer.solr_targets[3].parsed_url.path).to eq('/core_four')
+      expect(indexer.solr_targets[3].user).to eq('auth_user')
+      expect(indexer.solr_targets[3].pass).to eq('auth_pass')
+      expect(indexer.solr_targets[3].basic_auth_enabled?).to eq(true)
+    end
+
+  end
+
   describe 'Solr authentication' do
     let(:auth_target) { ArclightIndexer::SolrTarget.new('http://solr.example/core', 'Solr', 'user', 'secret') }
     let(:noauth_target) { ArclightIndexer::SolrTarget.new('http://solr.example/core') }

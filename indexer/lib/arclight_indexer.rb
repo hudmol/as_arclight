@@ -18,7 +18,7 @@ class ArclightIndexer < PeriodicIndexer
     end
 
     def basic_auth_enabled?
-      user && pass
+      !!(user && pass)
     end
   end
 
