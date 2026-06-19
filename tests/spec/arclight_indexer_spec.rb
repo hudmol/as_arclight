@@ -92,6 +92,50 @@ describe 'ArclightIndexer' do
     end
   end
 
+  describe '#fetch_records' do
+    let(:sample_records) { [ {:id => 1}, {:id => 2}, {:id => 3} ] }
+
+    let(:jsonmodel) {
+      records = sample_records
+
+      Object.new.tap do |r|
+        r.define_singleton_method(:all) do |opts|
+          id_set = opts.fetch(:id_set).split(",").map {|s| Integer(s)}
+
+          records.select {|record| id_set.include?(record.fetch(:id))}
+        end
+      end
+    }
+
+    before(:each) do
+      allow(JSONModel).to receive(:JSONModel).with(:archival_object).and_return(jsonmodel)
+    end
+
+    it 'returns an array of records when called without a block' do
+      [1, 1000].each do |page_size|
+        allow(AppConfig).to receive(:[]).and_call_original
+        allow(AppConfig).to receive(:[]).with(:max_page_size).and_return(page_size)
+
+        expect(indexer.fetch_records(:archival_object, [1, 2, 3], {})).to eq(sample_records)
+      end
+    end
+
+    it 'yields records when called with a block' do
+      [1, 1000].each do |page_size|
+        allow(AppConfig).to receive(:[]).and_call_original
+        allow(AppConfig).to receive(:[]).with(:max_page_size).and_return(page_size)
+
+        result = []
+        indexer.fetch_records(:archival_object, [1, 2, 3], {}) do |record|
+          result << record
+        end
+
+        expect(result).to eq(sample_records)
+      end
+    end
+
+  end
+
   describe '#index_records' do
     let(:published_repo) { { '_resolved' => { 'publish' => true } } }
     let(:unpublished_repo) { { '_resolved' => { 'publish' => false } } }
