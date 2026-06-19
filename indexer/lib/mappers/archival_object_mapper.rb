@@ -101,15 +101,16 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
                                                     .select{|n| n['type'] == 'accessrestrict'}
                                                     .map{|n| n['subnotes']
                                                                .select{|s| s['publish']}
-                                                               .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }
-                                                               .join("\n")}
+                                                               .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}}}
+                                                    .flatten
                                                     .map{|s| EADHelper.strip_markup(s)})
 
     map_field('parent_access_terms_tesm',    resource['notes']
                                                     .select{|n| n['type'] == 'userestrict'}
                                                     .map{|n| n['subnotes']
                                                               .select{|s| s['publish']}
-                                                              .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}.join("\n") }.join("\n")}
+                                                              .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}}}
+                                                    .flatten
                                                     .map{|s| EADHelper.strip_markup(s)})
 
     map_field('date_range_isim',             format_date_range(@json['dates']))
