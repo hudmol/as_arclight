@@ -397,12 +397,15 @@ describe 'ArclightIndexer' do
       allow(indexer).to receive(:self_test_mode).and_return(nil)
     end
 
-    it 'streams the doc to each solr target and commits on a 200 response' do
+    it 'deletes the doc and all of its nested docs and then streams it, to each solr target, and commits on a 200 response' do
       root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+      delete_json = {'delete' => {'query' => "archivesspace_resource_uri_ssi:\"test-uri\""}}.to_json
 
       indexer.stream_nested_doc(root, 'test-uri')
-      expect(http_request_log.size).to eq(1)
-      expect(http_request_log.first[:request]['Content-Type']).to eq('application/json')
+      expect(http_request_log.size).to eq(2)
+      expect(http_request_log[0][:request]['Content-Type']).to eq('application/json')
+      expect(http_request_log[0][:request].body).to eq(delete_json)
+
       expect(indexer).to have_received(:send_commit_for_target)
     end
 
@@ -517,7 +520,7 @@ describe 'ArclightIndexer' do
       indexer.index_round_complete(repository)
 
       delete_request = JSON.parse(http_request_log.first[:request].body)
-      expect(delete_request.dig('delete', 'query')).to eq("archivesspace_uri_ssi:\"#{resource_uri}\"")
+      expect(delete_request.dig('delete', 'query')).to eq("archivesspace_resource_uri_ssi:\"#{resource_uri}\"")
       expect(indexer).to have_received(:send_commit_to_all_targets)
       expect(db[:resource].select_map(:uri)).to be_empty
     end

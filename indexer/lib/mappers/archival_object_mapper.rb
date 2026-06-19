@@ -56,9 +56,12 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   end
 
   def map
+    map_field('id',                          ao_id(@json))
+    map_field('archivesspace_uri_ssi',       @json['uri'])
+    map_field('archivesspace_resource_uri_ssi', resource['uri'])
+
     map_field('ref_ssi',                     archival_object_id(@json))
     map_field('ref_ssm',                     [archival_object_id(@json), archival_object_id(@json)]) # the traject mapping duplicates so here we are
-    map_field('id',                          ao_id(@json))
 
     title_xml = @json['display_string']
     title_no_xml = EADHelper.strip_markup(@json['display_string'])

@@ -360,6 +360,8 @@ class ArclightIndexer < PeriodicIndexer
 
     begin
       solr_targets.each do |target|
+        send_delete_for_resource(uri, target)
+
         req = request_for_target(target)
         req['Content-Length'] = File.size(temp_file_path)
 
@@ -390,11 +392,12 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  def send_delete_for_resource(resource_uri)
-    delete_json = {'delete' => {'query' => "archivesspace_uri_ssi:\"#{resource_uri}\""}}.to_json
+  def send_delete_for_resource(resource_uri, send_to_target = nil)
+    delete_json = {'delete' => {'query' => "archivesspace_resource_uri_ssi:\"#{resource_uri}\""}}.to_json
     delete_length = delete_json.length
 
-    solr_targets.each do |target|
+    (send_to_target ? [send_to_target] : solr_targets).each do |target|
+      ARCLog.debug "Sending delete for resource #{resource_uri} and all its nested docs to #{target.name}"
       req = request_for_target(target)
       req['Content-Length'] = delete_length
       req.body = delete_json
