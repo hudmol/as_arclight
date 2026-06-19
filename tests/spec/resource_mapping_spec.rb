@@ -126,8 +126,8 @@ describe Arclight::ResourceMapper do
         mapper = Arclight::ResourceMapper.new(resource_json)
         map = JSON.parse(mapper.json)
 
-        expect(map['unitdate_bulk_ssim']).to eq(['1960-1970'])
-        expect(map['unitdate_ssm'].sort).to eq(['1950-1975', '1960-1970'].sort)
+        expect(map['unitdate_bulk_ssim']).to eq(['bulk 1960-1970'])
+        expect(map['unitdate_ssm'].sort).to eq(['1950-1975', 'bulk 1960-1970'].sort)
       end
 
       it 'builds date_range_isim from date years' do
