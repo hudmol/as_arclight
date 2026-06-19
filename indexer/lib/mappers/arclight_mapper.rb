@@ -175,7 +175,7 @@ module Arclight
     end
 
     def format_date(date)
-      if date['expression']
+      result = if date['expression']
         date['expression']
       else
         begin_year, end_year = find_year_bounds(date)
@@ -185,6 +185,13 @@ module Arclight
           # this case can't happen - dates need at least one of: expression, begin or end
           ''
         end
+      end
+
+      # Bulk dates get prefixed with the "bulk" label
+      if date['date_type'] == 'bulk'
+        [I18n.t("date_type_bulk.bulk"), result].join(' ')
+      else
+        result
       end
     end
 
