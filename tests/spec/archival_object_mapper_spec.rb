@@ -355,6 +355,7 @@ describe Arclight::ArchivalObjectMapper do
       allow(AppConfig).to receive(:has_key?).and_call_original
       allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(false)
       allow(AppConfig).to receive(:[]).and_call_original
+      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_delimiter).and_raise("No value set")
 
       mapper = Arclight::ArchivalObjectMapper.new(minimal_archival_json)
       map = JSON.parse(mapper.json)
