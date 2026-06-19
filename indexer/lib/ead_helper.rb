@@ -8,41 +8,62 @@ class EADHelper
   end
 
   def self.render_paragraph(line)
-    '<p>' + line.strip + '</p>'
+    fragment = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
+
+    Nokogiri::XML::Builder.with(fragment) do |xml|
+      xml.p { xml << line.strip }
+    end
+
+    fragment.to_xml
   end
 
   def self.render_orderedlist(note)
-    out = "<list type=\"ordered\" numeration=\"arabic\">\n"
-    ASUtils.wrap(note['items']).map do |item|
-      out += "<item>#{item}</item>\n"
+    fragment = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
+
+    Nokogiri::XML::Builder.with(fragment) do |xml|
+      xml.list(type: 'ordered', numeration: 'arabic') {
+        ASUtils.wrap(note['items']).map do |item|
+          xml.item { xml << item }
+        end
+      }
     end
-    out += "</list>\n"
-    out
+
+    fragment.to_xml
   end
 
   def self.render_definedlist(note)
-    out = "<list type=\"deflist\">\n"
-    ASUtils.wrap(note['items']).map do |item|
-      out += "<defitem>\n"
-      out += "<label>#{item['label']}</label>\n"
-      out += "<item>#{item['value']}</item>\n"
-      out += "</defitem>\n"
+    fragment = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
+
+    Nokogiri::XML::Builder.with(fragment) do |xml|
+      xml.list(type: "deflist") {
+        ASUtils.wrap(note['items']).map do |item|
+          xml.defitem {
+            xml.label { xml << item['label'] }
+            xml.item { xml << item['value'] }
+          }
+        end
+      }
     end
-    out += "</list>\n"
-    out
+
+    fragment.to_xml
   end
 
   def self.render_chronology(note)
-    out = "<chronlist>\n"
-    ASUtils.wrap(note['items']).map do |item|
-      out += "<chronitem>\n"
-      out += "<date>#{item['event_date']}</date>\n"
-      ASUtils.wrap(item['events']).each do | event |
-        out += "<event>#{event}</event>\n"
-      end
-      out += "</chronitem>\n"
+    fragment = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
+
+    Nokogiri::XML::Builder.with(fragment) do |xml|
+      xml.chronlist {
+        ASUtils.wrap(note['items']).map do |item|
+          xml.chronitem {
+            xml.date item['event_date']
+            ASUtils.wrap(item['events']).each do |event|
+              xml.event { xml << event }
+            end
+          }
+        end
+      }
     end
-    out += "</chronlist>\n"
-    out
+
+    fragment.to_xml
   end
 end

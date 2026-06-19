@@ -184,7 +184,7 @@ describe Arclight::Mapper do
       html = mapped['arrangement_html_tesm'].join("\n")
 
       # Ordered list EAD elements
-      expect(html).to include('<list type="ordered" numeration="arabic">')
+      expect(html).to include('<list numeration="arabic" type="ordered">')
       expect(html).to include('<item>First</item>')
       expect(html).to include('<item>Second</item>')
 

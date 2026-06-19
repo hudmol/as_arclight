@@ -42,25 +42,29 @@ describe EADHelper do
     end
 
     it 'renders an empty paragraph for blank lines' do
-      expect(EADHelper.render_paragraph("   ")).to eq('<p></p>')
+      expect(EADHelper.render_paragraph("   ")).to eq('<p/>')
+    end
+
+    it 'retains embedded <emph> elements' do
+      expect(EADHelper.render_paragraph('I am <emph render="bold">bold</emph> text')).to eq('<p>I am <emph render="bold">bold</emph> text</p>')
     end
   end
 
   describe '.render_orderedlist' do
     it 'renders an ordered list with each item wrapped in <item>' do
       note = { 'items' => ['First', 'Second'] }
-      expected = "<list type=\"ordered\" numeration=\"arabic\">\n" \
-        "<item>First</item>\n" \
-        "<item>Second</item>\n" \
-        "</list>\n"
+      expected = "<list numeration=\"arabic\" type=\"ordered\">" \
+        "<item>First</item>" \
+        "<item>Second</item>" \
+        "</list>"
       expect(EADHelper.render_orderedlist(note)).to eq(expected)
     end
 
     it 'handles a single item (non-array) via ASUtils.wrap' do
       note = { 'items' => 'Single' }
-      expected = "<list type=\"ordered\" numeration=\"arabic\">\n" \
-        "<item>Single</item>\n" \
-        "</list>\n"
+      expected = "<list numeration=\"arabic\" type=\"ordered\">" \
+        "<item>Single</item>" \
+        "</list>"
       expect(EADHelper.render_orderedlist(note)).to eq(expected)
     end
   end
@@ -74,16 +78,16 @@ describe EADHelper do
         ]
       }
 
-      expected = "<list type=\"deflist\">\n" \
-        "<defitem>\n" \
-        "<label>Label1</label>\n" \
-        "<item>Value1</item>\n" \
-        "</defitem>\n" \
-        "<defitem>\n" \
-        "<label>Label2</label>\n" \
-        "<item>Value2</item>\n" \
-        "</defitem>\n" \
-        "</list>\n"
+      expected = "<list type=\"deflist\">" \
+        "<defitem>" \
+        "<label>Label1</label>" \
+        "<item>Value1</item>" \
+        "</defitem>" \
+        "<defitem>" \
+        "<label>Label2</label>" \
+        "<item>Value2</item>" \
+        "</defitem>" \
+        "</list>"
 
       expect(EADHelper.render_definedlist(note)).to eq(expected)
     end
@@ -98,17 +102,17 @@ describe EADHelper do
         ]
       }
 
-      expected = "<chronlist>\n" \
-        "<chronitem>\n" \
-        "<date>1900</date>\n" \
-        "<event>Born</event>\n" \
-        "<event>Started school</event>\n" \
-        "</chronitem>\n" \
-        "<chronitem>\n" \
-        "<date>1950</date>\n" \
-        "<event>Retired</event>\n" \
-        "</chronitem>\n" \
-        "</chronlist>\n"
+      expected = "<chronlist>" \
+        "<chronitem>" \
+        "<date>1900</date>" \
+        "<event>Born</event>" \
+        "<event>Started school</event>" \
+        "</chronitem>" \
+        "<chronitem>" \
+        "<date>1950</date>" \
+        "<event>Retired</event>" \
+        "</chronitem>" \
+        "</chronlist>"
 
       expect(EADHelper.render_chronology(note)).to eq(expected)
     end
