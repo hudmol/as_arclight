@@ -37,14 +37,13 @@ if AppConfig.has_key?(:as_arclight_resource_id_prefix)
   end
 end
 
-if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
-  if AppConfig[:as_arclight_archival_object_id_prefix].is_a?(String)
-    if AppConfig[:as_arclight_archival_object_id_prefix].include?(' ')
-      # FIXME: other rules?
-      bad.push("as_arclight plugin AppConfig[:as_arclight_archival_object_id_prefix] cannot contain spaces")
+if AppConfig.has_key?(:as_arclight_archival_object_id_delimiter)
+  if AppConfig[:as_arclight_archival_object_id_delimiter].is_a?(String)
+    if AppConfig[:as_arclight_archival_object_id_delimiter].include?(' ')
+      bad.push("as_arclight plugin AppConfig[:as_arclight_archival_object_id_delimiter] cannot contain spaces")
     end
   else
-    bad.push("as_arclight plugin AppConfig[:as_arclight_archival_object_id_prefix] must be a String")
+    bad.push("as_arclight plugin AppConfig[:as_arclight_archival_object_id_delimiter] must be a String")
   end
 end
 

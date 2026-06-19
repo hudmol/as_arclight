@@ -19,19 +19,12 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
   def archival_object_id(ao_json)
     id = ao_json['ref_id'] || ao_json['component_id'] || ao_json['uri']
-
-    id.tr!('.', '-')
-
-    if AppConfig.has_key?(:as_arclight_archival_object_id_prefix)
-      id = AppConfig[:as_arclight_archival_object_id_prefix] + id
-    end
-
-    id
+    id.tr('.', '-')
   end
 
   def ao_id(ao_json)
-    # if no prefix is set then use _ as a delimiter
-    delimiter = AppConfig.has_key?(:as_arclight_archival_object_id_prefix) ? '' : '_'
+    # delimiter defaults to _
+    delimiter = AppConfig[:as_arclight_archival_object_id_delimiter] rescue '_'
 
     resource_id(resource) + delimiter + archival_object_id(ao_json)
   end

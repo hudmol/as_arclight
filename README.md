@@ -62,8 +62,9 @@ Required configuration:
 Optional configuration:
 *  AppConfig[:as_arclight_resource_id_prefix]
     - A string to prefix a Resource's ID with when mapping
-*  AppConfig[:as_arclight_archival_object_id_prefix]
-    - A string to prefix an Archival Object's ID with when mapping
+*  AppConfig[:as_arclight_archival_object_id_delimiter]
+    - A string to delimit the root id and the Archival Object's ID with when
+      mapping. Default '_'
 *  AppConfig[:as_arclight_iiif_min_cache_seconds]
     - The minimum number of seconds to cache a URL's contents when
       fetching IIIF resources.  If unset, relies on the IIIF server's

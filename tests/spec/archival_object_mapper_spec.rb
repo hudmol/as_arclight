@@ -337,18 +337,31 @@ describe Arclight::ArchivalObjectMapper do
         .to include('ancestors', 'top_container', 'instances::digital_object')
     end
 
-    it 'prepends the configured archival object id prefix when one is set' do
+    it 'uses the configured archival object id delimiter when one is set' do
       allow(AppConfig).to receive(:has_key?).and_call_original
-      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_prefix).and_return(true)
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(true)
       allow(AppConfig).to receive(:[]).and_call_original
-      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_prefix).and_return('AO-PRE-')
+      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_delimiter).and_return('_AO-DELIMITER_')
 
       mapper = Arclight::ArchivalObjectMapper.new(minimal_archival_json)
       map = JSON.parse(mapper.json)
 
-      expect(map['ref_ssi']).to eq('AO-PRE-AO-1')
-      # with a prefix set, the id delimiter is empty
-      expect(map['id']).to eq('res-001AO-PRE-AO-1')
+      expect(map['ref_ssi']).to eq('AO-1')
+      # with a delimiter set
+      expect(map['id']).to eq('res-001_AO-DELIMITER_AO-1')
+    end
+
+    it 'uses the default archival object id delimiter _ when it is not set in config' do
+      allow(AppConfig).to receive(:has_key?).and_call_original
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(false)
+      allow(AppConfig).to receive(:[]).and_call_original
+
+      mapper = Arclight::ArchivalObjectMapper.new(minimal_archival_json)
+      map = JSON.parse(mapper.json)
+
+      expect(map['ref_ssi']).to eq('AO-1')
+      # without a delimiter set
+      expect(map['id']).to eq('res-001_AO-1')
     end
   end
 
