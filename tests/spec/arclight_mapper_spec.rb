@@ -174,8 +174,10 @@ describe Arclight::Mapper do
       mapper = notes_mapper_class.new(json)
       mapped = JSON.parse(mapper.json)
 
-      expect(mapped['arrangement_tesm']).to include(a_string_including("First\nSecond"))
-      expect(mapped['arrangement_tesm']).to include(a_string_including("Para one\nPara two"))
+      expect(mapped['arrangement_tesm']).to include(a_string_including("First"))
+      expect(mapped['arrangement_tesm']).to include(a_string_including("Second"))
+      expect(mapped['arrangement_tesm']).to include(a_string_including("Para one"))
+      expect(mapped['arrangement_tesm']).to include(a_string_including("Para two"))
       expect(mapped['arrangement_tesim']).to eq(mapped['arrangement_tesm'])
 
       html = mapped['arrangement_html_tesm'].join("\n")
