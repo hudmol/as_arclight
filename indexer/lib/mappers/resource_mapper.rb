@@ -74,9 +74,10 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
     map_field('language_ssim',          @json['lang_materials'].map{|lm|
                                               out = lm['notes']
-                                                      .map{|n| render_note(n, strip_markup: true)}
+                                                      .map{|n| render_note(n)}
                                                       .flatten
                                                       .compact
+                                                      .map{|ead| EADHelper.strip_markup(ead)}
                                                       .map{|s| s.split(/[,.]/)}
                                                       .flatten
                                                       .map(&:strip)

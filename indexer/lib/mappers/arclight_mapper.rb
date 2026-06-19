@@ -120,8 +120,9 @@ module Arclight
 
           map_field("#{note_type}_tesm",
                     notes_to_process
-                      .map{|n| render_note(n, strip_markup: true)}
+                      .map{|note| render_note(note)}
                       .flatten
+                      .map{|ead| EADHelper.strip_markup(ead)}
                       .compact)
 
           map_field("#{note_type}_tesim", @map["#{note_type}_tesm"])
@@ -139,66 +140,29 @@ module Arclight
       end
     end
 
-    def render_note(note, opts = {})
+    def render_note(note)
       return if !note['publish']
 
       case note.fetch('jsonmodel_type')
       when *MULTIPART_NOTE_TYPES
         ASUtils.wrap(note['subnotes']).map do |subnote|
-          render_note(subnote, opts)
+          render_note(subnote)
         end.flatten
       when *SINGLEPART_NOTE_TYPES
         ASUtils.wrap(note['content']).map do |note_text|
           note_text
             .split(/\n+/)
-            .map{|line| '<p>' + line.strip + '</p>'}
-            .map{|paragraph|
-              render_note_text(paragraph, opts)
-            }
+            .map{|line| EADHelper.render_paragraph(line)}
         end.flatten
       when 'note_orderedlist'
-        out = "<list type=\"ordered\" numeration=\"arabic\">\n"
-        ASUtils.wrap(note['items']).map do |item|
-          out += "<item>#{item}</item>\n"
-        end
-        out += "</list>\n"
-
-        render_note_text(out, opts)
+        EADHelper.render_orderedlist(note)
       when 'note_definedlist'
-        out = "<list type\"deflist\">\n"
-        ASUtils.wrap(note['items']).map do |item|
-          out += "<defitem>\n"
-          out += "<label>#{item['label']}</label>\n"
-          out += "<item>#{item['value']}</item>\n"
-          out += "</defitem>\n"
-        end
-        out += "</dl>\n"
-
-        render_note_text(out, opts)
+        EADHelper.render_definedlist(note)
       when 'note_chronology'
-        out = "<chronlist>\n"
-        ASUtils.wrap(note['items']).map do |item|
-          out += "<chronitem>\n"
-          out += "<date>#{item['event_date']}</date>\n"
-          item['events'].each do | event |
-            out += "<event>#{event}</event>\n"
-          end
-          out += "</chronitem>\n"
-        end
-        out += "</chronlist>\n"
-
-        render_note_text(out, opts)
+        EADHelper.render_chronology(note)
       else
         ARCLog.warn("Unrecognised note type: #{note.fetch('jsonmodel_type')}")
         nil
-      end
-    end
-
-    def render_note_text(note_text, opts = {})
-      if opts.fetch(:strip_markup, false)
-        EADHelper.strip_markup(note_text)
-      else
-        note_text
       end
     end
 
