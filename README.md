@@ -60,6 +60,9 @@ Required configuration:
     - Number of seconds to wait between indexing runs
 
 Optional configuration:
+*  AppConfig[:as_arclight_index_version]
+    - Current index version as an integer. Default 1.
+      See below for discussion of index versions
 *  AppConfig[:as_arclight_resource_id_prefix]
     - A string to prefix a Resource's ID with when mapping
 *  AppConfig[:as_arclight_archival_object_id_delimiter]
@@ -124,6 +127,29 @@ Note that in the example, Arclight Solr is running on the default Solr port.
 This is the same port that ArchivesSpace's Solr defaults to. If the two Solrs
 are running on the same host, one will have to choose a non-default port.
 
+## Index Version
+
+The following configuration options are used in the construction of Solr
+document ids:
+  *  AppConfig[:as_arclight_resource_id_prefix]
+  *  AppConfig[:as_arclight_archival_object_id_delimiter]
+
+If any of these are changed then the document ids for existing documents in the
+Solr targets will be incorrect. In this scenario it is necessary to do a full
+reindex of each Solr target to correct the document ids.
+
+The plugin provides the ability to safely manage such config changes. It does
+this by remembering the last configuration settings against an index version
+number (all stored in the SQLite db). The index version defaults to 1, so it
+is not necessary to set it for an initial deployment.
+
+On start up the plugin will check to see if any of the relevant config options
+have changed since the last run. If there is a change then the plugin will raise
+an error and exit (logging instructions) unless the version number has been
+incremented by setting `AppConfig[:as_arclight_index_version]`.
+
+Whenever the version number is incremented a full reindex will be triggered, and
+this new version information will be stored and checked on subsequent runs.
 
 ## Customization
 
