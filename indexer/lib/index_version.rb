@@ -66,7 +66,7 @@ class IndexVersion
           ARCLog.error "Index version config mismatch!\n" +
             ("*" * 100) + "\n" +
             "    Increment AppConfig[:as_arclight_index_version] to #{version + 1} and restart to trigger a full reindex.\n" +
-            revert_message
+            revert_message +
             "\n" + ("*" * 100) + "\n"
 
           raise "as_arclight index version mismatch"
