@@ -48,15 +48,16 @@ RSpec.configure do |config|
     allow(AppConfig).to receive(:has_key?).and_call_original
     allow(AppConfig).to receive(:[]).and_call_original
 
-    [:as_arclight_resource_id_prefix,
-     :as_arclight_archival_object_id_prefix,].each do |config_entry|
+    {
+      :as_arclight_solr_targets => [{:url => "http://solr.example/core"}],
+      :as_arclight_indexing_frequency_seconds => 30,
+      :as_arclight_index_version => 1,
+      :as_arclight_resource_id_prefix => '',
+      :as_arclight_archival_object_id_delimiter => '_',
+      :as_arclight_reset_queue_on_start => false,
+    }.each do |config_entry, setting|
       allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(true)
-      allow(AppConfig).to receive(:[]).with(config_entry).and_return('')
-    end
-    [:as_arclight_resource_id_delimiter,
-     :as_arclight_archival_object_id_delimiter].each do |config_entry|
-      allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(true)
-      allow(AppConfig).to receive(:[]).with(config_entry).and_return('_')
+      allow(AppConfig).to receive(:[]).with(config_entry).and_return(setting)
     end
   end
 end
