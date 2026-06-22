@@ -176,6 +176,60 @@ class ArclightIndexer < PeriodicIndexer
     ArclightIndexer.data_dir = data_dir
   end
 
+  def self.prepare_db
+    db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
+
+    unless File.exist?(db_path)
+      ARCLog.info 'Initializing db at ' + db_path
+    end
+
+    db = Sequel.connect("jdbc:sqlite:#{db_path}")
+    db.run("PRAGMA journal_mode = WAL;")
+    init_schema(db)
+
+    db
+  end
+
+  def self.init_schema(db)
+    db.create_table?(:resource) do
+      primary_key :id
+      String :uri, :null => false, :unique => true
+    end
+
+    db.create_table?(:deleted_resource) do
+      primary_key :id
+      String :uri, :null => false, :unique => true
+    end
+
+    # start with a fresh document table
+    db.drop_table?(:document)
+
+    db.create_table(:document) do
+      primary_key :id
+      String :resource_uri
+      Integer :parent_id
+      blob :json
+    end
+
+    unless db[:resource].columns.include?(:next_retry_time)
+      db.alter_table(:resource) do
+        add_column :next_retry_time, :Bignum
+      end
+    end
+
+    unless db[:resource].columns.include?(:failure_count)
+      db.alter_table(:resource) do
+        add_column :failure_count, :Bignum, :default => 0
+      end
+    end
+
+    db.create_table?(:index_version) do
+      primary_key :id
+      Integer :version, :null => false, :unique => true
+      String :config_hash, :null => false, :text => true
+    end
+  end
+
   def initialize(backend = nil, state = nil, name)
     check_config_or_die!
     ensure_data_dir_or_die!
@@ -193,10 +247,7 @@ class ArclightIndexer < PeriodicIndexer
       ARCLog.info 'Initializing db at ' + @db_path
     end
 
-    @db = Sequel.connect("jdbc:sqlite:#{@db_path}")
-
-    @db.run("PRAGMA journal_mode = WAL;")
-    init_schema
+    @db = self.class.prepare_db
 
     IndexVersion.validate_config_or_die!(@db)
 
@@ -211,46 +262,6 @@ class ArclightIndexer < PeriodicIndexer
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
       ARCLog.warn 'Resetting queue!'
       @db[:resource].delete
-    end
-  end
-
-  def init_schema
-    @db.create_table?(:resource) do
-      primary_key :id
-      String :uri, :null => false, :unique => true
-    end
-
-    @db.create_table?(:deleted_resource) do
-      primary_key :id
-      String :uri, :null => false, :unique => true
-    end
-
-    # start with a fresh document table
-    @db.drop_table?(:document)
-
-    @db.create_table(:document) do
-      primary_key :id
-      String :resource_uri
-      Integer :parent_id
-      blob :json
-    end
-
-    unless @db[:resource].columns.include?(:next_retry_time)
-      @db.alter_table(:resource) do
-        add_column :next_retry_time, :Bignum
-      end
-    end
-
-    unless @db[:resource].columns.include?(:failure_count)
-      @db.alter_table(:resource) do
-        add_column :failure_count, :Bignum, :default => 0
-      end
-    end
-
-    @db.create_table?(:index_version) do
-      primary_key :id
-      Integer :version, :null => false, :unique => true
-      String :config_hash, :null => false, :text => true
     end
   end
 

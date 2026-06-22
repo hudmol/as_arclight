@@ -75,6 +75,7 @@ class IndexVersion
         end
       elsif version < current_index_version[:version]
         ARCLog.error "Index AppConfig[:as_arclight_index_version] cannot decrease! Current version: #{current_index_version[:version]}. Attempt to set to #{version}"
+
         raise ConfigurationError.new("Invalid index version")
       else
         ARCLog.info "Initializing index version #{version}. Full reindex required"
