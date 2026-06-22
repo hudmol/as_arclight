@@ -23,10 +23,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   end
 
   def ao_id(ao_json)
-    # delimiter defaults to _
-    delimiter = AppConfig[:as_arclight_archival_object_id_delimiter] rescue '_'
-
-    resource_id(resource) + delimiter + archival_object_id(ao_json)
+    resource_id(resource) + AppConfig[:as_arclight_archival_object_id_delimiter] + archival_object_id(ao_json)
   end
 
   def iiif_client

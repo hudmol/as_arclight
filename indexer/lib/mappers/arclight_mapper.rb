@@ -66,11 +66,7 @@ module Arclight
 
       id.tr!('.', '-')
 
-      if AppConfig.has_key?(:as_arclight_resource_id_prefix)
-        id = AppConfig[:as_arclight_resource_id_prefix] + id
-      end
-
-      id
+      AppConfig[:as_arclight_resource_id_prefix] + id
     end
 
     def collection_title(json)
