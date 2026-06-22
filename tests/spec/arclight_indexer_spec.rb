@@ -113,7 +113,6 @@ describe 'ArclightIndexer' do
 
     it 'returns an array of records when called without a block' do
       [1, 1000].each do |page_size|
-        allow(AppConfig).to receive(:[]).and_call_original
         allow(AppConfig).to receive(:[]).with(:max_page_size).and_return(page_size)
 
         expect(indexer.fetch_records(:archival_object, [1, 2, 3], {})).to eq(sample_records)
@@ -122,7 +121,6 @@ describe 'ArclightIndexer' do
 
     it 'yields records when called with a block' do
       [1, 1000].each do |page_size|
-        allow(AppConfig).to receive(:[]).and_call_original
         allow(AppConfig).to receive(:[]).with(:max_page_size).and_return(page_size)
 
         result = []
@@ -234,9 +232,7 @@ describe 'ArclightIndexer' do
 
   describe 'ArclightIndexer::SolrTarget' do
     it 'populates solr_targets from AppConfig' do
-      allow(AppConfig).to receive(:has_key?).and_call_original
       allow(AppConfig).to receive(:has_key?).with(:as_arclight_solr_targets).and_return(true)
-      allow(AppConfig).to receive(:[]).and_call_original
       allow(AppConfig).to receive(:[]).with(:as_arclight_solr_targets).and_return(
         [
          { :label => 'target one', :url => 'http://solr.example/core_one' },
@@ -477,7 +473,6 @@ describe 'ArclightIndexer' do
     it 'writes a candidate copy of the doc for inspection in record_candidate mode' do
       Dir.mktmpdir do |dir|
         allow(indexer).to receive(:self_test_mode).and_return(:record_candidate)
-        allow(AppConfig).to receive(:[]).and_call_original
         allow(AppConfig).to receive(:[]).with(:as_arclight_test_candidate_directory).and_return(dir)
 
         root = db[:document].insert(:resource_uri => '/repositories/2/resources/55', :json => '{"id":"root"}')
@@ -492,7 +487,6 @@ describe 'ArclightIndexer' do
     it 'writes a pristine copy of the doc for inspection in record_pristine mode' do
       Dir.mktmpdir do |dir|
         allow(indexer).to receive(:self_test_mode).and_return(:record_pristine)
-        allow(AppConfig).to receive(:[]).and_call_original
         allow(AppConfig).to receive(:[]).with(:as_arclight_test_pristine_directory).and_return(dir)
 
         root = db[:document].insert(:resource_uri => '/repositories/2/resources/56', :json => '{"id":"root"}')
@@ -757,7 +751,6 @@ describe 'ArclightIndexer' do
     end
 
     it '#solr_targets builds SolrTarget structs from configuration' do
-      allow(AppConfig).to receive(:[]).and_call_original
       allow(AppConfig).to receive(:[]).with(:as_arclight_solr_targets).and_return([
         { :url => 'http://solr/core', :label => 'Primary', :user => 'u', :pass => 'p' }
       ])
@@ -781,9 +774,7 @@ describe 'ArclightIndexer' do
           seed = ArclightIndexer.new(nil, nil, 'reset-seed')
           seed.instance_variable_get(:@db)[:resource].insert(:uri => '/repositories/2/resources/1')
 
-          allow(AppConfig).to receive(:has_key?).and_call_original
           allow(AppConfig).to receive(:has_key?).with(:as_arclight_reset_queue_on_start).and_return(true)
-          allow(AppConfig).to receive(:[]).and_call_original
           allow(AppConfig).to receive(:[]).with(:as_arclight_reset_queue_on_start).and_return(true)
           allow(ARCLog).to receive(:warn)
 

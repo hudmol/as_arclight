@@ -89,9 +89,7 @@ describe Arclight::Mapper do
     end
 
     it 'prepends the configured prefix when one is set' do
-      allow(AppConfig).to receive(:has_key?).and_call_original
       allow(AppConfig).to receive(:has_key?).with(:as_arclight_resource_id_prefix).and_return(true)
-      allow(AppConfig).to receive(:[]).and_call_original
       allow(AppConfig).to receive(:[]).with(:as_arclight_resource_id_prefix).and_return('PRE-')
 
       expect(mapper.resource_id('ead_id' => 'abc')).to eq('PRE-abc')

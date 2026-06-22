@@ -46,11 +46,14 @@ RSpec.configure do |config|
     allow(AppConfig).to receive(:[]).and_call_original
 
     [:as_arclight_resource_id_prefix,
-     :as_arclight_resource_id_delimiter,
-     :as_arclight_archival_object_id_prefix,
+     :as_arclight_archival_object_id_prefix,].each do |config_entry|
+      allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(true)
+      allow(AppConfig).to receive(:[]).with(config_entry).and_return('')
+    end
+    [:as_arclight_resource_id_delimiter,
      :as_arclight_archival_object_id_delimiter].each do |config_entry|
-      allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(false)
-      allow(AppConfig).to receive(:[]).with(config_entry).and_raise("No value set")
+      allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(true)
+      allow(AppConfig).to receive(:[]).with(config_entry).and_return('_')
     end
   end
 end

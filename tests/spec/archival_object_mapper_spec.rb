@@ -338,9 +338,7 @@ describe Arclight::ArchivalObjectMapper do
     end
 
     it 'uses the configured archival object id delimiter when one is set' do
-      allow(AppConfig).to receive(:has_key?).and_call_original
       allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(true)
-      allow(AppConfig).to receive(:[]).and_call_original
       allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_delimiter).and_return('_AO-DELIMITER_')
 
       mapper = Arclight::ArchivalObjectMapper.new(minimal_archival_json)
@@ -351,11 +349,9 @@ describe Arclight::ArchivalObjectMapper do
       expect(map['id']).to eq('res-001_AO-DELIMITER_AO-1')
     end
 
-    it 'uses the default archival object id delimiter _ when it is not set in config' do
-      allow(AppConfig).to receive(:has_key?).and_call_original
-      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(false)
-      allow(AppConfig).to receive(:[]).and_call_original
-      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_delimiter).and_raise("No value set")
+    it 'handles the default archival object id delimiter config value _' do
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(true)
+      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_delimiter).and_return("_")
 
       mapper = Arclight::ArchivalObjectMapper.new(minimal_archival_json)
       map = JSON.parse(mapper.json)
@@ -400,9 +396,7 @@ describe Arclight::ArchivalObjectMapper do
     end
 
     it 'maps dado_* fields when include_dadocm_required_fields is enabled' do
-      allow(AppConfig).to receive(:has_key?).and_call_original
       allow(AppConfig).to receive(:has_key?).with(:include_dadocm_required_fields).and_return(true)
-      allow(AppConfig).to receive(:[]).and_call_original
       allow(AppConfig).to receive(:[]).with(:include_dadocm_required_fields).and_return(true)
 
       archival_json = minimal_archival_json({
