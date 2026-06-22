@@ -25,10 +25,11 @@ describe 'ArclightIndexer' do
   before(:each) do
     # The arclight indexer keeps its SQLite db at:
     #   /tmp/as_arclight_test_data/as_arclight/arclight_indexer.db
-    # :resource table survives across instances, so clear it between examples.
+    # clear it between examples.
     db[:resource].delete
     db[:document].delete
     db[:deleted_resource].delete
+    db[:index_version].delete
 
     # Silence log output unless an example sets its own expectation.
     allow(ARCLog).to receive(:debug)
