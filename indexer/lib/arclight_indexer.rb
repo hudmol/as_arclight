@@ -105,6 +105,8 @@ class ArclightIndexer < PeriodicIndexer
 
   ARCLIGHT_RESOLVES = AppConfig.has_key?(:as_arclight_resolves) ? AppConfig[:as_arclight_resolves] : []
 
+  class ConfigurationError < StandardError; end
+
   def check_config_or_die!
     bad = []
 
@@ -155,7 +157,7 @@ class ArclightIndexer < PeriodicIndexer
         ("*" * 100) + "\n    " +
         bad.join("\n    ") + "\n" +
         ("*" * 100) + "\n"
-      raise "as_arclight configuration error"
+      raise ConfigurationError.new("as_arclight configuration error")
     end
   end
 

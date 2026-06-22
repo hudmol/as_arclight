@@ -57,6 +57,45 @@ describe 'ArclightIndexer' do
     }
   end
 
+  describe "#check_config_or_die!" do
+    it "dies if :as_arclight_solr_targets isn't set" do
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_solr_targets).and_return(false)
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+    it "dies if :as_arclight_solr_targets isn't an array" do
+      allow(AppConfig).to receive(:[]).with(:as_arclight_solr_targets).and_return("not an array")
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+    it "dies if an :as_arclight_solr_targets entry lacks a :url key" do
+      allow(AppConfig).to receive(:[]).with(:as_arclight_solr_targets).and_return([{:url => "this entry is good"},
+                                                                                   {:not_url => "this entry is bad"}])
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+    it "dies if :as_arclight_index_version isn't an integer" do
+      allow(AppConfig).to receive(:[]).with(:as_arclight_index_version).and_return("not an integer")
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+    it "dies if :as_arclight_indexing_frequency_seconds isn't an integer" do
+      allow(AppConfig).to receive(:[]).with(:as_arclight_indexing_frequency_seconds).and_return("not an integer")
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+    it "dies if :as_arclight_resource_id_prefix isn't a string" do
+      allow(AppConfig).to receive(:[]).with(:as_arclight_resource_id_prefix).and_return(["not", "a", "string"])
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+    it "dies if :as_arclight_archival_object_id_delimiter isn't a string" do
+      allow(AppConfig).to receive(:[]).with(:as_arclight_archival_object_id_delimiter).and_return(["not", "a", "string"])
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
+  end
+
   describe '#repositories_updated_action' do
     let(:published_repo) { { 'record' => { 'publish' => true } } }
     let(:unpublished_repo) { { 'record' => { 'name' => 'unpublished_repo', 'publish' => false } } }
