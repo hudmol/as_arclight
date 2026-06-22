@@ -79,6 +79,11 @@ describe 'ArclightIndexer' do
       expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
     end
 
+    it "dies if :as_arclight_indexing_frequency_seconds isn't set" do
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_indexing_frequency_seconds).and_return(false)
+      expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
+    end
+
     it "dies if :as_arclight_indexing_frequency_seconds isn't an integer" do
       allow(AppConfig).to receive(:[]).with(:as_arclight_indexing_frequency_seconds).and_return("not an integer")
       expect{indexer.check_config_or_die!}.to raise_error(ArclightIndexer::ConfigurationError)
