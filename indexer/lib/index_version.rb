@@ -35,6 +35,8 @@ class IndexVersion
     @version = AppConfig[:as_arclight_index_version]
   end
 
+  class ConfigurationError < StandardError; end
+
   def self.validate_config_or_die!(db)
     ensure_config!
 
@@ -69,11 +71,11 @@ class IndexVersion
             revert_message +
             "\n" + ("*" * 100) + "\n"
 
-          raise "as_arclight index version mismatch"
+          raise ConfigurationError.new("Index version mismatch")
         end
       elsif version < current_index_version[:version]
         ARCLog.error "Index AppConfig[:as_arclight_index_version] cannot decrease! Current version: #{current_index_version[:version]}. Attempt to set to #{version}"
-        raise "as_arclight invalid index version"
+        raise ConfigurationError.new("Invalid index version")
       else
         ARCLog.info "Initializing index version #{version}. Full reindex required"
         db[:index_version].insert(:version => version, :config_hash => generate_index_version_hash)
