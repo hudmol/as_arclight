@@ -9,7 +9,10 @@ SimpleCov.start do
   add_filter 'indexer/plugin_init.rb'
 end
 
-FileUtils.mkdir_p(ENV['APPCONFIG_DATA_DIRECTORY'] = '/tmp/as_arclight_test_data')
+TEST_DATA_DIR = '/tmp/as_arclight_test_data'
+ENV['APPCONFIG_DATA_DIRECTORY'] = TEST_DATA_DIR
+FileUtils.rm_rf(TEST_DATA_DIR)
+FileUtils.mkdir_p(TEST_DATA_DIR)
 
 archivesspace_dir = ENV.fetch('ARCHIVESSPACE')
 
