@@ -8,6 +8,12 @@ require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar
 # config check
 bad = []
 
+if AppConfig.has_key?(:as_arclight_index_version)
+  unless AppConfig[:as_arclight_index_version].is_a?(Integer)
+    bad.push("as_arclight plugin requires AppConfig[:as_arclight_index_version] to be an Integer")
+  end
+end
+
 if AppConfig.has_key?(:as_arclight_solr_targets)
   if AppConfig[:as_arclight_solr_targets].is_a?(Array)
     AppConfig[:as_arclight_solr_targets].each_with_index do |target, ix|

@@ -2,6 +2,7 @@ require 'sequel'
 
 require_relative 'mappers/arclight_mapper'
 require_relative 'iiif_client'
+require_relative 'index_version'
 
 class ArclightIndexer < PeriodicIndexer
   class << self
@@ -123,6 +124,12 @@ class ArclightIndexer < PeriodicIndexer
     @db.run("PRAGMA journal_mode = WAL;")
     init_schema
 
+    IndexVersion.validate_config_or_die!(@db)
+
+    if IndexVersion.reindex_required?
+      reset_state_files
+    end
+
     @failed_index_retry_delay_seconds = AppConfig[:as_arclight_failed_index_retry_delay_seconds] rescue 60 * 60
 
     @failed_index_max_failures = AppConfig[:as_arclight_failed_index_max_failures] rescue 100
@@ -166,6 +173,26 @@ class ArclightIndexer < PeriodicIndexer
       end
     end
 
+    @db.create_table?(:index_version) do
+      primary_key :id
+      Integer :version, :null => false, :unique => true
+      String :config_hash, :null => false, :text => true
+    end
+  end
+
+  def reset_state_files
+    ARCLog.info "Resetting state files to trigger a full reindex"
+    JSONModel(:repository).all.each do |repo|
+      record_types.each do |record_type|
+        ARCLog.debug "Resetting state file for repository: #{repo.id}, record type: #{record_type}"
+        @state.set_last_mtime(repo.id, record_type, 0)
+      end
+    end
+
+    ARCLog.debug "Resetting repositories state file"
+    @state.set_last_mtime('repositories', 'repositories', 0)
+    ARCLog.debug "Resetting deletes state file"
+    @state.set_last_mtime('_deletes', 'deletes', 0)
   end
 
   def fetch_records(type, ids, resolve)
