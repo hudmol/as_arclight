@@ -105,13 +105,85 @@ class ArclightIndexer < PeriodicIndexer
 
   ARCLIGHT_RESOLVES = AppConfig.has_key?(:as_arclight_resolves) ? AppConfig[:as_arclight_resolves] : []
 
+  def check_config_or_die!
+    bad = []
+
+    if AppConfig.has_key?(:as_arclight_index_version)
+      unless AppConfig[:as_arclight_index_version].is_a?(Integer)
+        bad.push("as_arclight plugin requires AppConfig[:as_arclight_index_version] to be an Integer")
+      end
+    end
+
+    if AppConfig.has_key?(:as_arclight_solr_targets)
+      if AppConfig[:as_arclight_solr_targets].is_a?(Array)
+        AppConfig[:as_arclight_solr_targets].each_with_index do |target, ix|
+          unless target.has_key?(:url)
+            bad.push("Each Solr target definition must include a url. Target #{ix + 1} lacks one.")
+          end
+        end
+      else
+        bad.push("AppConfig[:as_arclight_solr_targets] must be an array of hashes containing target configurations")
+      end
+    else
+      bad.push("AppConfig[:as_arclight_solr_targets] must be set. Minimal example: [{:url => 'http://localhost:8983/solr/blacklight-core'}]")
+    end
+
+    if AppConfig.has_key?(:as_arclight_indexing_frequency_seconds)
+      unless AppConfig[:as_arclight_indexing_frequency_seconds].is_a?(Integer)
+        bad.push("AppConfig[:as_arclight_indexing_frequency_seconds] must be an Integer")
+      end
+    else
+      bad.push("AppConfig[:as_arclight_indexing_frequency_seconds] is required")
+    end
+
+    if AppConfig.has_key?(:as_arclight_resource_id_prefix)
+      unless AppConfig[:as_arclight_resource_id_prefix].is_a?(String)
+        bad.push("AppConfig[:as_arclight_resource_id_prefix] must be a String")
+      end
+    end
+
+    if AppConfig.has_key?(:as_arclight_archival_object_id_delimiter)
+      unless AppConfig[:as_arclight_archival_object_id_delimiter].is_a?(String)
+        bad.push("AppConfig[:as_arclight_archival_object_id_delimiter] must be a String")
+      end
+    end
+
+    if bad.empty?
+      ARCLog.debug "Configuration is valid"
+    else
+      ARCLog.error "Configuration errors detected!\n" +
+        ("*" * 100) + "\n    " +
+        bad.join("\n    ") + "\n" +
+        ("*" * 100) + "\n"
+      raise "as_arclight configuration error"
+    end
+  end
+
+  def ensure_data_dir_or_die!
+    begin
+      data_dir = File.join(AppConfig[:data_directory], 'as_arclight')
+      Dir.mkdir(data_dir)
+      ARCLog.info "Created data directory at #{data_dir}"
+    rescue Errno::EEXIST => e
+      ARCLog.info "Using existing data directory at #{data_dir}"
+    rescue => e
+      ARCLog.error "Unable to create data directory #{data_dir}: #{e}"
+      raise "as_arclight failed start up due to error when creating data directory: #{e}"
+    end
+
+    ArclightIndexer.data_dir = data_dir
+  end
+
   def initialize(backend = nil, state = nil, name)
+    check_config_or_die!
+    ensure_data_dir_or_die!
+
     state_class = Object.const_get(AppConfig[:index_state_class])
     index_state = state || state_class.new("indexer_arclight_state")
 
     super(backend, index_state, name)
 
-    @time_to_sleep = AppConfig[:as_arclight_indexing_frequency_seconds].to_i
+    @time_to_sleep = AppConfig[:as_arclight_indexing_frequency_seconds]
     @thread_count = 1
 
     @db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
