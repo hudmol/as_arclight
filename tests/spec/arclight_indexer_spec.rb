@@ -101,6 +101,14 @@ describe 'ArclightIndexer' do
 
   end
 
+  describe "#ensure_data_dir_or_die!" do
+    it "dies if it can't create the data directory" do
+      allow(AppConfig).to receive(:[]).with(:data_directory).and_return("/definitely/not/a/path/that/exists")
+      expect{indexer.ensure_data_dir_or_die!}.to raise_error(/as_arclight failed start up due to error when creating data directory/)
+    end
+
+  end
+
   describe '#repositories_updated_action' do
     let(:published_repo) { { 'record' => { 'publish' => true } } }
     let(:unpublished_repo) { { 'record' => { 'name' => 'unpublished_repo', 'publish' => false } } }
