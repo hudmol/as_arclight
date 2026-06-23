@@ -1,12 +1,32 @@
 describe 'IndexVersion' do
 
-  let(:db) { ArclightIndexer.prepare_db }
+  describe '#ensure_config!' do
+    it 'sets a default for :as_arclight_index_version' do
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_index_version).and_return(false)
+      IndexVersion.ensure_config!
+      expect(AppConfig[:as_arclight_index_version]).to eq(1)
+    end
 
-  before(:each) do
-    db[:index_version].delete
+    it 'sets a default for :as_arclight_resource_id_prefix' do
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_resource_id_prefix).and_return(false)
+      IndexVersion.ensure_config!
+      expect(AppConfig[:as_arclight_resource_id_prefix]).to eq('')
+    end
+
+    it 'sets a default for :as_arclight_archival_object_id_delimiter' do
+      allow(AppConfig).to receive(:has_key?).with(:as_arclight_archival_object_id_delimiter).and_return(false)
+      IndexVersion.ensure_config!
+      expect(AppConfig[:as_arclight_archival_object_id_delimiter]).to eq('_')
+    end
   end
 
   describe '#validate_config_or_die!' do
+    let(:db) { ArclightIndexer.prepare_db }
+
+    before(:each) do
+      db[:index_version].delete
+    end
+
     it 'creates an initial index version on a first run' do
       allow(AppConfig).to receive(:[]).with(:as_arclight_index_version).and_return(1)
       IndexVersion.validate_config_or_die!(db)
