@@ -30,12 +30,13 @@ rescue LoadError => e
   raise e
 end
 require_relative '../indexer/lib/arclight_indexer'
+ArclightIndexer.ensure_data_dir_or_die!
 
 require 'active_support/all'
 require 'rspec'
 
 
-Dir.glob(File.join(File.dirname(__FILE__), "spec/*_spec.rb")).each do |spec|
+Dir.glob(File.join(File.dirname(__FILE__), "spec/*_spec.rb")).sort_by {|f| File.basename(f)}.each do |spec|
   require spec
 end
 

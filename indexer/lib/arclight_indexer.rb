@@ -161,7 +161,7 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  def ensure_data_dir_or_die!
+  def self.ensure_data_dir_or_die!
     begin
       data_dir = File.join(AppConfig[:data_directory], 'as_arclight')
       Dir.mkdir(data_dir)
@@ -232,7 +232,7 @@ class ArclightIndexer < PeriodicIndexer
 
   def initialize(backend = nil, state = nil, name)
     check_config_or_die!
-    ensure_data_dir_or_die!
+    self.class.ensure_data_dir_or_die!
 
     state_class = Object.const_get(AppConfig[:index_state_class])
     index_state = state || state_class.new("indexer_arclight_state")

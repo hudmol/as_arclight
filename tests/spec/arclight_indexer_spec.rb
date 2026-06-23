@@ -12,11 +12,11 @@ describe 'ArclightIndexer' do
     JSONModel::init(enum_source: mock_enum_source)
   end
 
-  let!(:indexer) do
+  let(:indexer) do
     ArclightIndexer.new(nil, nil, "arclight_indexer_test")
   end
 
-  let(:db) { indexer.instance_variable_get(:@db) }
+  let(:db) { ArclightIndexer.prepare_db }
 
   let(:http_request_log) { @http_request_log ||= [] }
 
@@ -104,7 +104,7 @@ describe 'ArclightIndexer' do
   describe "#ensure_data_dir_or_die!" do
     it "dies if it can't create the data directory" do
       allow(AppConfig).to receive(:[]).with(:data_directory).and_return("/definitely/not/a/path/that/exists")
-      expect{indexer.ensure_data_dir_or_die!}.to raise_error(/as_arclight failed start up due to error when creating data directory/)
+      expect{indexer.class.ensure_data_dir_or_die!}.to raise_error(/as_arclight failed start up due to error when creating data directory/)
     end
 
   end
