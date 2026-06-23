@@ -201,7 +201,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('text', iiif_text.map {|text| text.scrub("?").encode('UTF-8', undef: :replace, replace: '?')})
 
     unless dado_fields.empty?
-      # FIXME: the solr fields are multis, but the existing mapping has single values
+      # the solr fields are multis, but the existing mapping has single values
       # so just taking the first for now.
       dado_fields.first.each do |k,v|
         map_field(k, v)
