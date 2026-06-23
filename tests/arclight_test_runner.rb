@@ -35,11 +35,6 @@ ArclightIndexer.ensure_data_dir_or_die!
 require 'active_support/all'
 require 'rspec'
 
-
-Dir.glob(File.join(File.dirname(__FILE__), "spec/*_spec.rb")).sort_by {|f| File.basename(f)}.each do |spec|
-  require spec
-end
-
 $ARCLIGHT_UNIT_TESTS = true
 
 
@@ -63,6 +58,10 @@ RSpec.configure do |config|
       allow(AppConfig).to receive(:[]).with(config_entry).and_return(setting)
     end
   end
+end
+
+Dir.glob(File.join(File.dirname(__FILE__), "spec/*_spec.rb")).sort_by {|f| File.basename(f)}.each do |spec|
+  require spec
 end
 
 RSpec::Core::Runner.run([])
