@@ -839,4 +839,10 @@ describe 'ArclightIndexer' do
       end
     end
   end
+
+  describe '#record_types' do
+    it 'returns an array of record types we care about' do
+      expect(indexer.record_types).to eq([:resource, :archival_object, :top_container])
+    end
+  end
 end
