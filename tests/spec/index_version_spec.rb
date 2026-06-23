@@ -3,7 +3,7 @@ describe 'IndexVersion' do
   let(:db) { ArclightIndexer.prepare_db }
 
   before(:each) do
-    indexer_db[:index_version].delete
+    db[:index_version].delete
   end
 
   describe '#validate_config_or_die!' do
