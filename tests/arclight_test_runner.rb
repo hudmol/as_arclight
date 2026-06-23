@@ -44,6 +44,8 @@ $ARCLIGHT_UNIT_TESTS = true
 
 
 RSpec.configure do |config|
+  config.order = :defined
+
   config.before(:each) do
     # Ensure some AppConfig entries don't pollute our tests
     allow(AppConfig).to receive(:has_key?).and_call_original
