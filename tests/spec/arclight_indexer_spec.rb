@@ -845,4 +845,34 @@ describe 'ArclightIndexer' do
       expect(indexer.record_types).to eq([:resource, :archival_object, :top_container])
     end
   end
+
+  describe '#reset_state_files' do
+    let(:repositories) {
+      [ {:id => 1}, {:id => 2}, {:id => 3} ].map do |sr|
+        Object.new.tap do |r|
+          r.define_singleton_method(:id) do
+            sr[:id]
+          end
+        end
+      end
+    }
+
+    let(:all_repositories) {
+      repos = repositories
+      Object.new.tap do |r|
+        r.define_singleton_method(:all) do
+          repos
+        end
+      end
+    }
+
+    it 'writes 0 to all state files' do
+      allow(JSONModel).to receive(:JSONModel).with(:repository).and_return(all_repositories)
+      state_dir = indexer.instance_variable_get(:@state).instance_variable_get(:@state_dir)
+      indexer.reset_state_files
+      Dir.glob(File.join(state_dir, '*.dat')).each do |state_file|
+        expect(File.read(state_file).chomp).to eq('0')
+      end
+    end
+  end
 end
