@@ -1,6 +1,5 @@
 class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
-  # FIXME: a bit ouchy resolving ancestors - needed for various fields
   def self.resolves
     ['repository', 'resource', 'top_container', 'ancestors', 'instances::digital_object']
   end
