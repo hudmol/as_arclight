@@ -267,7 +267,9 @@ class ArclightIndexer < PeriodicIndexer
 
   def insert_document(opts)
     @db.synchronize do |jdbc|
-      ps = jdbc.prepare_statement("insert into document (resource_uri, parent_id, json) values (?, ?, ?)")
+      ps = jdbc.prepare_statement(
+        "insert into document (resource_uri, parent_id, json) values (?, ?, ?)",
+        java.sql.Statement::RETURN_GENERATED_KEYS)
       begin
         ps.set_string(1, opts.fetch(:resource_uri).to_java)
 
@@ -280,6 +282,17 @@ class ArclightIndexer < PeriodicIndexer
         ps.set_bytes(3, opts.fetch(:json).to_java_bytes)
 
         ps.executeUpdate
+
+        keys = ps.get_generated_keys
+        begin
+          if keys.next
+            keys.get_int(1)
+          else
+            nil
+          end
+        ensure
+          keys.close if keys
+        end
       ensure
         ps.close
       end
@@ -434,7 +447,7 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def stream_doc(id, fh)
-    doc = @db[:document].filter(:id => id).select_map(:json).first
+    doc = @db[:document].filter(:id => id).select_map(:json).first || raise("Document not found for #{id}")
     kid_ids = @db[:document].filter(:parent_id => id).select_map(:id)
 
     if kid_ids.empty?
