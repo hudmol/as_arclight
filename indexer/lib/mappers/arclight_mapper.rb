@@ -73,6 +73,12 @@ module Arclight
       EADHelper.strip_markup(json['title']) + ', ' + json['dates'].map{|d| format_date(d)}.join(', ')
     end
 
+    def creator_sort(linked_agents)
+      all_creators = linked_agents.select{|a| a['role'] == 'creator'}
+      creator = all_creators.find{|c| c['is_primary']} || all_creators.first
+      creator ? creator.dig('_resolved', 'names', 0, 'sort_name') : ''
+    end
+
     SUPPORTED_NOTE_TYPES = [
       'accessrestrict',
       'acqinfo',

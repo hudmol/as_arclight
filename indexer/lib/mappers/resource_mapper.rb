@@ -39,7 +39,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('repository_ssim',        [repository['name']])
     map_field('creator_ssm',            @json['linked_agents'].select{|a| a['role'] == 'creator'}.map{|a| a['_resolved']['names'].map{|n| n['primary_name']}}.flatten.uniq)
     map_field('creator_ssim',           @map['creator_ssm'])
-    map_field('creator_sort',           @json['linked_agents'].select{|a| a['role'] == 'creator'}.map{|a| a['_resolved']['names'].map{|n| n['sort_name']}}.flatten.uniq)
+    map_field('creator_sort',           creator_sort(@json['linked_agents']))
     map_field('creator_persname_ssim',  @map['creator_ssm'])
     map_field('creators_ssim',          @map['creator_ssm'])
 

@@ -1,7 +1,7 @@
 class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
   def self.resolves
-    ['repository', 'resource', 'top_container', 'ancestors', 'instances::digital_object']
+    ['repository', 'resource', 'top_container', 'ancestors', 'instances::digital_object', 'linked_agents']
   end
 
   def repository
@@ -83,7 +83,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('repository_ssim',             [repository['name']])
     map_field('repository_ssm',              [repository['name']])
     map_field('collection_ssim',             [collection_title(resource)])
-    map_field('creator_sort',                @json['linked_agents'].select{|a| a['role'] == 'creator'}.map{|a| a['_resolved']['names'].map{|n| n['sort_name']}}.flatten.uniq)
+    map_field('creator_sort',                creator_sort(@json['linked_agents']))
     map_field('child_component_count_isi',   [@json['_child_count']])
     map_field('level_ssm',                   [@json['level'].capitalize])
     map_field('level_ssim',                  [@json['level'].capitalize])
