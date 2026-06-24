@@ -640,7 +640,7 @@ class ArclightIndexer < PeriodicIndexer
     end
 
     if resource_count > 0
-      log "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
+      ARCLog.info "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
     end
   rescue
     ARCLog.exception($!)
@@ -659,7 +659,7 @@ class ArclightIndexer < PeriodicIndexer
           response = do_http_request(target.parsed_url, req)
           if response.code == '200'
             if send_commit_for_target(target)
-              log "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
+              ARCLog.info "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
             end
           else
             ARCLog.error "failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{target.name}: #{response.body}"
