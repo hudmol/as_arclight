@@ -3,8 +3,22 @@ require 'nokogiri'
 class EADHelper
   def self.strip_markup(content)
     return if content.nil?
-    fragment = Nokogiri::XML.fragment(content)
+
+    encoded = EADHelper.encode_markup(content)
+
+    fragment = Nokogiri::XML.fragment(encoded)
     fragment.text.strip
+  end
+
+  def self.encode_markup(content)
+    return if content.nil?
+
+    decoded = content.gsub('&amp;', '&')
+                     .gsub('&quot;', '"')
+                     .gsub('&apos;', "'")
+
+    fragment = Nokogiri::HTML.fragment(decoded)
+    fragment.to_xml
   end
 
   def self.render_paragraph(line)

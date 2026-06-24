@@ -52,7 +52,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('ref_ssi',                     archival_object_id(@json))
     map_field('ref_ssm',                     [archival_object_id(@json), archival_object_id(@json)]) # the traject mapping duplicates so here we are
 
-    title_xml = @json['display_string']
+    title_xml = EADHelper.encode_markup(@json['display_string'])
     title_no_xml = EADHelper.strip_markup(@json['display_string'])
 
     map_field('title_filing_ssi',            title_no_xml)

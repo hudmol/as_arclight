@@ -13,7 +13,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
     map_field('archivesspace_uri_ssi',  @json['uri'])
     map_field('archivesspace_resource_uri_ssi', @json['uri'])
 
-    title_xml = @json['title']
+    title_xml = EADHelper.encode_markup(@json['title'])
     title_no_xml = EADHelper.strip_markup(@json['title'])
 
     map_field('title_ssm',              [title_no_xml])

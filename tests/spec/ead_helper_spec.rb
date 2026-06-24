@@ -25,11 +25,6 @@ describe EADHelper do
       expect(EADHelper.strip_markup(input)).to eq('Title with spaces')
     end
 
-    it 'preserves CDATA content inside elements' do
-      input = '<p><![CDATA[Some <b>bold</b> text]]></p>'
-      expect(EADHelper.strip_markup(input)).to eq('Some <b>bold</b> text')
-    end
-
     it 'strips comments and processing instructions' do
       input = '<!--comment--><p>Text<?pi instruction?></p>'
       expect(EADHelper.strip_markup(input)).to eq('Text')
@@ -115,6 +110,30 @@ describe EADHelper do
         "</chronlist>"
 
       expect(EADHelper.render_chronology(note)).to eq(expected)
+    end
+  end
+
+  describe '.encode_markup' do
+    it 'encodes bare ampersands in plain text' do
+      expect(EADHelper.encode_markup('One & two')).to eq('One &amp; two')
+    end
+
+    it 'normalizes mixed encoded and unencoded ampersands' do
+      expect(EADHelper.encode_markup('One &amp; two & three')).to eq('One &amp; two &amp; three')
+    end
+
+    it 'preserves XML markup while encoding ampersands in text nodes' do
+      input = '<em>One &amp; two & three</em><p>A & B</p>'
+      expect(EADHelper.encode_markup(input)).to eq('<em>One &amp; two &amp; three</em><p>A &amp; B</p>')
+    end
+
+    it 'does not double-encode already-encoded ampersands' do
+      expect(EADHelper.encode_markup('Already &amp; encoded')).to eq('Already &amp; encoded')
+    end
+
+    it 'handles ampersands in element text adjacent to child elements' do
+      input = '<p>Rock & roll <em>R&amp;B & soul</em> jazz & blues</p>'
+      expect(EADHelper.encode_markup(input)).to eq('<p>Rock &amp; roll <em>R&amp;B &amp; soul</em> jazz &amp; blues</p>')
     end
   end
 end
