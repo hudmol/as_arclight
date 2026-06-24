@@ -265,6 +265,27 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
+  def insert_document(opts)
+    @db.synchronize do |jdbc|
+      ps = jdbc.prepare_statement("insert into document (resource_uri, parent_id, json) values (?, ?, ?)")
+      begin
+        ps.set_string(1, opts.fetch(:resource_uri).to_java)
+
+        if opts.fetch(:parent_id)
+          ps.set_int(2, opts.fetch(:parent_id))
+        else
+          ps.set_null(2, java.sql.Types::VARCHAR)
+        end
+
+        ps.set_bytes(3, opts.fetch(:json).to_java_bytes)
+
+        ps.executeUpdate
+      ensure
+        ps.close
+      end
+    end
+  end
+
   def reset_state_files
     ARCLog.info "Resetting state files to trigger a full reindex"
     JSONModel(:repository).all.each do |repo|
@@ -386,7 +407,7 @@ class ArclightIndexer < PeriodicIndexer
       ao_json = fetched_child_records.fetch(record_uri)
       ao_json['_child_count'] = child_count
       mapper = Arclight::Mapper.archival_object_mapper.new(ao_json)
-      ao_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
+      ao_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
 
       if waypoint_record.fetch('child_count') > 0
         child_wp_json = JSONModel::HTTP.get_json(resource_uri + '/tree/node',
@@ -568,7 +589,7 @@ class ArclightIndexer < PeriodicIndexer
         if resource_json['publish'] && !resource_json['suppressed']
           ARCLog.debug "Preparing resource #{resource_uri}"
 
-          resource_doc_id = @db[:document].insert(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
+          resource_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
           root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
 
