@@ -220,7 +220,7 @@ describe Arclight::ResourceMapper do
 
         expect(map['creator_ssm']).to eq(['Smith, John'])
         expect(map['creator_ssim']).to eq(['Smith, John'])
-        expect(map['creator_sort']).to eq(['Smith, John'])
+        expect(map['creator_sort']).to eq('Smith, John')
         expect(map['creator_persname_ssim']).to eq(['Smith, John'])
         expect(map['creators_ssim']).to eq(['Smith, John'])
       end
