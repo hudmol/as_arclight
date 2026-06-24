@@ -53,6 +53,7 @@ RSpec.configure do |config|
       :as_arclight_resource_id_prefix => '',
       :as_arclight_archival_object_id_delimiter => '_',
       :as_arclight_reset_queue_on_start => false,
+      :disable_config_changed_warning => true,
     }.each do |config_entry, setting|
       allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(true)
       allow(AppConfig).to receive(:[]).with(config_entry).and_return(setting)
