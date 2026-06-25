@@ -32,7 +32,7 @@ class EADHelper
     Nokogiri::XML::Builder.with(fragment) do |xml|
       xml.list(type: 'ordered', numeration: 'arabic') {
         ASUtils.wrap(note['items']).map do |item|
-          xml.item { xml << item }
+          xml.item { xml << EADHelper.encode_markup(item) }
         end
       }
     end
@@ -47,8 +47,8 @@ class EADHelper
       xml.list(type: "deflist") {
         ASUtils.wrap(note['items']).map do |item|
           xml.defitem {
-            xml.label { xml << item['label'] }
-            xml.item { xml << item['value'] }
+            xml.label { xml << EADHelper.encode_markup(item['label']) }
+            xml.item { xml << EADHelper.encode_markup(item['value']) }
           }
         end
       }
@@ -66,7 +66,7 @@ class EADHelper
           xml.chronitem {
             xml.date item['event_date']
             ASUtils.wrap(item['events']).each do |event|
-              xml.event { xml << event }
+              xml.event { xml << EADHelper.encode_markup(event) }
             end
           }
         end

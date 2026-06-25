@@ -163,7 +163,7 @@ module Arclight
       when 'note_chronology'
         EADHelper.render_chronology(note)
       else
-        ARCLog.warn("Unrecognised note type: #{note.fetch('jsonmodel_type')}")
+        ARCLog.warn("Unrecognized note type: #{note.fetch('jsonmodel_type')}")
         nil
       end
     end
