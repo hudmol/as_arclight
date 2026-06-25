@@ -506,7 +506,7 @@ class ArclightIndexer < PeriodicIndexer
 
     begin
       solr_targets.each do |target|
-        send_delete_for_resource(uri, target)
+        send_delete_for_resource(uri, 'it is about to be reindexed', target)
 
         req = request_for_target(target)
         req['Content-Length'] = File.size(temp_file_path)
@@ -525,12 +525,8 @@ class ArclightIndexer < PeriodicIndexer
           stream.close
         end
 
-        if resp.code == '200'
-          if send_commit_for_target(target)
-            log "Indexed #{uri} to #{target.name}"
-          end
-        else
-          ARCLog.error "Error commiting index doc for #{uri} to #{target.name}: #{resp.body}"
+        if send_commit_for_target(target)
+          ARCLog.info "Successfully indexed #{uri} to #{target.name}"
         end
       end
     ensure
@@ -538,12 +534,12 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
-  def send_delete_for_resource(resource_uri, send_to_target = nil)
+  def send_delete_for_resource(resource_uri, reason, send_to_target = nil)
     delete_json = {'delete' => {'query' => "archivesspace_resource_uri_ssi:\"#{resource_uri}\""}}.to_json
     delete_length = delete_json.length
 
     (send_to_target ? [send_to_target] : solr_targets).each do |target|
-      ARCLog.debug "Sending delete for resource #{resource_uri} and all its nested docs to #{target.name}"
+      ARCLog.debug "Sending delete for #{resource_uri} and all its nested docs to #{target.name} because #{reason}"
       req = request_for_target(target)
       req['Content-Length'] = delete_length
       req.body = delete_json
@@ -562,8 +558,7 @@ class ArclightIndexer < PeriodicIndexer
     unpublished_count = 0
 
     @db[:deleted_resource].select_map(:uri).each do |resource_uri|
-      ARCLog.debug "Ensuring resource #{resource_uri} is not in the Arclight indexes because it has been deleted in ArchivesSpace"
-      send_delete_for_resource(resource_uri)
+      send_delete_for_resource(resource_uri, 'it has been deleted in ArchivesSpace')
       deleted_count += 1
       resource_count += 1
       @db[:resource].filter(:uri => resource_uri).delete
@@ -616,11 +611,8 @@ class ArclightIndexer < PeriodicIndexer
 
           indexed_count += 1
         else
-          ARCLog.debug "Ensuring resource #{resource_uri} is not in the Arclight indexes because it is either not published or suppressed"
-
           unpublished_count += 1
-
-          send_delete_for_resource(resource_uri)
+          send_delete_for_resource(resource_uri, 'it is either unpublished or suppressed')
           send_commit_to_all_targets
         end
 

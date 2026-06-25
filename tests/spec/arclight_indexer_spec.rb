@@ -502,11 +502,12 @@ describe 'ArclightIndexer' do
 
     it 'logs a successful index when the commit succeeds' do
       allow(indexer).to receive(:send_commit_for_target).and_return(true)
+      allow(ARCLog).to receive(:info)
       root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
 
       indexer.stream_nested_doc(root, '/repositories/2/resources/77')
 
-      expect(indexer).to have_received(:log).with(/Indexed .* to/)
+      expect(ARCLog).to have_received(:info).with(/Successfully indexed .* to/)
     end
 
     it 'logs an error when streaming the document to a target fails' do
@@ -659,7 +660,7 @@ describe 'ArclightIndexer' do
 
       indexer.index_round_complete(repository)
 
-      expect(indexer).to have_received(:send_delete_for_resource).with(resource_uri)
+      expect(indexer).to have_received(:send_delete_for_resource).with(resource_uri, 'it has been deleted in ArchivesSpace')
       expect(indexer).to have_received(:send_commit_to_all_targets)
       # the resource is cleared from both the work queue and the deleted queue
       expect(db[:deleted_resource].select_map(:uri)).to be_empty
@@ -786,7 +787,7 @@ describe 'ArclightIndexer' do
       resp.define_singleton_method(:body) { 'down' }
       allow(indexer).to receive(:do_http_request).and_return(resp)
 
-      indexer.send_delete_for_resource('/repositories/2/resources/9')
+      indexer.send_delete_for_resource('/repositories/2/resources/9', 'we are testing deletes')
 
       expect(ARCLog).to have_received(:error).with(/Error deleting .* from/)
     end
