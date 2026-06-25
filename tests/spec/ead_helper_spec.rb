@@ -115,6 +115,31 @@ describe EADHelper do
 
   describe '.encode_markup' do
     it 'encodes bare ampersands in plain text' do
+      expect(EADHelper.encode_markup('rock & roll')).to eq('rock &amp; roll')
+    end
+
+    it 'does not double-encode already encoded ampersands' do
+      expect(EADHelper.encode_markup('rock &amp; roll')).to eq('rock &amp; roll')
+    end
+
+    it 'leaves literal quotes unchanged in plain text' do
+      expect(EADHelper.encode_markup('rock "and" roll')).to eq('rock "and" roll')
+    end
+
+    it 'preserves encoded quote entities in plain text' do
+      expect(EADHelper.encode_markup('rock &quot;and&quot; roll')).to eq('rock "and" roll')
+    end
+
+    it 'preserves markup and encoded entities inside attribute values' do
+      input = '<emph class="it&quot;a&quot;lic">emphasis</emph>'
+      expect(EADHelper.encode_markup(input)).to eq('<emph class="it%22a%22lic">emphasis</emph>')
+    end
+
+    it 'preserves encoded less-than entity' do
+      expect(EADHelper.encode_markup('4 &lt; 5')).to eq('4 &lt; 5')
+    end
+
+    it 'encodes bare ampersands in plain text (One & two)' do
       expect(EADHelper.encode_markup('One & two')).to eq('One &amp; two')
     end
 
@@ -127,13 +152,37 @@ describe EADHelper do
       expect(EADHelper.encode_markup(input)).to eq('<em>One &amp; two &amp; three</em><p>A &amp; B</p>')
     end
 
-    it 'does not double-encode already-encoded ampersands' do
+    it 'does not double-encode already-encoded ampersands (Already &amp; encoded)' do
       expect(EADHelper.encode_markup('Already &amp; encoded')).to eq('Already &amp; encoded')
     end
 
     it 'handles ampersands in element text adjacent to child elements' do
       input = '<p>Rock & roll <em>R&amp;B & soul</em> jazz & blues</p>'
       expect(EADHelper.encode_markup(input)).to eq('<p>Rock &amp; roll <em>R&amp;B &amp; soul</em> jazz &amp; blues</p>')
+    end
+  end
+
+  describe "encoding" do
+    describe "#render_paragraph" do
+      cases = {
+        "rock & roll" => "<p>rock &amp; roll</p>",
+        "rock &amp; roll" => "<p>rock &amp; roll</p>",
+        'rock "and" roll' => '<p>rock "and" roll</p>',
+        "rock &quot;and&quot; roll" => '<p>rock "and" roll</p>',
+        '<emph class="it&quot;a&quot;lic">emphasis</emph>' => '<p><emph class="it%22a%22lic">emphasis</emph></p>',
+        '4 &lt; 5' => '<p>4 &lt; 5</p>',
+        'One &amp; two & three' => '<p>One &amp; two &amp; three</p>',
+        "<emph render=\"bold\">One &amp; two & three</emph>" => '<p><emph render="bold">One &amp; two &amp; three</emph></p>',
+        'Rock & roll <emph render="bold">R&amp;B & soul</emph> jazz & blues' => '<p>Rock &amp; roll <emph render="bold">R&amp;B &amp; soul</emph> jazz &amp; blues</p>'
+      }
+
+      cases.each do |input, expected_text|
+        it "handles #{input.inspect}" do
+          rendered = EADHelper.render_paragraph(input)
+
+          expect(rendered).to include(expected_text)
+        end
+      end
     end
   end
 end

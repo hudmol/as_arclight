@@ -13,19 +13,14 @@ class EADHelper
   def self.encode_markup(content)
     return if content.nil?
 
-    decoded = content.gsub('&amp;', '&')
-                     .gsub('&quot;', '"')
-                     .gsub('&apos;', "'")
-
-    fragment = Nokogiri::HTML.fragment(decoded)
-    fragment.to_xml
+    Nokogiri::HTML.fragment(content).inner_html
   end
 
   def self.render_paragraph(line)
     fragment = Nokogiri::XML::DocumentFragment.new(Nokogiri::XML::Document.new)
 
     Nokogiri::XML::Builder.with(fragment) do |xml|
-      xml.p { xml << line.strip }
+      xml.p { xml << EADHelper.encode_markup(line.strip) }
     end
 
     fragment.to_xml
