@@ -175,6 +175,31 @@ The plugin has a suite of unit tests. Run them like this:
     ./tests/run_tests.sh
 ```
 
+The test suite requires a clone of the ArchivesSpace git repository to
+be available, initialized with `build/run bootstrap`.  If you place
+this plugin under its `plugins` directory, the test suite should find
+your ArchivesSpace clone, but you can specify it explicitly by setting
+the `ARCHIVESSPACE` environment variable:
+
+    cd /my/favorite/archivesspace/dev/location/
+    git clone https://github.com/archivesspace/archivesspace.git
+    (cd archivesspace && build/run bootstrap)
+
+    export ARCHIVESSPACE=$PWD/archivesspace
+
+    cd /path/to/as_arclight
+    ./tests/run_tests.sh
+
+You can also run the tests using Docker (note that the following
+command should be run as a single line; linebreaks added for
+readability):
+
+    docker run --rm
+      -v /path/to/as_arclight:/as_arclight
+      -v /my/favorite/archivesspace/dev/location/archivesspace:/archivesspace
+      amazoncorretto:11
+      env ARCHIVESSPACE=/archivesspace /as_arclight/tests/run_tests.sh
+
 
 ## Testing Your Mappings
 

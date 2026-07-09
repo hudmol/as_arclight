@@ -1,12 +1,20 @@
 require 'tempfile'
 require 'fileutils'
 
-require 'simplecov'
+begin
+  require 'simplecov'
 
-SimpleCov.start do
-  root File.absolute_path(File.join(File.dirname(__FILE__), ".."))
-  add_filter '/spec/'
-  add_filter 'indexer/plugin_init.rb'
+  SimpleCov.start do
+    root File.absolute_path(File.join(File.dirname(__FILE__), ".."))
+    add_filter '/spec/'
+    add_filter 'indexer/plugin_init.rb'
+  end
+rescue LoadError
+  $stderr.puts "SimpleCov gem was not available.  Line coverage reporting will not be available."
+  $stderr.puts ""
+  $stderr.puts "To make this work, point your ARCHIVESSPACE environment variable to a clone of."
+  $stderr.puts "the ArchivesSpace git repository that has been bootstrapped with `build/run bootstrap`"
+  $stderr.puts ""
 end
 
 TEST_DATA_DIR = '/tmp/as_arclight_test_data'
