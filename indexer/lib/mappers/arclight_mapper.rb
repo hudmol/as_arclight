@@ -115,7 +115,7 @@ module Arclight
     def map_notes
       SUPPORTED_NOTE_TYPES.each do |note_type|
         notes_to_process = ASUtils.wrap(@json['notes'])
-                             .filter{|n| n['type'] == note_type && n['publish']}
+                             .select{|n| n['type'] == note_type && n['publish']}
 
         if notes_to_process.length > 0
           map_field("#{note_type}_heading_ssm",  [I18n.t('enumerations._note_types.' + note_type)])
