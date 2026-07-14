@@ -1,7 +1,7 @@
 class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
   def self.resolves
-    ['repository', 'resource', 'top_container', 'ancestors', 'instances::digital_object', 'linked_agents']
+    ['repository', 'top_container', 'ancestors', 'instances::digital_object', 'linked_agents']
   end
 
   def repository

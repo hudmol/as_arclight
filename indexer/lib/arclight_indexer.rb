@@ -406,7 +406,7 @@ class ArclightIndexer < PeriodicIndexer
   def configure_doc_rules
   end
 
-  def map_children(waypoints_json, resource_uri, parent_doc_id, parent_uri)
+  def map_children(waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     fetched_child_records =
       fetch_records(:archival_object,
                     waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))},
@@ -418,6 +418,7 @@ class ArclightIndexer < PeriodicIndexer
       record_uri = waypoint_record.fetch('uri')
       child_count = waypoint_record.fetch('child_count')
       ao_json = fetched_child_records.fetch(record_uri)
+      ao_json['resource']['_resolved'] = resource_json
       ao_json['_child_count'] = child_count
       mapper = Arclight::Mapper.archival_object_mapper.new(ao_json)
       ao_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
@@ -430,19 +431,19 @@ class ArclightIndexer < PeriodicIndexer
         # We might bomb out if a record was deleted out from under us.
         next if child_wp_json.nil?
 
-        map_waypoints(child_wp_json, resource_uri, ao_doc_id, record_uri)
+        map_waypoints(child_wp_json, resource_uri, ao_doc_id, resource_json, record_uri)
       end
     end
   end
 
-  def map_waypoints(json, resource_uri, parent_doc_id, parent_uri)
-    json.fetch('waypoints').times do |waypoint_number|
+  def map_waypoints(tree_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+    tree_json.fetch('waypoints').times do |waypoint_number|
       waypoints_json = JSONModel::HTTP.get_json(resource_uri + '/tree/waypoint',
                                                 :offset => waypoint_number,
                                                 :parent_node => parent_uri,
                                                 :published_only => true)
 
-      map_children(waypoints_json, resource_uri, parent_doc_id, parent_uri)
+      map_children(waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     end
   end
 
@@ -599,9 +600,9 @@ class ArclightIndexer < PeriodicIndexer
 
           resource_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
-          root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
+          tree_root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
 
-          map_waypoints(root_json, resource_uri, resource_doc_id, nil)
+          map_waypoints(tree_root_json, resource_uri, resource_doc_id, resource_json, nil)
 
           ARCLog.debug "Generated index docs for #{resource_uri}"
 
