@@ -140,7 +140,7 @@ class ArclightIndexer < PeriodicIndexer
 
     if AppConfig.has_key?(:as_arclight_resource_id_prefix)
       if AppConfig[:as_arclight_resource_id_prefix].is_a?(String)
-        unless AppConfig[:as_arclight_resource_id_prefix].match(/^[a-zA-Z0-9_-]+$/)
+        unless AppConfig[:as_arclight_resource_id_prefix].match(/^[a-zA-Z0-9_-]*$/)
           bad.push("AppConfig[:as_arclight_resource_id_prefix] can only contain alphanumerics, dash and underscore")
         end
       else
@@ -150,7 +150,7 @@ class ArclightIndexer < PeriodicIndexer
 
     if AppConfig.has_key?(:as_arclight_archival_object_id_delimiter)
       if AppConfig[:as_arclight_archival_object_id_delimiter].is_a?(String)
-        unless AppConfig[:as_arclight_archival_object_id_delimiter].match(/^[a-zA-Z0-9_-]+$/)
+        unless AppConfig[:as_arclight_archival_object_id_delimiter].match(/^[a-zA-Z0-9_-]*$/)
           bad.push("AppConfig[:as_arclight_archival_object_id_delimiter] can only contain alphanumerics, dash and underscore")
         end
       else
