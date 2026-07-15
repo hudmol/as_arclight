@@ -418,6 +418,7 @@ class ArclightIndexer < PeriodicIndexer
       record_uri = waypoint_record.fetch('uri')
       child_count = waypoint_record.fetch('child_count')
       ao_json = fetched_child_records.fetch(record_uri)
+      ao_json['resource'] ||= {}
       ao_json['resource']['_resolved'] = resource_json
       ao_json['_child_count'] = child_count
       mapper = Arclight::Mapper.archival_object_mapper.new(ao_json)

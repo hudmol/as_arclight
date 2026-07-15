@@ -392,7 +392,7 @@ describe 'ArclightIndexer' do
       it 'inserts a document row for each waypoint child' do
         allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
 
-        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 0 }], resource_uri, nil, nil)
+        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 0 }], resource_uri, nil, {}, nil)
 
         rows = db[:document].all
         expect(rows.size).to eq(1)
@@ -407,10 +407,10 @@ describe 'ArclightIndexer' do
         allow(JSONModel::HTTP).to receive(:get_json).and_return(child_waypoints)
         allow(indexer).to receive(:map_waypoints)
 
-        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 3 }], resource_uri, nil, nil)
+        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 3 }], resource_uri, nil, {}, nil)
 
         inserted_id = db[:document].select_map(:id).first
-        expect(indexer).to have_received(:map_waypoints).with(child_waypoints, resource_uri, inserted_id, ao_uri)
+        expect(indexer).to have_received(:map_waypoints).with(child_waypoints, resource_uri, inserted_id, {}, ao_uri)
       end
 
       it 'skips recursion when the child node was deleted out from under us' do
@@ -418,7 +418,7 @@ describe 'ArclightIndexer' do
         allow(JSONModel::HTTP).to receive(:get_json).and_return(nil)
         allow(indexer).to receive(:map_waypoints)
 
-        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 1 }], resource_uri, nil, nil)
+        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 1 }], resource_uri, nil, {}, nil)
 
         expect(indexer).not_to have_received(:map_waypoints)
       end
@@ -429,7 +429,7 @@ describe 'ArclightIndexer' do
         allow(JSONModel::HTTP).to receive(:get_json).and_return([{ 'uri' => 'x', 'child_count' => 0 }])
         allow(indexer).to receive(:map_children)
 
-        indexer.map_waypoints({ 'waypoints' => 2 }, resource_uri, 7, 'parent-uri')
+        indexer.map_waypoints({ 'waypoints' => 2 }, resource_uri, 7, {}, 'parent-uri')
 
         expect(JSONModel::HTTP).to have_received(:get_json).twice
         expect(indexer).to have_received(:map_children).twice
@@ -438,7 +438,7 @@ describe 'ArclightIndexer' do
       it 'does nothing when there are no waypoints' do
         allow(indexer).to receive(:map_children)
 
-        indexer.map_waypoints({ 'waypoints' => 0 }, resource_uri, 7, 'parent-uri')
+        indexer.map_waypoints({ 'waypoints' => 0 }, resource_uri, 7, {}, 'parent-uri')
 
         expect(indexer).not_to have_received(:map_children)
       end
