@@ -45,9 +45,7 @@ class Arclight::ResourceMapper < Arclight::Mapper
 
     map_field('access_terms_ssm',       @json['notes']
                                               .select{|n| n['type'] == 'userestrict' && n['publish']}
-                                              .map{|n| n['subnotes']
-                                                         .select{|s| s['publish']}
-                                                         .map{|s| s['content'].split(/\n+/)}}
+                                              .map{|n| render_note(n)}
                                               .flatten
                                               .map{|s| EADHelper.strip_markup(s)})
 

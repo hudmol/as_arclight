@@ -91,17 +91,13 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
     map_field('parent_access_restrict_tesm', resource['notes']
                                                     .select{|n| n['type'] == 'accessrestrict'}
-                                                    .map{|n| n['subnotes']
-                                                               .select{|s| s['publish']}
-                                                               .map{|s| render_note(s)}}
+                                                    .map{|n| render_note(n)}
                                                     .flatten
                                                     .map{|ead| EADHelper.strip_markup(ead)})
 
     map_field('parent_access_terms_tesm',    resource['notes']
                                                     .select{|n| n['type'] == 'userestrict'}
-                                                    .map{|n| n['subnotes']
-                                                              .select{|s| s['publish']}
-                                                              .map{|s| s['content'].split(/\n+/).map{|c| '<p>' + c + '</p>'}}}
+                                                    .map{|n| render_note(n)}
                                                     .flatten
                                                     .map{|s| EADHelper.strip_markup(s)})
 
