@@ -7,7 +7,11 @@ class EADHelper
     encoded = EADHelper.encode_markup(content)
 
     fragment = Nokogiri::XML.fragment(encoded)
-    fragment.text.strip
+    fragment
+      .xpath('.//text()')
+      .map(&:text).join(' ')
+      .gsub(/\s+/, ' ')
+      .strip
   end
 
   def self.encode_markup(content)

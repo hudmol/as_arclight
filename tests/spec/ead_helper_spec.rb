@@ -13,7 +13,7 @@ describe EADHelper do
 
     it 'removes nested tags and preserves text' do
       input = '<ead><archdesc><did><unittitle>My Title</unittitle><unitdate>2001</unitdate></did></archdesc></ead>'
-      expect(EADHelper.strip_markup(input)).to eq('My Title2001')
+      expect(EADHelper.strip_markup(input)).to eq('My Title 2001')
     end
 
     it 'removes tags with attributes' do
