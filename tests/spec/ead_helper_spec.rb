@@ -16,6 +16,11 @@ describe EADHelper do
       expect(EADHelper.strip_markup(input)).to eq('My Title 2001')
     end
 
+    it 'removes nested tags and separates combined text with spaces' do
+      input = '<list numeration="arabic" type="ordered"><item>Item A</item><item>Item B</item></list><p>This is a <strong>test</strong></p>'
+      expect(EADHelper.strip_markup(input)).to eq('Item A Item B This is a test')
+    end
+
     it 'removes tags with attributes' do
       expect(EADHelper.strip_markup('<note type="access">Open</note>')).to eq('Open')
     end
