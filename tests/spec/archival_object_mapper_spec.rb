@@ -260,7 +260,7 @@ describe Arclight::ArchivalObjectMapper do
       expect(map['extent_ssm']).to include('2 volumes')
       expect(map['extent_tesim']).to eq(map['extent_ssm'])
       expect(map['child_component_count_isi']).to eq([3])
-      expect(map['component_level_isim']).to eq([1]) # ancestors length = 1
+      expect(map['component_level_isim']).to eq([2]) # ancestors length + 1
       expect(map['level_ssm']).to eq(['Series'])
       expect(map['sort_isi']).to eq(1)
     end
@@ -334,7 +334,7 @@ describe Arclight::ArchivalObjectMapper do
   context 'resolves and id construction' do
     it 'resolves the ancestor and related records needed for mapping' do
       expect(Arclight::ArchivalObjectMapper.resolves)
-        .to include('ancestors', 'top_container', 'instances::digital_object')
+        .to include('top_container', 'instances::digital_object')
     end
 
     it 'uses the configured archival object id delimiter when one is set' do

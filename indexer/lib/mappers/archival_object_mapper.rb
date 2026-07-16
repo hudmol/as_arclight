@@ -1,7 +1,7 @@
 class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
   def self.resolves
-    ['repository', 'top_container', 'ancestors', 'instances::digital_object', 'linked_agents']
+    ['repository', 'top_container', 'instances::digital_object', 'linked_agents']
   end
 
   def repository
@@ -13,7 +13,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
   end
 
   def ancestors
-    @json['ancestors'].reverse.map{|a| a['_resolved']}
+    @json['ancestors'].map{|a| a['_resolved']}
   end
 
   def archival_object_id(ao_json)
@@ -71,15 +71,15 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     map_field('extent_ssm',                  @json['extents'].map{|e| e['container_summary'] || "#{e['number']} #{I18n.t('enumerations.extent_extent_type.' + e['extent_type'], :default => e['extent_type'])}"})
     map_field('extent_tesim',                @map['extent_ssm'])
 
-    map_field('component_level_isim',        [ancestors.length])
-    map_field('parent_ids_ssim',             [resource_id(resource), ancestors[1..-1].map{|a| ao_id(a)}].flatten)
+    map_field('component_level_isim',        [ancestors.length + 1])
+    map_field('parent_ids_ssim',             [resource_id(resource)] + ancestors.map{|a| ao_id(a)})
     map_field('parent_ssi',                  @map['parent_ids_ssim'].last)
     map_field('parent_ssim',                 @map['parent_ids_ssim'])
 
-    map_field('parent_unittitles_ssm',       [collection_title(resource), ancestors[1..-1].map{|a| EADHelper.strip_markup(a['display_string'])}].select{|a| !a.nil?}.flatten)
+    map_field('parent_unittitles_ssm',       [collection_title(resource)] + ancestors.map{|a| EADHelper.strip_markup(a['display_string'])})
     map_field('parent_unittitles_tesim',     @map['parent_unittitles_ssm'])
 
-    map_field('parent_levels_ssm',           ancestors.map{|a| a['level']})
+    map_field('parent_levels_ssm',           [resource['level']] + ancestors.map{|a| a['level']})
     map_field('repository_ssim',             [repository['name']])
     map_field('repository_ssm',              [repository['name']])
     map_field('collection_ssim',             [collection_title(resource)])

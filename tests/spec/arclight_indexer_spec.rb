@@ -378,7 +378,7 @@ describe 'ArclightIndexer' do
     def ao_record(uri)
       rec = Object.new
       rec.define_singleton_method(:uri) { uri }
-      rec.define_singleton_method(:to_hash) { |*| { 'uri' => uri } }
+      rec.define_singleton_method(:to_hash) { |*| { 'uri' => uri, 'ancestors' => [] } }
       rec
     end
 

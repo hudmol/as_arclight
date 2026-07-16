@@ -422,6 +422,28 @@ class ArclightIndexer < PeriodicIndexer
         .map{|record| [record.uri, record.to_hash(:trusted)]}
         .to_h
 
+    # Manually resolve ancestors to avoid excessive memory usage
+    # The child records are all children of the same parent,
+    # so they have the same set of ancestors, so we only need
+    # to fetch the ancestor data for the first one in the batch
+    # and then apply the result to the whole batch
+    ancestors_uri = fetched_child_records.keys.first.split('/')[0,3].join('/') + '/arclight_ancestors'
+
+    # drop the last ancestor - it is the resource and we don't need it
+    ao_ancestors = fetched_child_records.values.first['ancestors'][0..-2]
+
+    unless ao_ancestors.empty?
+      ancestor_fields = JSONModel::HTTP.get_json(ancestors_uri,
+                                                 'id_set[]' => ao_ancestors.map{|a| JSONModel.parse_reference(a['ref'])[:id]})
+      ao_ancestors.zip(ancestor_fields).each do |aa, flds|
+        aa['_resolved'] = flds
+        aa['_resolved']['level'] = aa['level']
+      end
+    end
+
+    # the ao mapper expects a top-to-bottom order
+    ao_ancestors.reverse!
+
     waypoints_json.each do |waypoint_record|
       record_uri = waypoint_record.fetch('uri')
       child_count = waypoint_record.fetch('child_count')
@@ -429,6 +451,7 @@ class ArclightIndexer < PeriodicIndexer
       ao_json['resource'] ||= {}
       ao_json['resource']['_resolved'] = resource_json
       ao_json['_child_count'] = child_count
+      ao_json['ancestors'] = ao_ancestors
       mapper = Arclight::Mapper.archival_object_mapper.new(ao_json)
       ao_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
 

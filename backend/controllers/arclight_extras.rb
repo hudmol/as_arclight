@@ -21,4 +21,23 @@ class ArchivesSpaceService < Sinatra::Base
       json_response(out)
     end
   end
+
+  Endpoint.get('/repositories/:repo_id/arclight_ancestors')
+    .description("Fetch ancestor fields required for mapping Archival Objects during Arclight indexing")
+    .params(["id_set", [String], "IDs of Archival Object ancestors"],
+            ["repo_id", :repo_id])
+    .permissions([:view_repository])
+    .returns([200, "ancestor_summary_data"]) \
+  do
+    DB.open do |db|
+      json_response(db[:archival_object].filter(:id => params[:id_set])
+                                        .select(:id, :ref_id, :component_id, :repo_id, :display_string)
+                                        .map{|row|
+                      row[:uri] = JSONModel(:archival_object).uri_for(row[:id], :repo_id => row[:repo_id])
+                      row.delete(:id)
+                      row.delete(:repo_id)
+                      row
+                    })
+    end
+  end
 end
