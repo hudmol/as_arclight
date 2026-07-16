@@ -427,13 +427,12 @@ class ArclightIndexer < PeriodicIndexer
     # so they have the same set of ancestors, so we only need
     # to fetch the ancestor data for the first one in the batch
     # and then apply the result to the whole batch
-    ancestors_uri = fetched_child_records.keys.first.split('/')[0,3].join('/') + '/arclight_ancestors'
-
+    #
     # drop the last ancestor - it is the resource and we don't need it
     ao_ancestors = fetched_child_records.values.first['ancestors'][0..-2]
 
     unless ao_ancestors.empty?
-      ancestor_fields = JSONModel::HTTP.get_json(ancestors_uri,
+      ancestor_fields = JSONModel::HTTP.get_json('/arclight_extras/ancestors',
                                                  'id_set[]' => ao_ancestors.map{|a| JSONModel.parse_reference(a['ref'])[:id]})
       ao_ancestors.zip(ancestor_fields).each do |aa, flds|
         aa['_resolved'] = flds
@@ -624,7 +623,7 @@ class ArclightIndexer < PeriodicIndexer
         resource_uri = resource_record.uri
         resource_json = resource_record.to_hash(:trusted)
 
-        resource_json.merge!(JSONModel::HTTP.get_json("#{resource_uri}/arclight_extras"))
+        resource_json.merge!(JSONModel::HTTP.get_json("/arclight_extras#{resource_uri}"))
         mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
         if resource_json['publish'] && !resource_json['suppressed']

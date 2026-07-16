@@ -1,10 +1,10 @@
 class ArchivesSpaceService < Sinatra::Base
 
-  Endpoint.get('/repositories/:repo_id/resources/:id/arclight_extras')
+  Endpoint.get('/arclight_extras/repositories/:repo_id/resources/:id')
     .description("Fetch extra summary information needed for Arclight indexing")
     .params(["id", :id],
             ["repo_id", :repo_id])
-    .permissions([:view_repository])
+    .permissions([:index_system])
     .returns([200, "summary_data"]) \
   do
     DB.open do |db|
@@ -22,11 +22,10 @@ class ArchivesSpaceService < Sinatra::Base
     end
   end
 
-  Endpoint.get('/repositories/:repo_id/arclight_ancestors')
+  Endpoint.get('/arclight_extras/ancestors')
     .description("Fetch ancestor fields required for mapping Archival Objects during Arclight indexing")
-    .params(["id_set", [String], "IDs of Archival Object ancestors"],
-            ["repo_id", :repo_id])
-    .permissions([:view_repository])
+    .params(["id_set", [String], "IDs of Archival Object ancestors"])
+    .permissions([:index_system])
     .returns([200, "ancestor_summary_data"]) \
   do
     DB.open do |db|
