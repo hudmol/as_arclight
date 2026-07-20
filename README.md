@@ -159,13 +159,15 @@ creating a plugin that registers its own mappers.
 [Example plugin](https://github.com/hudmol/as_arclight_custom_example)
 
 
-## Notes
+## Repository Name
 
   * The repository that a resource gets added to in Arclight is determined
-    by the repository_ssm field in its solr. This is the name of the repository
+    by the repository_ssm field in its Solr. This is the name of the repository
     as defined in config/repositories.yml. So, if the name of the repository
     gets changed in ArchivesSpace it will need to be changed to match in
-    Arclight. This will require reindexing the whole repository.
+    Arclight, and vice versa.
+
+    This will require reindexing the entire repository.
 
 
 ## Run the unit tests
