@@ -44,6 +44,13 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     @iiif_client
   end
 
+  def matched_iiif_manifest_uri(uri)
+    matcher = AppConfig[:as_arclight_iiif_manifest_uri_matcher] rescue %r{(?=(https?://.*manifest.json))}i
+    decoded_uri = URI.decode_www_form_component(uri)
+    decoded_uri.scan(matcher).flatten.min_by(&:length)
+  end
+
+
   def map
     map_field('id',                          ao_id(@json))
     map_field('archivesspace_uri_ssi',       @json['uri'])
@@ -153,8 +160,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
       end
 
       digital_object.fetch('file_versions', []).each do |file_version|
-        decoded_uri = URI.decode_www_form_component(file_version.fetch('file_uri', ''))
-        manifest_uri = decoded_uri.scan(%r{(?=(https?://.*manifest.json))}i).flatten.min_by(&:length)
+        manifest_uri = matched_iiif_manifest_uri(file_version.fetch('file_uri', ''))
 
         if manifest_uri
           iiif = iiif_client

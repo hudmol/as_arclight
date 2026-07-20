@@ -158,6 +158,12 @@ class ArclightIndexer < PeriodicIndexer
       end
     end
 
+    if AppConfig.has_key?(:as_arclight_iiif_manifest_uri_matcher)
+      unless AppConfig[:as_arclight_iiif_manifest_uri_matcher].is_a?(Regexp)
+        bad.push("AppConfig[:as_arclight_iiif_manifest_uri_matcher] must be a Regexp. The default is %r{(?=(https?://.*manifest.json))}i")
+      end
+    end
+
     if bad.empty?
       ARCLog.debug "Configuration is valid"
     else

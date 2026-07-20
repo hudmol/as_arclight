@@ -73,6 +73,10 @@ Optional configuration:
       fetching IIIF resources.  If unset, relies on the IIIF server's
       `Expires` and `Cache-Control` headers for guidance, defaulting
       to never caching.
+*  AppConfig[:as_arclight_iiif_manifest_uri_matcher]
+    - The regular expression used to determine if a File Version's file_uri
+      is pointing to an IIIF manifest.
+      The default is `%r{(?=(https?://.*manifest.json))}i`.
 *  AppConfig[:as_arclight_test_pristine_directory]
     - If `AppConfig[:as_arclight_test_mode]` is set to
       `:record_pristine`, mapped Solr documents will be written to
@@ -159,15 +163,34 @@ creating a plugin that registers its own mappers.
 [Example plugin](https://github.com/hudmol/as_arclight_custom_example)
 
 
+## Matching IIIF Manifest URIs
+
+The plugin tries to determine whether a the `file_uri` field in File Version
+sub-records of Archival Objects are referring to IIIF manifest files. By default
+it expects such uris to end with `manifest.json`.
+
+If this is not accurately matching your IIIF manifest uris, then you can define
+a different regular expression using `AppConfig[:as_arclight_iiif_manifest_uri_matcher].
+
+If you need more control over the matching process, you can override (from
+another plugin - see above) the following method:
+```
+Arclight::ArchivalObjectMapper#matched_iiif_manifest_uri(uri)
+```
+The method is passed the `file_uri` of each File Version and returns the matched
+IIIF manifest uri, or a falsy value if the given uri is determined not to be an
+IIIF manifest uri.
+
+
 ## Repository Name
 
-  * The repository that a resource gets added to in Arclight is determined
-    by the repository_ssm field in its Solr. This is the name of the repository
-    as defined in config/repositories.yml. So, if the name of the repository
-    gets changed in ArchivesSpace it will need to be changed to match in
-    Arclight, and vice versa.
+The repository that a resource gets added to in Arclight is determined
+by the repository_ssm field in its Solr. This is the name of the repository
+as defined in config/repositories.yml. So, if the name of the repository
+gets changed in ArchivesSpace it will need to be changed to match in
+Arclight, and vice versa.
 
-    This will require reindexing the entire repository.
+This will require reindexing the entire repository.
 
 
 ## Run the unit tests
