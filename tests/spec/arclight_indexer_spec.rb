@@ -586,7 +586,7 @@ describe 'ArclightIndexer' do
       allow(indexer).to receive(:send_commit_to_all_targets)
       allow(indexer).to receive(:log)
       allow(Arclight::Mapper).to receive(:resource_mapper).and_return(fake_resource_mapper)
-      # arclight_extras and tree/root lookups
+      # as_arclight and tree/root lookups
       allow(JSONModel::HTTP).to receive(:get_json).and_return({})
     end
 
