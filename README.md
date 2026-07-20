@@ -170,7 +170,7 @@ sub-records of Archival Objects are referring to IIIF manifest files. By default
 it expects such uris to end with `manifest.json`.
 
 If this is not accurately matching your IIIF manifest uris, then you can define
-a different regular expression using `AppConfig[:as_arclight_iiif_manifest_uri_matcher].
+a different regular expression using `AppConfig[:as_arclight_iiif_manifest_uri_matcher]`.
 
 If you need more control over the matching process, you can override (from
 another plugin - see above) the following method:
