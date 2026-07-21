@@ -1,5 +1,4 @@
-require 'sequel'
-
+require_relative 'arcdb'
 require_relative 'mappers/arclight_mapper'
 require_relative 'iiif_client'
 require_relative 'index_version'
@@ -190,60 +189,6 @@ class ArclightIndexer < PeriodicIndexer
     ArclightIndexer.data_dir = data_dir
   end
 
-  def self.prepare_db
-    db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
-
-    unless File.exist?(db_path)
-      ARCLog.info 'Initializing db at ' + db_path
-    end
-
-    db = Sequel.connect("jdbc:sqlite:#{db_path}")
-    db.run("PRAGMA journal_mode = WAL;")
-    init_schema(db)
-
-    db
-  end
-
-  def self.init_schema(db)
-    db.create_table?(:resource) do
-      primary_key :id
-      String :uri, :null => false, :unique => true
-    end
-
-    db.create_table?(:deleted_resource) do
-      primary_key :id
-      String :uri, :null => false, :unique => true
-    end
-
-    # start with a fresh document table
-    db.drop_table?(:document)
-
-    db.create_table(:document) do
-      primary_key :id
-      String :resource_uri
-      Integer :parent_id
-      blob :json
-    end
-
-    unless db[:resource].columns.include?(:next_retry_time)
-      db.alter_table(:resource) do
-        add_column :next_retry_time, :Bignum
-      end
-    end
-
-    unless db[:resource].columns.include?(:failure_count)
-      db.alter_table(:resource) do
-        add_column :failure_count, :Bignum, :default => 0
-      end
-    end
-
-    db.create_table?(:index_version) do
-      primary_key :id
-      Integer :version, :null => false, :unique => true
-      String :config_hash, :null => false, :text => true
-    end
-  end
-
   def initialize(backend = nil, state = nil, name)
     check_config_or_die!
     self.class.ensure_data_dir_or_die!
@@ -256,14 +201,12 @@ class ArclightIndexer < PeriodicIndexer
     @time_to_sleep = AppConfig[:as_arclight_indexing_frequency_seconds]
     @thread_count = 1
 
-    @db_path = File.join(ArclightIndexer.data_dir, "arclight_indexer.db")
-    unless File.exist?(@db_path)
-      ARCLog.info 'Initializing db at ' + @db_path
+    @db = ARCDB.new(ArclightIndexer.data_dir)
+    @db.ensure_prepared
+
+    @db.connect do |db|
+      IndexVersion.validate_config_or_die!(db)
     end
-
-    @db = self.class.prepare_db
-
-    IndexVersion.validate_config_or_die!(@db)
 
     if IndexVersion.reindex_required?
       reset_state_files
@@ -275,15 +218,15 @@ class ArclightIndexer < PeriodicIndexer
 
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
       ARCLog.warn 'Resetting queue!'
-      @db[:resource].delete
+      @db.connect{|db| db[:resource].delete}
     end
   end
 
-  def insert_document(opts)
-    @db.synchronize do |jdbc|
+  def insert_document(db, opts)
+    db.synchronize do |jdbc|
       ps = jdbc.prepare_statement(
-        "insert into document (resource_uri, parent_id, json) values (?, ?, ?)",
-        java.sql.Statement::RETURN_GENERATED_KEYS)
+             "insert into document (resource_uri, parent_id, json) values (?, ?, ?)",
+             java.sql.Statement::RETURN_GENERATED_KEYS)
       begin
         ps.set_string(1, opts.fetch(:resource_uri).to_java)
 
@@ -368,8 +311,10 @@ class ArclightIndexer < PeriodicIndexer
       end
 
       # Clear any existing rows prior to insert to reset our failure counts
-      @db[:resource].filter(:uri => uri).delete
-      @db[:resource].insert(:uri => uri)
+      @db.connect do |db|
+        db[:resource].filter(:uri => uri).delete
+        db[:resource].insert(:uri => uri)
+      end
     end
   end
 
@@ -382,7 +327,7 @@ class ArclightIndexer < PeriodicIndexer
       end
 
       begin
-        @db[:deleted_resource].insert(:uri => uri)
+        @db.connect{|db| db[:deleted_resource].insert(:uri => uri)}
       rescue Sequel::UniqueConstraintViolation
         # this is ok and shoudn't happen - a record can only be deleted once
       end
@@ -420,7 +365,7 @@ class ArclightIndexer < PeriodicIndexer
   def configure_doc_rules
   end
 
-  def map_children(waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+  def map_children(db, waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     fetched_child_records =
       fetch_records(:archival_object,
                     waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))},
@@ -458,7 +403,7 @@ class ArclightIndexer < PeriodicIndexer
       ao_json['_child_count'] = child_count
       ao_json['ancestors'] = ao_ancestors
       mapper = Arclight::Mapper.archival_object_mapper.new(ao_json)
-      ao_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
+      ao_doc_id = insert_document(db, :resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
 
       if waypoint_record.fetch('child_count') > 0
         child_wp_json = JSONModel::HTTP.get_json(resource_uri + '/tree/node',
@@ -468,25 +413,29 @@ class ArclightIndexer < PeriodicIndexer
         # We might bomb out if a record was deleted out from under us.
         next if child_wp_json.nil?
 
-        map_waypoints(child_wp_json, resource_uri, ao_doc_id, resource_json, record_uri)
+        map_waypoints(db, child_wp_json, resource_uri, ao_doc_id, resource_json, record_uri)
       end
     end
   end
 
-  def map_waypoints(tree_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+  def map_waypoints(db, tree_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     tree_json.fetch('waypoints').times do |waypoint_number|
       waypoints_json = JSONModel::HTTP.get_json(resource_uri + '/tree/waypoint',
                                                 :offset => waypoint_number,
                                                 :parent_node => parent_uri,
                                                 :published_only => true)
 
-      map_children(waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+      map_children(db, waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     end
   end
 
   def stream_doc(id, fh)
-    doc = @db[:document].filter(:id => id).select_map(:json).first || raise("Document not found for #{id}")
-    kid_ids = @db[:document].filter(:parent_id => id).select_map(:id)
+    doc = ''
+    kid_ids = []
+    @db.connect do |db|
+      doc = db[:document].filter(:id => id).select_map(:json).first || raise("Document not found for #{id}")
+      kid_ids = db[:document].filter(:parent_id => id).select_map(:id)
+    end
 
     if kid_ids.empty?
       fh.write(doc)
@@ -532,7 +481,10 @@ class ArclightIndexer < PeriodicIndexer
 
     if self_test_output_dir
       FileUtils.mkdir_p(self_test_output_dir)
-      output_basename = @db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
+      output_basename = nil
+      @db.connect do |db|
+        output_basename = db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
+      end
       output_file = File.join(self_test_output_dir, output_basename + ".json")
 
       ARCLog.debug "Writing #{output_file} for further inspection"
@@ -589,92 +541,101 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
+  def run_index_round
+    @db.copy_to_local_dir
+    super
+  ensure
+    @db.restore_to_data_dir
+  end
+
   def index_round_complete(repository)
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
     unpublished_count = 0
 
-    @db[:deleted_resource].select_map(:uri).each do |resource_uri|
-      send_delete_for_resource(resource_uri, 'it has been deleted in ArchivesSpace')
-      deleted_count += 1
-      resource_count += 1
-      @db[:resource].filter(:uri => resource_uri).delete
-      @db[:deleted_resource].filter(:uri => resource_uri).delete
-    end
-
-    if deleted_count > 0
-      send_commit_to_all_targets
-    end
-
-    # Clear any records that have reached our maximum number of failures
-    max_failures = @failed_index_max_failures
-    @db[:resource].where { failure_count > max_failures }.each do |failed_resource|
-      ARCLog.debug "Resource #{failed_resource[:uri]} has failed to index #{failed_resource[:failure_count]} times in a row and will be skipped"
-    end
-
-    @db[:resource].where { failure_count > max_failures }.delete
-
-    eligible_resource_ds = @db[:resource]
-                             .where{(next_retry_time =~ nil) | (next_retry_time <= Time.now.to_i)}
-
-    ARCLog.info "There are #{eligible_resource_ds.count} collections in need of indexing"
-
-    fetch_records(:resource,
-                  eligible_resource_ds
-                    .select_map(:uri)
-                    .map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
-                   Arclight::Mapper.resource_mapper.resolves) do |resource_record|
-      begin
-        resource_uri = resource_record.uri
-        resource_json = resource_record.to_hash(:trusted)
-
-        resource_json.merge!(JSONModel::HTTP.get_json("/as_arclight#{resource_uri}"))
-        mapper = Arclight::Mapper.resource_mapper.new(resource_json)
-
-        if resource_json['publish'] && !resource_json['suppressed']
-          ARCLog.debug "Preparing resource #{resource_uri}"
-
-          resource_doc_id = insert_document(:resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
-
-          tree_root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
-
-          map_waypoints(tree_root_json, resource_uri, resource_doc_id, resource_json, nil)
-
-          ARCLog.debug "Generated index docs for #{resource_uri}"
-
-          stream_nested_doc(resource_doc_id, resource_uri)
-
-          @db[:document].filter(:resource_uri => resource_uri).delete
-
-          indexed_count += 1
-        else
-          unpublished_count += 1
-          send_delete_for_resource(resource_uri, 'it is either unpublished or suppressed')
-          send_commit_to_all_targets
-        end
-
-        @db[:resource].filter(:uri => resource_uri).delete
+    @db.connect do |db|
+      db[:deleted_resource].select_map(:uri).each do |resource_uri|
+        send_delete_for_resource(resource_uri, 'it has been deleted in ArchivesSpace')
+        deleted_count += 1
         resource_count += 1
-      rescue => e
-        next_retry_time = Time.now.to_i + @failed_index_retry_delay_seconds
-
-        ARCLog.error "Error indexing resource #{resource_uri}: #{e}"
-        ARCLog.error "This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
-        ARCLog.exception(e)
-
-        @db[:resource].filter(:uri => resource_uri)
-          .update(:next_retry_time => next_retry_time,
-                  :failure_count => Sequel.expr(:failure_count) + 1)
+        db[:resource].filter(:uri => resource_uri).delete
+        db[:deleted_resource].filter(:uri => resource_uri).delete
       end
-    end
 
-    if resource_count > 0
-      ARCLog.info "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
+      if deleted_count > 0
+        send_commit_to_all_targets
+      end
+
+      # Clear any records that have reached our maximum number of failures
+      max_failures = @failed_index_max_failures
+
+      db[:resource].where { failure_count > max_failures }.each do |failed_resource|
+        ARCLog.debug "Resource #{failed_resource[:uri]} has failed to index #{failed_resource[:failure_count]} times in a row and will be skipped"
+      end
+
+      db[:resource].where { failure_count > max_failures }.delete
+
+      eligible_resource_ds = db[:resource].where{(next_retry_time =~ nil) | (next_retry_time <= Time.now.to_i)}
+
+      ARCLog.info "There are #{eligible_resource_ds.count} collections in need of indexing"
+
+      fetch_records(:resource,
+                    eligible_resource_ds
+                      .select_map(:uri)
+                      .map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
+                    Arclight::Mapper.resource_mapper.resolves) do |resource_record|
+        begin
+          resource_uri = resource_record.uri
+          resource_json = resource_record.to_hash(:trusted)
+
+          resource_json.merge!(JSONModel::HTTP.get_json("/as_arclight#{resource_uri}"))
+          mapper = Arclight::Mapper.resource_mapper.new(resource_json)
+
+          if resource_json['publish'] && !resource_json['suppressed']
+            ARCLog.debug "Preparing resource #{resource_uri}"
+
+            resource_doc_id = insert_document(db, :resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
+
+            tree_root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
+
+            map_waypoints(db, tree_root_json, resource_uri, resource_doc_id, resource_json, nil)
+
+            ARCLog.debug "Generated index docs for #{resource_uri}"
+
+            stream_nested_doc(resource_doc_id, resource_uri)
+
+            db[:document].filter(:resource_uri => resource_uri).delete
+
+            indexed_count += 1
+          else
+            unpublished_count += 1
+            send_delete_for_resource(resource_uri, 'it is either unpublished or suppressed')
+            send_commit_to_all_targets
+          end
+
+          db[:resource].filter(:uri => resource_uri).delete
+          resource_count += 1
+        rescue => e
+          next_retry_time = Time.now.to_i + @failed_index_retry_delay_seconds
+
+          ARCLog.error "Error indexing resource #{resource_uri}: #{e}"
+          ARCLog.error "This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
+          ARCLog.exception(e)
+
+          db[:resource].filter(:uri => resource_uri)
+            .update(:next_retry_time => next_retry_time,
+                    :failure_count => Sequel.expr(:failure_count) + 1)
+        end
+      end
+
+      if resource_count > 0
+        ARCLog.info "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
+      end
+    rescue
+      ARCLog.exception($!)
+      raise $!
     end
-  rescue
-    ARCLog.exception($!)
-    raise $!
   end
 
   def repositories_updated_action(updated_repositories)
