@@ -38,6 +38,8 @@ class IIIFClient
         @min_cache_seconds = opts.fetch(:min_cache_seconds, nil)
 
         create_schema!
+
+        @lock = Mutex.new
       end
 
       def open_db!
@@ -45,16 +47,18 @@ class IIIFClient
       end
 
       def get_cache_entry(uri)
-        auto_close(@connection.prepare_statement("SELECT uri, response, timestamp FROM cache WHERE uri = ? AND expiration_time > ?")) do |ps|
-          ps.set_string(1, uri.to_s)
-          ps.set_long(2, Time.now.to_i)
-          auto_close(ps.execute_query) do |rs|
-            if rs.next
-              compressed = rs.get_bytes("response")
-              response = decompress(compressed)
-              return CacheEntry.new(rs.get_string("uri"), response, rs.get_int("timestamp"))
-            else
-              return nil
+        @lock.synchronize do
+          auto_close(@connection.prepare_statement("SELECT uri, response, timestamp FROM cache WHERE uri = ? AND expiration_time > ?")) do |ps|
+            ps.set_string(1, uri.to_s)
+            ps.set_long(2, Time.now.to_i)
+            auto_close(ps.execute_query) do |rs|
+              if rs.next
+                compressed = rs.get_bytes("response")
+                response = decompress(compressed)
+                return CacheEntry.new(rs.get_string("uri"), response, rs.get_int("timestamp"))
+              else
+                return nil
+              end
             end
           end
         end
@@ -68,29 +72,31 @@ class IIIFClient
       end
 
       def insert_response(uri, http_response)
-        if rand < 0.01
-          run_expiration!
+        @lock.synchronize do
+          if rand < 0.01
+            run_expiration!
+          end
+
+          json = http_response.to_json
+          compressed = compress(json)
+
+          expiration_time = http_response.cache_expiration_time.to_i
+
+          if @min_cache_seconds
+            min_expiration = (Time.now.to_i + @min_cache_seconds)
+            expiration_time = [expiration_time, min_expiration].max
+          end
+
+          auto_close(@connection.prepare_statement("INSERT OR REPLACE INTO cache (uri, response, timestamp, expiration_time) VALUES (?, ?, ?, ?)")) do |ps|
+            ps.set_string(1, uri.to_s)
+            ps.set_bytes(2, compressed)
+            ps.set_long(3, Time.now.to_i)
+            ps.set_long(4, expiration_time)
+            ps.execute_update
+          end
+
+          CacheEntry.new(uri.to_s, json, Time.now.to_i)
         end
-
-        json = http_response.to_json
-        compressed = compress(json)
-
-        expiration_time = http_response.cache_expiration_time.to_i
-
-        if @min_cache_seconds
-          min_expiration = (Time.now.to_i + @min_cache_seconds)
-          expiration_time = [expiration_time, min_expiration].max
-        end
-
-        auto_close(@connection.prepare_statement("INSERT OR REPLACE INTO cache (uri, response, timestamp, expiration_time) VALUES (?, ?, ?, ?)")) do |ps|
-          ps.set_string(1, uri.to_s)
-          ps.set_bytes(2, compressed)
-          ps.set_long(3, Time.now.to_i)
-          ps.set_long(4, expiration_time)
-          ps.execute_update
-        end
-
-        CacheEntry.new(uri.to_s, json, Time.now.to_i)
       end
 
       def close
@@ -98,11 +104,13 @@ class IIIFClient
       end
 
       def flush
-        close
+        @lock.synchronize do
+          close
 
-        FileUtils.cp(@local_db_path.path, @db_path)
+          FileUtils.cp(@local_db_path.path, @db_path)
 
-        open_db!
+          open_db!
+        end
       end
 
       private
