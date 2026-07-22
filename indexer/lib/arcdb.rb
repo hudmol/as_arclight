@@ -5,7 +5,7 @@ class ARCDB
   def initialize(data_dir, opts = {})
     @data_dir_path = File.join(data_dir, 'arclight_indexer.db')
 
-    @session_active = false
+    @session_active = java.util.concurrent.atomic.AtomicBoolean.new(false)
 
     ensure_prepared
   end
@@ -37,13 +37,13 @@ class ARCDB
         SESSION_LOCK.unlock
       end
     else
-      @session_active = true
+      @session_active.set(true)
       begin
         copy_to_local_dir
         yield
       ensure
         restore_to_data_dir
-        @session_active = false
+        @session_active.set(false)
         SESSION_LOCK.unlock
       end
     end
@@ -68,7 +68,7 @@ class ARCDB
   end
 
   def transaction
-    unless @session_active
+    unless @session_active.get
       raise "Can only call ArcDB#transaction from within an ArcDB#session block"
     end
 
