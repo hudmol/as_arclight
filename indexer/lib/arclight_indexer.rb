@@ -550,9 +550,11 @@ class ArclightIndexer < PeriodicIndexer
     @db.with_session do
       super
     end
+
+    run_arclight_indexing
   end
 
-  def index_round_complete(repository)
+  def run_arclight_indexing
     resource_count = 0
     indexed_count = 0
     deleted_count = 0
@@ -638,11 +640,13 @@ class ArclightIndexer < PeriodicIndexer
       end
 
       if resource_count > 0
-        ARCLog.info "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count} for repository #{repository.repo_code}"
+        ARCLog.info "Processed #{resource_count} resources. Indexed: #{indexed_count}, Deleted: #{deleted_count}, Unpublished: #{unpublished_count}"
       end
     rescue
       ARCLog.exception($!)
       raise $!
+    ensure
+      Arclight::Mapper.iiif_client.flush
     end
   end
 
