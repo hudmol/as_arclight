@@ -12,13 +12,23 @@ class IIIFClient
       def insert_response(uri, http_response)
         nil
       end
+
+      def flush
+      end
     end
 
 
     class SQLiteCache
 
       def initialize(db_path, opts)
-        @connection = org.sqlite.JDBC.new.connect("jdbc:sqlite:#{db_path}", java.util.Properties.new)
+        @db_path = db_path
+        @local_db_path = Tempfile.new
+
+        if File.exist?(db_path)
+          FileUtils.cp(db_path, @local_db_path.path)
+        end
+
+        open_db!
 
         # Enable WAL
         auto_close(@connection.create_statement) do |stmt|
@@ -28,6 +38,10 @@ class IIIFClient
         @min_cache_seconds = opts.fetch(:min_cache_seconds, nil)
 
         create_schema!
+      end
+
+      def open_db!
+        @connection = org.sqlite.JDBC.new.connect("jdbc:sqlite:#{@local_db_path.path}", java.util.Properties.new)
       end
 
       def get_cache_entry(uri)
@@ -81,6 +95,14 @@ class IIIFClient
 
       def close
         @connection.close
+      end
+
+      def flush
+        close
+
+        FileUtils.cp(@local_db_path.path, @db_path)
+
+        open_db!
       end
 
       private

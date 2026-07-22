@@ -410,6 +410,8 @@ class ArclightIndexer < PeriodicIndexer
         insert_document(db, :resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
       end
 
+      Arclight::Mapper.iiif_client.maybe_flush
+
       if waypoint_record.fetch('child_count') > 0
         child_wp_json = JSONModel::HTTP.get_json(resource_uri + '/tree/node',
                                                  :node_uri => record_uri,

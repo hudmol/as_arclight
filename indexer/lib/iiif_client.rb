@@ -15,6 +15,7 @@ class IIIFClient
 
   def initialize(config)
     @config = config
+    @unflushed_insert_count = 0
   end
 
   def fetch_manifest(url)
@@ -200,6 +201,18 @@ class IIIFClient
     end
   end
 
+  def flush
+    ARCLog.debug("Flushing IIIFClient cache to disk")
+
+    config.request_cache.flush
+    @unflushed_insert_count = 0
+  end
+
+  def maybe_flush
+    if @unflushed_insert_count >= 128
+      flush
+    end
+  end
 
   private
 
@@ -260,6 +273,7 @@ class IIIFClient
 
       if result.is_success?
         config.request_cache.insert_response((original_url || url), result)
+        @unflushed_insert_count += 1
       end
 
       result

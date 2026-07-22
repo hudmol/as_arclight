@@ -25,25 +25,6 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     resource_id(resource) + AppConfig[:as_arclight_archival_object_id_delimiter] + archival_object_id(ao_json)
   end
 
-  def iiif_client
-    unless @iiif_client
-      config = IIIFClient::Config.new
-
-      # FIXME: albany-specific
-      config.instance_eval do
-        def configure_http_request(http, request)
-          if request.uri.to_s.include?('albany.edu')
-            request['Referer'] = 'https://archives.albany.edu/'
-          end
-        end
-      end
-
-      @iiif_client = IIIFClient.new(config)
-    end
-
-    @iiif_client
-  end
-
   def matched_iiif_manifest_uri(uri)
     matcher = AppConfig[:as_arclight_iiif_manifest_uri_matcher] rescue %r{(?=(https?://.*manifest.json))}i
     decoded_uri = URI.decode_www_form_component(uri)
@@ -163,7 +144,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
         manifest_uri = matched_iiif_manifest_uri(file_version.fetch('file_uri', ''))
 
         if manifest_uri
-          iiif = iiif_client
+          iiif = Arclight::Mapper.iiif_client
 
           manifest = iiif.fetch_manifest(manifest_uri)
 
@@ -212,4 +193,5 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
 
     map_notes
   end
+
 end

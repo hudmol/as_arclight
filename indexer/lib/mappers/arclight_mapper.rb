@@ -38,6 +38,31 @@ module Arclight
       []
     end
 
+    IIIF_LOCK = Mutex.new
+
+    def self.iiif_client
+      IIIF_LOCK.synchronize do
+        unless @iiif_client
+          config = IIIFClient::Config.new
+          # Eager load our request cache
+          config.request_cache
+
+          # FIXME: albany-specific
+          config.instance_eval do
+            def configure_http_request(http, request)
+              if request.uri.to_s.include?('albany.edu')
+                request['Referer'] = 'https://archives.albany.edu/'
+              end
+            end
+          end
+
+          @iiif_client = IIIFClient.new(config)
+        end
+
+        @iiif_client
+      end
+    end
+
     def initialize(json)
       @json = json
       @map = {}
