@@ -363,19 +363,8 @@ describe Arclight::ArchivalObjectMapper do
   end
 
   context '#iiif_client request configuration' do
-    let(:mapper) { Arclight::ArchivalObjectMapper.new(minimal_archival_json) }
-
-    def fake_request(uri)
-      headers = {}
-      req = Object.new
-      req.define_singleton_method(:uri) { URI.parse(uri) }
-      req.define_singleton_method(:[]=) { |k, v| headers[k] = v }
-      req.define_singleton_method(:headers) { headers }
-      req
-    end
-
     it 'memoizes the client across calls' do
-      expect(mapper.iiif_client).to be(mapper.iiif_client)
+      expect(Arclight::Mapper.iiif_client).to be(Arclight::Mapper.iiif_client)
     end
   end
 

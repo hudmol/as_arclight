@@ -639,7 +639,7 @@ describe 'ArclightIndexer' do
     end
   end
 
-  describe '#index_round_complete' do
+  describe '#run_arclight_indexing' do
     let(:target) { ArclightIndexer::SolrTarget.new('http://solr.example/core') }
     let(:repository) { double('repository', repo_code: 'repo1') }
     let(:resource_uri) { '/repositories/2/resources/123' }
@@ -690,7 +690,7 @@ describe 'ArclightIndexer' do
         allow(indexer).to receive(:map_waypoints)
         allow(indexer).to receive(:stream_nested_doc)
 
-        indexer.index_round_complete(repository)
+        indexer.run_arclight_indexing
 
         expect(indexer).to have_received(:map_waypoints)
         expect(indexer).to have_received(:stream_nested_doc).with(anything, resource_uri)
@@ -707,7 +707,7 @@ describe 'ArclightIndexer' do
         end
         allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, false))
 
-        indexer.index_round_complete(repository)
+        indexer.run_arclight_indexing
 
         delete_request = JSON.parse(http_request_log.first[:request].body)
         expect(delete_request.dig('delete', 'query')).to eq("archivesspace_resource_uri_ssi:\"#{resource_uri}\"")
@@ -727,7 +727,7 @@ describe 'ArclightIndexer' do
         allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
         allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
-        indexer.index_round_complete(repository)
+        indexer.run_arclight_indexing
 
         row = arcdb.transaction do |db|
           db[:resource].first(:uri => resource_uri)
@@ -747,7 +747,7 @@ describe 'ArclightIndexer' do
         allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
         allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
-        indexer.index_round_complete(repository)
+        indexer.run_arclight_indexing
 
         arcdb.transaction do |db|
           expect(db[:resource].first(:uri => resource_uri)[:failure_count]).to eq(4)
@@ -764,7 +764,7 @@ describe 'ArclightIndexer' do
         end
         allow(indexer).to receive(:fetch_records).and_return([])
 
-        indexer.index_round_complete(repository)
+        indexer.run_arclight_indexing
 
         # the over-limit resource is removed, the at-limit one is kept for another try
         arcdb.transaction do |db|
@@ -782,7 +782,7 @@ describe 'ArclightIndexer' do
         allow(indexer).to receive(:fetch_records).and_return([])
         allow(indexer).to receive(:send_delete_for_resource)
 
-        indexer.index_round_complete(repository)
+        indexer.run_arclight_indexing
 
         expect(indexer).to have_received(:send_delete_for_resource).with(resource_uri, 'it has been deleted in ArchivesSpace')
         expect(indexer).to have_received(:send_commit_to_all_targets)
