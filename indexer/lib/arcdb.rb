@@ -1,15 +1,13 @@
 require 'sequel'
+require 'securerandom'
 
 class ARCDB
   def initialize(data_dir, opts = {})
     @data_dir_path = File.join(data_dir, 'arclight_indexer.db')
-    @local_path = '/tmp/as_arclight_working_copy_of_indexer.db'
-    @connection_count = java.util.concurrent.atomic.AtomicInteger.new(0)
 
-    if File.exist?(@local_path)
-      File.rm(@local_path)
-      ARCLog.warn "Removed unexpected local copy. Did we have an unexpected shutdown?"
-    end
+    @session_active = false
+
+    ensure_prepared
   end
 
   def ensure_prepared
@@ -17,52 +15,67 @@ class ARCDB
       ARCLog.info 'Initializing db at ' + @data_dir_path
     end
 
-    connect do |db|
-      db.run("PRAGMA journal_mode = WAL;")
-      init_schema(db)
-    end
-  end
-
-  def ensure_local
-    if File.exist?(@local_path)
-      true
-    else
-      copy_to_local_dir
-      false
-    end
-  end
-
-  def copy_to_local_dir
-    if File.exist?(@local_path)
-      raise "as_arclight plugin: Attempt to copy database file to a local directory when it is already there!"
-    else
-      if File.exist?(@data_dir_path)
-        FileUtils.cp(@data_dir_path, @local_path)
-        ARCLog.debug "Database file copied to local directory for access"
-      else
-        ARCLog.debug "Creating new database file for access"
+    with_session do
+      transaction do |db|
+        db.run("PRAGMA journal_mode = WAL;")
+        init_schema(db)
       end
     end
   end
 
-  def restore_to_data_dir
-    if @connection_count.get > 0
-      raise "as_arclight plugin: Attempt to restore database file while there are open connections!"
+  SESSION_LOCK = java.util.concurrent.locks.ReentrantLock.new
+
+  # Copy the SQLite DB from the ArchivesSpace data directory to a local temp
+  # file in anticipation of updating it.  Once updates complete, copy it back.
+  def with_session
+    SESSION_LOCK.lock
+
+    if SESSION_LOCK.getHoldCount > 1
+      begin
+        yield
+      ensure
+        SESSION_LOCK.unlock
+      end
     else
-      FileUtils.mv(@local_path, @data_dir_path)
-      ARCLog.debug "Database file restored to data directory"
+      @session_active = true
+      begin
+        copy_to_local_dir
+        yield
+      ensure
+        restore_to_data_dir
+        @session_active = false
+        SESSION_LOCK.unlock
+      end
     end
   end
 
-  def connect
-    already_local = ensure_local
+  def copy_to_local_dir
+    @tmpfile = Tempfile.new('arclight_indexer_working_copy.db')
+    @local_path = @tmpfile.path
+
+    if File.exist?(@data_dir_path)
+      FileUtils.cp(@data_dir_path, @local_path)
+      ARCLog.debug "Database file copied to local directory for access"
+    else
+      ARCLog.debug "Creating new database file for access"
+    end
+  end
+
+  def restore_to_data_dir
+    FileUtils.mv(@local_path, @data_dir_path + ".tmp")
+    FileUtils.mv(@data_dir_path + ".tmp", @data_dir_path)
+    ARCLog.debug "Database file restored to data directory"
+  end
+
+  def transaction
+    unless @session_active
+      raise "Can only call ArcDB#transaction from within an ArcDB#session block"
+    end
+
     conn = Sequel.connect("jdbc:sqlite:#{@local_path}")
-    @connection_count.incrementAndGet
     yield conn
   ensure
-    conn.disconnect
-    @connection_count.decrementAndGet
-    restore_to_data_dir unless already_local
+    conn.disconnect if conn
   end
 
 

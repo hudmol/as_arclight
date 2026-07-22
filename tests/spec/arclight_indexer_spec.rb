@@ -16,7 +16,7 @@ describe 'ArclightIndexer' do
     ArclightIndexer.new(nil, nil, "arclight_indexer_test")
   end
 
-  let(:db) { ArclightIndexer.prepare_db }
+  let(:arcdb) { indexer.instance_variable_get(:@db) }
 
   let(:http_request_log) { @http_request_log ||= [] }
 
@@ -24,10 +24,14 @@ describe 'ArclightIndexer' do
     # The arclight indexer keeps its SQLite db at:
     #   /tmp/as_arclight_test_data/as_arclight/arclight_indexer.db
     # clear it between examples.
-    db[:resource].delete
-    db[:document].delete
-    db[:deleted_resource].delete
-    db[:index_version].delete
+    arcdb.with_session do
+      arcdb.transaction do |db|
+        db[:resource].delete
+        db[:document].delete
+        db[:deleted_resource].delete
+        db[:index_version].delete
+      end
+    end
 
     # Silence log output unless an example sets its own expectation.
     allow(ARCLog).to receive(:debug)
@@ -189,89 +193,124 @@ describe 'ArclightIndexer' do
     let(:published_repo) { { '_resolved' => { 'publish' => true } } }
     let(:unpublished_repo) { { '_resolved' => { 'publish' => false } } }
 
-    it 'flags a resource for indexing when its repository is published' do
-      indexer.index_records([
-                              record_for('/repositories/2/resources/123', 'repository' => published_repo)
-                            ])
 
-      expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+    it 'flags a resource for indexing when its repository is published' do
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2/resources/123', 'repository' => published_repo)
+                              ])
+
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        end
+      end
     end
 
     it 'skips a resource whose repository is not published' do
-      indexer.index_records([
-                              record_for('/repositories/2/resources/123', 'repository' => unpublished_repo)
-                            ])
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2/resources/123', 'repository' => unpublished_repo)
+                              ])
 
-      expect(db[:resource].select_map(:uri)).to be_empty
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
 
     it 'flags the parent resource when an archival object is updated' do
-      indexer.index_records([
-                              record_for('/repositories/2/archival_objects/456',
-                                         'repository' => published_repo,
-                                         'resource' => { 'ref' => '/repositories/2/resources/123' })
-                            ])
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2/archival_objects/456',
+                                           'repository' => published_repo,
+                                           'resource' => { 'ref' => '/repositories/2/resources/123' })
+                              ])
 
-      expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        end
+      end
     end
 
     it 'skips an archival object whose repository is not published' do
-      indexer.index_records([
-                              record_for('/repositories/2/archival_objects/456',
-                                         'repository' => unpublished_repo,
-                                         'resource' => { 'ref' => '/repositories/2/resources/123' })
-                            ])
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2/archival_objects/456',
+                                           'repository' => unpublished_repo,
+                                           'resource' => { 'ref' => '/repositories/2/resources/123' })
+                              ])
 
-      expect(db[:resource].select_map(:uri)).to be_empty
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
 
     it 'flags every resource a top container belongs to' do
-      indexer.index_records([
-                              record_for('/repositories/2/top_containers/789',
-                                         'repository' => published_repo,
-                                         'collection' => [
-                                           { 'ref' => '/repositories/2/resources/123' },
-                                           { 'ref' => '/repositories/2/resources/124' }
-                                         ])
-                            ])
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2/top_containers/789',
+                                           'repository' => published_repo,
+                                           'collection' => [
+                                             { 'ref' => '/repositories/2/resources/123' },
+                                             { 'ref' => '/repositories/2/resources/124' }
+                                           ])
+                              ])
 
-      expect(db[:resource].select_map(:uri)).to contain_exactly(
-                                                  '/repositories/2/resources/123',
-                                                  '/repositories/2/resources/124'
-                                                )
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to contain_exactly(
+                                                      '/repositories/2/resources/123',
+                                                      '/repositories/2/resources/124'
+                                                    )
+        end
+      end
     end
 
     it 'skips a repository record that is not published' do
-      indexer.index_records([
-                              record_for('/repositories/2', 'publish' => false)
-                            ])
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2', 'publish' => false)
+                              ])
 
-      expect(db[:resource].select_map(:uri)).to be_empty
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
 
     it 'deduplicates resources flagged by more than one related record' do
-      indexer.index_records([
-                              record_for('/repositories/2/resources/123', 'repository' => published_repo),
-                              record_for('/repositories/2/archival_objects/456',
-                                         'repository' => published_repo,
-                                         'resource' => { 'ref' => '/repositories/2/resources/123' })
-                            ])
+      arcdb.with_session do
+        indexer.index_records([
+                                record_for('/repositories/2/resources/123', 'repository' => published_repo),
+                                record_for('/repositories/2/archival_objects/456',
+                                           'repository' => published_repo,
+                                           'resource' => { 'ref' => '/repositories/2/resources/123' })
+                              ])
 
-      expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        end
+      end
     end
 
     it 'resets the failure count and retry time when a resource is re-flagged' do
-      db[:resource].insert(:uri => '/repositories/2/resources/123',
-                           :failure_count => 7,
-                           :next_retry_time => 99999)
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          db[:resource].insert(:uri => '/repositories/2/resources/123',
+                               :failure_count => 7,
+                               :next_retry_time => 99999)
+        end
 
-      indexer.index_records([
-                              record_for('/repositories/2/resources/123', 'repository' => published_repo)
-                            ])
+        indexer.index_records([
+                                record_for('/repositories/2/resources/123', 'repository' => published_repo)
+                              ])
 
-      row = db[:resource].first(:uri => '/repositories/2/resources/123')
-      expect(row[:failure_count]).to eq(0)
-      expect(row[:next_retry_time]).to be_nil
+        arcdb.transaction do |db|
+          row = db[:resource].first(:uri => '/repositories/2/resources/123')
+          expect(row[:failure_count]).to eq(0)
+          expect(row[:next_retry_time]).to be_nil
+        end
+      end
     end
   end
 
@@ -390,91 +429,120 @@ describe 'ArclightIndexer' do
       let(:ao_uri) { '/repositories/2/archival_objects/5' }
 
       it 'inserts a document row for each waypoint child' do
-        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
+        arcdb.with_session do
+          allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
 
-        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 0 }], resource_uri, nil, {}, nil)
+          indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 0 }], resource_uri, nil, {}, nil)
 
-        rows = db[:document].all
-        expect(rows.size).to eq(1)
-        expect(rows.first[:resource_uri]).to eq(resource_uri)
-        expect(rows.first[:parent_id]).to be_nil
-        expect(JSON.parse(rows.first[:json])).to include('id' => ao_uri, 'child_count' => 0)
+          arcdb.transaction do |db|
+            rows = db[:document].all
+            expect(rows.size).to eq(1)
+            expect(rows.first[:resource_uri]).to eq(resource_uri)
+            expect(rows.first[:parent_id]).to be_nil
+            expect(JSON.parse(rows.first[:json])).to include('id' => ao_uri, 'child_count' => 0)
+          end
+        end
       end
 
       it 'recurses into grandchildren when a child has its own children' do
-        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
-        child_waypoints = { 'waypoints' => 1 }
-        allow(JSONModel::HTTP).to receive(:get_json).and_return(child_waypoints)
-        allow(indexer).to receive(:map_waypoints)
+        arcdb.with_session do
+          allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
+          child_waypoints = { 'waypoints' => 1 }
+          allow(JSONModel::HTTP).to receive(:get_json).and_return(child_waypoints)
+          allow(indexer).to receive(:map_waypoints)
 
-        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 3 }], resource_uri, nil, {}, nil)
+          indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 3 }], resource_uri, nil, {}, nil)
 
-        inserted_id = db[:document].select_map(:id).first
-        expect(indexer).to have_received(:map_waypoints).with(child_waypoints, resource_uri, inserted_id, {}, ao_uri)
+          arcdb.transaction do |db|
+            inserted_id = db[:document].select_map(:id).first
+            expect(indexer).to have_received(:map_waypoints).with(child_waypoints, resource_uri, inserted_id, {}, ao_uri)
+          end
+        end
       end
 
       it 'skips recursion when the child node was deleted out from under us' do
-        allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
-        allow(JSONModel::HTTP).to receive(:get_json).and_return(nil)
-        allow(indexer).to receive(:map_waypoints)
+        arcdb.with_session do
+          allow(indexer).to receive(:fetch_records).and_return([ao_record(ao_uri)])
+          allow(JSONModel::HTTP).to receive(:get_json).and_return(nil)
+          allow(indexer).to receive(:map_waypoints)
 
-        indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 1 }], resource_uri, nil, {}, nil)
+          indexer.map_children([{ 'uri' => ao_uri, 'child_count' => 1 }], resource_uri, nil, {}, nil)
 
-        expect(indexer).not_to have_received(:map_waypoints)
+          expect(indexer).not_to have_received(:map_waypoints)
+        end
       end
     end
 
     describe '#map_waypoints' do
       it 'fetches and maps each waypoint page' do
-        allow(JSONModel::HTTP).to receive(:get_json).and_return([{ 'uri' => 'x', 'child_count' => 0 }])
-        allow(indexer).to receive(:map_children)
+        arcdb.with_session do
+          allow(JSONModel::HTTP).to receive(:get_json).and_return([{ 'uri' => 'x', 'child_count' => 0 }])
+          allow(indexer).to receive(:map_children)
 
-        indexer.map_waypoints({ 'waypoints' => 2 }, resource_uri, 7, {}, 'parent-uri')
+          indexer.map_waypoints({ 'waypoints' => 2 }, resource_uri, 7, {}, 'parent-uri')
 
-        expect(JSONModel::HTTP).to have_received(:get_json).twice
-        expect(indexer).to have_received(:map_children).twice
+          expect(JSONModel::HTTP).to have_received(:get_json).twice
+          expect(indexer).to have_received(:map_children).twice
+        end
       end
 
       it 'does nothing when there are no waypoints' do
-        allow(indexer).to receive(:map_children)
+        arcdb.with_session do
+          allow(indexer).to receive(:map_children)
 
-        indexer.map_waypoints({ 'waypoints' => 0 }, resource_uri, 7, {}, 'parent-uri')
+          indexer.map_waypoints({ 'waypoints' => 0 }, resource_uri, 7, {}, 'parent-uri')
 
-        expect(indexer).not_to have_received(:map_children)
+          expect(indexer).not_to have_received(:map_children)
+        end
       end
     end
   end
 
   describe '#stream_doc' do
     it 'writes a leaf document verbatim' do
-      id = db[:document].insert(:json => '{"id":"root"}')
-      io = StringIO.new
+      arcdb.with_session do
 
-      indexer.stream_doc(id, io)
+        id = arcdb.transaction do |db|
+          db[:document].insert(:json => '{"id":"root"}')
+        end
+        io = StringIO.new
 
-      expect(io.string).to eq('{"id":"root"}')
+        indexer.stream_doc(id, io)
+
+        expect(io.string).to eq('{"id":"root"}')
+      end
     end
 
     it 'nests child documents under a components array' do
-      root = db[:document].insert(:json => '{"a":1}')
-      db[:document].insert(:parent_id => root, :json => '{"b":2}')
-      db[:document].insert(:parent_id => root, :json => '{"c":3}')
-      io = StringIO.new
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          root = db[:document].insert(:json => '{"a":1}')
 
-      indexer.stream_doc(root, io)
+          db[:document].insert(:parent_id => root, :json => '{"b":2}')
+          db[:document].insert(:parent_id => root, :json => '{"c":3}')
+          io = StringIO.new
 
-      expect(io.string).to eq('{"a":1,"components":[{"b":2},{"c":3}]}')
+          indexer.stream_doc(root, io)
+
+          expect(io.string).to eq('{"a":1,"components":[{"b":2},{"c":3}]}')
+        end
+      end
     end
 
     it 'recurses through multiple levels of nesting' do
-      root = db[:document].insert(:json => '{"a":1}')
-      child = db[:document].insert(:parent_id => root, :json => '{"b":2}')
-      db[:document].insert(:parent_id => child, :json => '{"c":3}')
-      io = StringIO.new
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          root = db[:document].insert(:json => '{"a":1}')
+          child = db[:document].insert(:parent_id => root, :json => '{"b":2}')
+          db[:document].insert(:parent_id => child, :json => '{"c":3}')
 
-      indexer.stream_doc(root, io)
+          io = StringIO.new
 
-      expect(io.string).to eq('{"a":1,"components":[{"b":2,"components":[{"c":3}]}]}')
+          indexer.stream_doc(root, io)
+
+          expect(io.string).to eq('{"a":1,"components":[{"b":2,"components":[{"c":3}]}]}')
+        end
+      end
     end
   end
 
@@ -489,62 +557,84 @@ describe 'ArclightIndexer' do
     end
 
     it 'deletes the doc and all of its nested docs and then streams it, to each solr target, and commits on a 200 response' do
-      root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
-      delete_json = {'delete' => {'query' => "archivesspace_resource_uri_ssi:\"test-uri\""}}.to_json
+      arcdb.with_session do
+        root = arcdb.transaction do |db|
+          db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+        end
 
-      indexer.stream_nested_doc(root, 'test-uri')
-      expect(http_request_log.size).to eq(2)
-      expect(http_request_log[0][:request]['Content-Type']).to eq('application/json')
-      expect(http_request_log[0][:request].body).to eq(delete_json)
+        delete_json = {'delete' => {'query' => "archivesspace_resource_uri_ssi:\"test-uri\""}}.to_json
 
-      expect(indexer).to have_received(:send_commit_for_target)
+        indexer.stream_nested_doc(root, 'test-uri')
+        expect(http_request_log.size).to eq(2)
+        expect(http_request_log[0][:request]['Content-Type']).to eq('application/json')
+        expect(http_request_log[0][:request].body).to eq(delete_json)
+
+        expect(indexer).to have_received(:send_commit_for_target)
+      end
     end
 
     it 'logs a successful index when the commit succeeds' do
-      allow(indexer).to receive(:send_commit_for_target).and_return(true)
-      allow(ARCLog).to receive(:info)
-      root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+      arcdb.with_session do
+        allow(indexer).to receive(:send_commit_for_target).and_return(true)
+        allow(ARCLog).to receive(:info)
+        root = arcdb.transaction do |db|
+          db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+        end
 
-      indexer.stream_nested_doc(root, '/repositories/2/resources/77')
+        indexer.stream_nested_doc(root, '/repositories/2/resources/77')
 
-      expect(ARCLog).to have_received(:info).with(/Successfully indexed .* to/)
+        expect(ARCLog).to have_received(:info).with(/Successfully indexed .* to/)
+      end
     end
 
     it 'logs an error when streaming the document to a target fails' do
-      resp = Object.new
-      resp.define_singleton_method(:code) { '500' }
-      resp.define_singleton_method(:body) { 'boom' }
-      allow(indexer).to receive(:do_http_request).and_return(resp)
-      root = db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+      arcdb.with_session do
+        resp = Object.new
+        resp.define_singleton_method(:code) { '500' }
+        resp.define_singleton_method(:body) { 'boom' }
+        allow(indexer).to receive(:do_http_request).and_return(resp)
+        root = arcdb.transaction do |db|
+          db[:document].insert(:resource_uri => 'test-uri', :json => '{"id":"root"}')
+        end
 
-      indexer.stream_nested_doc(root, '/repositories/2/resources/88')
+        indexer.stream_nested_doc(root, '/repositories/2/resources/88')
 
-      expect(ARCLog).to have_received(:error).with(/Error when streaming doc/)
+        expect(ARCLog).to have_received(:error).with(/Error when streaming doc/)
+      end
     end
 
     it 'writes a candidate copy of the doc for inspection in record_candidate mode' do
-      Dir.mktmpdir do |dir|
-        allow(indexer).to receive(:self_test_mode).and_return(:record_candidate)
-        allow(AppConfig).to receive(:[]).with(:as_arclight_test_candidate_directory).and_return(dir)
+      arcdb.with_session do
+        Dir.mktmpdir do |dir|
+          allow(indexer).to receive(:self_test_mode).and_return(:record_candidate)
+          allow(AppConfig).to receive(:[]).with(:as_arclight_test_candidate_directory).and_return(dir)
 
-        root = db[:document].insert(:resource_uri => '/repositories/2/resources/55', :json => '{"id":"root"}')
-        indexer.stream_nested_doc(root, '/repositories/2/resources/55')
+          root = arcdb.transaction do |db|
+            db[:document].insert(:resource_uri => '/repositories/2/resources/55', :json => '{"id":"root"}')
+          end
 
-        written = Dir.glob(File.join(dir, '*.json'))
-        expect(written.size).to eq(1)
-        expect(File.read(written.first)).to eq('[{"id":"root"}]')
+          indexer.stream_nested_doc(root, '/repositories/2/resources/55')
+
+          written = Dir.glob(File.join(dir, '*.json'))
+          expect(written.size).to eq(1)
+          expect(File.read(written.first)).to eq('[{"id":"root"}]')
+        end
       end
     end
 
     it 'writes a pristine copy of the doc for inspection in record_pristine mode' do
-      Dir.mktmpdir do |dir|
-        allow(indexer).to receive(:self_test_mode).and_return(:record_pristine)
-        allow(AppConfig).to receive(:[]).with(:as_arclight_test_pristine_directory).and_return(dir)
+      arcdb.with_session do
+        Dir.mktmpdir do |dir|
+          allow(indexer).to receive(:self_test_mode).and_return(:record_pristine)
+          allow(AppConfig).to receive(:[]).with(:as_arclight_test_pristine_directory).and_return(dir)
 
-        root = db[:document].insert(:resource_uri => '/repositories/2/resources/56', :json => '{"id":"root"}')
-        indexer.stream_nested_doc(root, '/repositories/2/resources/56')
+          root = arcdb.transaction do |db|
+            db[:document].insert(:resource_uri => '/repositories/2/resources/56', :json => '{"id":"root"}')
+          end
+          indexer.stream_nested_doc(root, '/repositories/2/resources/56')
 
-        expect(Dir.glob(File.join(dir, '*.json')).size).to eq(1)
+          expect(Dir.glob(File.join(dir, '*.json')).size).to eq(1)
+        end
       end
     end
   end
@@ -591,80 +681,117 @@ describe 'ArclightIndexer' do
     end
 
     it 'indexes a published resource and clears it from the work queue' do
-      db[:resource].insert(:uri => resource_uri)
-      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
-      allow(indexer).to receive(:map_waypoints)
-      allow(indexer).to receive(:stream_nested_doc)
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          db[:resource].insert(:uri => resource_uri)
+        end
 
-      indexer.index_round_complete(repository)
+        allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
+        allow(indexer).to receive(:map_waypoints)
+        allow(indexer).to receive(:stream_nested_doc)
 
-      expect(indexer).to have_received(:map_waypoints)
-      expect(indexer).to have_received(:stream_nested_doc).with(anything, resource_uri)
-      expect(db[:resource].select_map(:uri)).to be_empty
+        indexer.index_round_complete(repository)
+
+        expect(indexer).to have_received(:map_waypoints)
+        expect(indexer).to have_received(:stream_nested_doc).with(anything, resource_uri)
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
 
     it 'deletes an unpublished resource from each solr target' do
-      db[:resource].insert(:uri => resource_uri)
-      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, false))
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          db[:resource].insert(:uri => resource_uri)
+        end
+        allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, false))
 
-      indexer.index_round_complete(repository)
+        indexer.index_round_complete(repository)
 
-      delete_request = JSON.parse(http_request_log.first[:request].body)
-      expect(delete_request.dig('delete', 'query')).to eq("archivesspace_resource_uri_ssi:\"#{resource_uri}\"")
-      expect(indexer).to have_received(:send_commit_to_all_targets)
-      expect(db[:resource].select_map(:uri)).to be_empty
+        delete_request = JSON.parse(http_request_log.first[:request].body)
+        expect(delete_request.dig('delete', 'query')).to eq("archivesspace_resource_uri_ssi:\"#{resource_uri}\"")
+        expect(indexer).to have_received(:send_commit_to_all_targets)
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
 
     it 'records a failure count and a retry time when indexing raises' do
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          db[:resource].insert(:uri => resource_uri)
+        end
+        allow(ARCLog).to receive(:exception)
+        allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
+        allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
-      db[:resource].insert(:uri => resource_uri)
-      allow(ARCLog).to receive(:exception)
-      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
-      allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
+        indexer.index_round_complete(repository)
 
-      indexer.index_round_complete(repository)
-
-      row = db[:resource].first(:uri => resource_uri)
-      # the resource stays in the queue to be retried later
-      expect(row[:failure_count]).to eq(1)
-      expect(row[:next_retry_time]).not_to be_nil
+        row = arcdb.transaction do |db|
+          db[:resource].first(:uri => resource_uri)
+        end
+        # the resource stays in the queue to be retried later
+        expect(row[:failure_count]).to eq(1)
+        expect(row[:next_retry_time]).not_to be_nil
+      end
     end
 
     it 'accumulates the failure count across repeated indexing failures' do
-      db[:resource].insert(:uri => resource_uri, :failure_count => 3)
-      allow(ARCLog).to receive(:exception)
-      allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
-      allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          db[:resource].insert(:uri => resource_uri, :failure_count => 3)
+        end
+        allow(ARCLog).to receive(:exception)
+        allow(indexer).to receive(:fetch_records).and_yield(resource_record(resource_uri, true))
+        allow(indexer).to receive(:map_waypoints).and_raise('indexing blew up')
 
-      indexer.index_round_complete(repository)
+        indexer.index_round_complete(repository)
 
-      expect(db[:resource].first(:uri => resource_uri)[:failure_count]).to eq(4)
+        arcdb.transaction do |db|
+          expect(db[:resource].first(:uri => resource_uri)[:failure_count]).to eq(4)
+        end
+      end
     end
 
     it 'drops resources that have exceeded the maximum number of failures' do
-      max = indexer.instance_variable_get(:@failed_index_max_failures)
-      db[:resource].insert(:uri => '/repositories/2/resources/123', :failure_count => max + 1)
-      db[:resource].insert(:uri => '/repositories/2/resources/999', :failure_count => max)
-      allow(indexer).to receive(:fetch_records).and_return([])
+      arcdb.with_session do
+        max = indexer.instance_variable_get(:@failed_index_max_failures)
+        arcdb.transaction do |db|
+          db[:resource].insert(:uri => '/repositories/2/resources/123', :failure_count => max + 1)
+          db[:resource].insert(:uri => '/repositories/2/resources/999', :failure_count => max)
+        end
+        allow(indexer).to receive(:fetch_records).and_return([])
 
-      indexer.index_round_complete(repository)
+        indexer.index_round_complete(repository)
 
-      # the over-limit resource is removed, the at-limit one is kept for another try
-      expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/999'])
+        # the over-limit resource is removed, the at-limit one is kept for another try
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to eq(['/repositories/2/resources/999'])
+        end
+      end
     end
 
     it 'sends a delete and a commit for resources removed in ArchivesSpace' do
-      db[:deleted_resource].insert(:uri => resource_uri)
-      allow(indexer).to receive(:fetch_records).and_return([])
-      allow(indexer).to receive(:send_delete_for_resource)
+      arcdb.with_session do
+        arcdb.transaction do |db|
+          db[:deleted_resource].insert(:uri => resource_uri)
+        end
 
-      indexer.index_round_complete(repository)
+        allow(indexer).to receive(:fetch_records).and_return([])
+        allow(indexer).to receive(:send_delete_for_resource)
 
-      expect(indexer).to have_received(:send_delete_for_resource).with(resource_uri, 'it has been deleted in ArchivesSpace')
-      expect(indexer).to have_received(:send_commit_to_all_targets)
-      # the resource is cleared from both the work queue and the deleted queue
-      expect(db[:deleted_resource].select_map(:uri)).to be_empty
-      expect(db[:resource].select_map(:uri)).to be_empty
+        indexer.index_round_complete(repository)
+
+        expect(indexer).to have_received(:send_delete_for_resource).with(resource_uri, 'it has been deleted in ArchivesSpace')
+        expect(indexer).to have_received(:send_commit_to_all_targets)
+        # the resource is cleared from both the work queue and the deleted queue
+        arcdb.transaction do |db|
+          expect(db[:deleted_resource].select_map(:uri)).to be_empty
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
   end
 
@@ -694,28 +821,44 @@ describe 'ArclightIndexer' do
 
   describe '#flag_for_delete' do
     it 'records a resource uri in the deleted_resource table' do
-      indexer.flag_for_delete('/repositories/2/resources/123')
-      expect(db[:deleted_resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+      arcdb.with_session do
+        indexer.flag_for_delete('/repositories/2/resources/123')
+        arcdb.transaction do |db|
+          expect(db[:deleted_resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        end
+      end
     end
 
     it 'skips uris that are not resource references' do
-      indexer.flag_for_delete('/repositories/2/archival_objects/456')
-      expect(db[:deleted_resource].select_map(:uri)).to be_empty
+      arcdb.with_session do
+        indexer.flag_for_delete('/repositories/2/archival_objects/456')
+        arcdb.transaction do |db|
+          expect(db[:deleted_resource].select_map(:uri)).to be_empty
+        end
+      end
     end
 
     it 'silently tolerates the same resource being flagged for deletion twice' do
-      indexer.flag_for_delete('/repositories/2/resources/123')
-      expect {
+      arcdb.with_session do
         indexer.flag_for_delete('/repositories/2/resources/123')
-      }.not_to raise_error
-      expect(db[:deleted_resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        expect {
+          indexer.flag_for_delete('/repositories/2/resources/123')
+        }.not_to raise_error
+        arcdb.transaction do |db|
+          expect(db[:deleted_resource].select_map(:uri)).to eq(['/repositories/2/resources/123'])
+        end
+      end
     end
   end
 
   describe '#flag_for_indexing' do
     it 'ignores uris that are not resource references' do
-      indexer.flag_for_indexing('/repositories/2/archival_objects/456')
-      expect(db[:resource].select_map(:uri)).to be_empty
+      arcdb.with_session do
+        indexer.flag_for_indexing('/repositories/2/archival_objects/456')
+        arcdb.transaction do |db|
+          expect(db[:resource].select_map(:uri)).to be_empty
+        end
+      end
     end
   end
 
@@ -824,7 +967,13 @@ describe 'ArclightIndexer' do
           ArclightIndexer.data_dir = dir
 
           seed = ArclightIndexer.new(nil, nil, 'reset-seed')
-          seed.instance_variable_get(:@db)[:resource].insert(:uri => '/repositories/2/resources/1')
+          seed.instance_variable_get(:@db).tap do |arcdb|
+            arcdb.with_session do
+              arcdb.transaction do |db|
+                db[:resource].insert(:uri => '/repositories/2/resources/1')
+              end
+            end
+          end
 
           allow(AppConfig).to receive(:has_key?).with(:as_arclight_reset_queue_on_start).and_return(true)
           allow(AppConfig).to receive(:[]).with(:as_arclight_reset_queue_on_start).and_return(true)
@@ -832,8 +981,14 @@ describe 'ArclightIndexer' do
 
           rerun = ArclightIndexer.new(nil, nil, 'reset-run')
 
-          expect(rerun.instance_variable_get(:@db)[:resource].select_map(:uri)).to be_empty
-          expect(ARCLog).to have_received(:warn).with(/Resetting queue/)
+          rerun.instance_variable_get(:@db).tap do |arcdb|
+            arcdb.with_session do
+              arcdb.transaction do |db|
+                expect(db[:resource].select_map(:uri)).to be_empty
+                expect(ARCLog).to have_received(:warn).with(/Resetting queue/)
+              end
+            end
+          end
         end
       ensure
         ArclightIndexer.data_dir = original
