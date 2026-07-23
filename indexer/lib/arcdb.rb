@@ -15,64 +15,15 @@ class ARCDB
       ARCLog.info 'Initializing db at ' + @data_dir_path
     end
 
-    with_session do
-      transaction(:autocommit) do |db|
-        db.run("PRAGMA journal_mode = WAL;")
-        init_schema(db)
-      end
+    transaction(:autocommit) do |db|
+      db.run("PRAGMA journal_mode = WAL;")
+      init_schema(db)
     end
-  end
-
-  SESSION_LOCK = java.util.concurrent.locks.ReentrantLock.new
-
-  # Copy the SQLite DB from the ArchivesSpace data directory to a local temp
-  # file in anticipation of updating it.  Once updates complete, copy it back.
-  def with_session
-    SESSION_LOCK.lock
-
-    if SESSION_LOCK.getHoldCount > 1
-      begin
-        yield
-      ensure
-        SESSION_LOCK.unlock
-      end
-    else
-      @session_active.set(true)
-      begin
-        copy_to_local_dir
-        yield
-      ensure
-        restore_to_data_dir
-        @session_active.set(false)
-        SESSION_LOCK.unlock
-      end
-    end
-  end
-
-  def copy_to_local_dir
-    @tmpfile = Tempfile.new('arclight_indexer_working_copy.db')
-    @local_path = @tmpfile.path
-
-    if File.exist?(@data_dir_path)
-      FileUtils.cp(@data_dir_path, @local_path)
-      ARCLog.debug "Database file copied to local directory for access"
-    else
-      ARCLog.debug "Creating new database file for access"
-    end
-  end
-
-  def restore_to_data_dir
-    FileUtils.mv(@local_path, @data_dir_path + ".tmp")
-    FileUtils.mv(@data_dir_path + ".tmp", @data_dir_path)
-    ARCLog.debug "Database file restored to data directory"
   end
 
   def transaction(autocommit = false)
-    unless @session_active.get
-      raise "Can only call ArcDB#transaction from within an ArcDB#session block"
-    end
-
-    conn = Sequel.connect("jdbc:sqlite:#{@local_path}")
+    conn = Sequel.connect("jdbc:sqlite:#{@data_dir_path}")
+    conn.run("PRAGMA busy_timeout = 10000;")
     if autocommit
       yield conn
     else

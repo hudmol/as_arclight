@@ -203,10 +203,8 @@ class ArclightIndexer < PeriodicIndexer
 
     @db = ARCDB.new(ArclightIndexer.data_dir)
 
-    @db.with_session do
-      @db.transaction do |db|
-        IndexVersion.validate_config_or_die!(db)
-      end
+    @db.transaction do |db|
+      IndexVersion.validate_config_or_die!(db)
     end
 
     if IndexVersion.reindex_required?
@@ -219,9 +217,7 @@ class ArclightIndexer < PeriodicIndexer
 
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
       ARCLog.warn 'Resetting queue!'
-      @db.with_session do
-        @db.transaction{|db| db[:resource].delete}
-      end
+      @db.transaction{|db| db[:resource].delete}
     end
   end
 
@@ -543,9 +539,7 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def run_index_round
-    @db.with_session do
-      super
-    end
+    super
 
     run_arclight_indexing
   end
@@ -556,7 +550,7 @@ class ArclightIndexer < PeriodicIndexer
     deleted_count = 0
     unpublished_count = 0
 
-    @db.with_session do
+    begin
       @db.transaction do |db|
         db[:deleted_resource].select_map(:uri).each do |resource_uri|
           send_delete_for_resource(resource_uri, 'it has been deleted in ArchivesSpace')

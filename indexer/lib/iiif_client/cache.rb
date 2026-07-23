@@ -22,11 +22,6 @@ class IIIFClient
 
       def initialize(db_path, opts)
         @db_path = db_path
-        @local_db_path = Tempfile.new
-
-        if File.exist?(db_path)
-          FileUtils.cp(db_path, @local_db_path.path)
-        end
 
         open_db!
 
@@ -43,7 +38,7 @@ class IIIFClient
       end
 
       def open_db!
-        @connection = org.sqlite.JDBC.new.connect("jdbc:sqlite:#{@local_db_path.path}", java.util.Properties.new)
+        @connection = org.sqlite.JDBC.new.connect("jdbc:sqlite:#{@db_path}", java.util.Properties.new)
       end
 
       def get_cache_entry(uri)
@@ -106,9 +101,6 @@ class IIIFClient
       def flush
         @lock.synchronize do
           close
-
-          FileUtils.cp(@local_db_path.path, @db_path)
-
           open_db!
         end
       end
