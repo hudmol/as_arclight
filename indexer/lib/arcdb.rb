@@ -5,8 +5,6 @@ class ARCDB
   def initialize(data_dir, opts = {})
     @data_dir_path = File.join(data_dir, 'arclight_indexer.db')
 
-    @session_active = java.util.concurrent.atomic.AtomicBoolean.new(false)
-
     ensure_prepared
   end
 
