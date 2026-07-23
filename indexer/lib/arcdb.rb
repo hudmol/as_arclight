@@ -16,7 +16,7 @@ class ARCDB
     end
 
     with_session do
-      transaction do |db|
+      transaction(:autocommit) do |db|
         db.run("PRAGMA journal_mode = WAL;")
         init_schema(db)
       end
@@ -67,14 +67,18 @@ class ARCDB
     ARCLog.debug "Database file restored to data directory"
   end
 
-  def transaction
+  def transaction(autocommit = false)
     unless @session_active.get
       raise "Can only call ArcDB#transaction from within an ArcDB#session block"
     end
 
     conn = Sequel.connect("jdbc:sqlite:#{@local_path}")
-    conn.transaction do
+    if autocommit
       yield conn
+    else
+      conn.transaction do
+        yield conn
+      end
     end
   ensure
     conn.disconnect if conn
