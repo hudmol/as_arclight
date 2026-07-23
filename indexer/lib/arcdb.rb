@@ -73,7 +73,9 @@ class ARCDB
     end
 
     conn = Sequel.connect("jdbc:sqlite:#{@local_path}")
-    yield conn
+    conn.transaction do
+      yield conn
+    end
   ensure
     conn.disconnect if conn
   end

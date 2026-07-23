@@ -368,7 +368,7 @@ class ArclightIndexer < PeriodicIndexer
   def configure_doc_rules
   end
 
-  def map_children(waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+  def map_children(db, waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     fetched_child_records =
       fetch_records(:archival_object,
                     waypoints_json.map{|wp| JSONModel(:archival_object).id_for(wp.fetch('uri'))},
@@ -406,9 +406,7 @@ class ArclightIndexer < PeriodicIndexer
       ao_json['_child_count'] = child_count
       ao_json['ancestors'] = ao_ancestors
       mapper = Arclight::Mapper.archival_object_mapper.new(ao_json)
-      ao_doc_id = @db.transaction do |db|
-        insert_document(db, :resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
-      end
+      ao_doc_id = insert_document(db, :resource_uri => resource_uri, :parent_id => parent_doc_id, :json => mapper.json)
 
       Arclight::Mapper.iiif_client.maybe_flush
 
@@ -420,29 +418,27 @@ class ArclightIndexer < PeriodicIndexer
         # We might bomb out if a record was deleted out from under us.
         next if child_wp_json.nil?
 
-        map_waypoints(child_wp_json, resource_uri, ao_doc_id, resource_json, record_uri)
+        map_waypoints(db, child_wp_json, resource_uri, ao_doc_id, resource_json, record_uri)
       end
     end
   end
 
-  def map_waypoints(tree_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+  def map_waypoints(db, tree_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     tree_json.fetch('waypoints').times do |waypoint_number|
       waypoints_json = JSONModel::HTTP.get_json(resource_uri + '/tree/waypoint',
                                                 :offset => waypoint_number,
                                                 :parent_node => parent_uri,
                                                 :published_only => true)
 
-      map_children(waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
+      map_children(db, waypoints_json, resource_uri, parent_doc_id, resource_json, parent_uri)
     end
   end
 
-  def stream_doc(id, fh)
-    doc = ''
+  def stream_doc(db, id, fh)
     kid_ids = []
-    @db.transaction do |db|
-      doc = db[:document].filter(:id => id).select_map(:json).first || raise("Document not found for #{id}")
-      kid_ids = db[:document].filter(:parent_id => id).select_map(:id)
-    end
+
+    doc = db[:document].filter(:id => id).select_map(:json).first || raise("Document not found for #{id}")
+    kid_ids = db[:document].filter(:parent_id => id).select_map(:id)
 
     if kid_ids.empty?
       fh.write(doc)
@@ -456,13 +452,13 @@ class ArclightIndexer < PeriodicIndexer
         else
           fh.write(',')
         end
-        stream_doc(kid, fh)
+        stream_doc(db, kid, fh)
       end
       fh.write(']}')
     end
   end
 
-  def stream_nested_doc(root_id, uri)
+  def stream_nested_doc(db, root_id, uri)
     # write the payload to a temp file because body_stream wants an IO
     # and this avoids having to load the whole thing into memory
     fh = Tempfile.new('arclight_stream.json')
@@ -471,7 +467,7 @@ class ArclightIndexer < PeriodicIndexer
 
     begin
       fh.write('[')
-      stream_doc(root_id, fh)
+      stream_doc(db, root_id, fh)
       fh.write(']')
     ensure
       fh.close
@@ -489,9 +485,7 @@ class ArclightIndexer < PeriodicIndexer
     if self_test_output_dir
       FileUtils.mkdir_p(self_test_output_dir)
       output_basename = nil
-      @db.transaction do |db|
-        output_basename = db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
-      end
+      output_basename = db[:document].filter(:id => root_id).get(:resource_uri).gsub(/[^a-zA-Z0-9]/, '_')
       output_file = File.join(self_test_output_dir, output_basename + ".json")
 
       ARCLog.debug "Writing #{output_file} for further inspection"
@@ -604,17 +598,15 @@ class ArclightIndexer < PeriodicIndexer
             if resource_json['publish'] && !resource_json['suppressed']
               ARCLog.debug "Preparing resource #{resource_uri}"
 
-              resource_doc_id = @db.transaction do |db|
-                insert_document(db, :resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
-              end
+              resource_doc_id = insert_document(db, :resource_uri => resource_uri, :parent_id => nil, :json => mapper.json)
 
               tree_root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
 
-              map_waypoints(tree_root_json, resource_uri, resource_doc_id, resource_json, nil)
+              map_waypoints(db, tree_root_json, resource_uri, resource_doc_id, resource_json, nil)
 
               ARCLog.debug "Generated index docs for #{resource_uri}"
 
-              stream_nested_doc(resource_doc_id, resource_uri)
+              stream_nested_doc(db, resource_doc_id, resource_uri)
 
               db[:document].filter(:resource_uri => resource_uri).delete
 
