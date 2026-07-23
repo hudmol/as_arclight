@@ -202,8 +202,6 @@ class IIIFClient
   end
 
   def flush
-    ARCLog.debug("Flushing IIIFClient cache to disk")
-
     config.request_cache.flush
     @unflushed_insert_count = 0
   end
