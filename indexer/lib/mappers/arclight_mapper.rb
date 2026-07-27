@@ -47,11 +47,20 @@ module Arclight
           # Eager load our request cache
           config.request_cache
 
-          # FIXME: albany-specific
           config.instance_eval do
-            def configure_http_request(http, request)
-              if request.uri.to_s.include?('albany.edu')
-                request['Referer'] = 'https://archives.albany.edu/'
+            def configure_http_request(_http, request)
+              # Allow the referer to be overridden per IIIF host
+              #
+              # Example configuration:
+              #   AppConfig[:as_arclight_iiif_referer_override] = {
+              #     'albany.edu' => 'https://archives.albany.edu/'
+              #   }
+              if AppConfig.has_key?(:as_arclight_iiif_referer_override)
+                AppConfig[:as_arclight_iiif_referer_override].each do |iiif_host, referer_override|
+                  if request.uri.to_s.include?(iiif_host)
+                    request['Referer'] = referer_override
+                  end
+                end
               end
             end
           end

@@ -209,4 +209,83 @@ describe Arclight::Mapper do
       expect(html).to include('<event>Event two two</event>')
     end
   end
+
+  describe '.iiif_client' do
+    before do
+      Arclight::Mapper.instance_variable_set(:@iiif_client, nil)
+    end
+
+    let(:captured_config) { [] }
+
+    before do
+      allow(IIIFClient).to receive(:new) do |config|
+        captured_config << config
+        double('iiif_client')
+      end
+    end
+
+    it 'does not set Referer when override config is absent' do
+      allow(AppConfig).to receive(:has_key?)
+                            .with(:as_arclight_iiif_referer_override)
+                            .and_return(false)
+
+      Arclight::Mapper.iiif_client
+      config = captured_config.first
+
+      request = Struct.new(:uri, :headers) do
+        def []=(_k, _v); raise 'should not write header'; end
+      end.new(URI('https://example.org/iiif/manifest'), {})
+
+      expect { config.configure_http_request(nil, request) }.not_to raise_error
+      expect(request.headers).to eq({})
+    end
+
+    it 'sets Referer when request URL matches configured host' do
+      allow(AppConfig).to receive(:has_key?)
+                            .with(:as_arclight_iiif_referer_override)
+                            .and_return(true)
+
+      allow(AppConfig).to receive(:[])
+                            .with(:as_arclight_iiif_referer_override)
+                            .and_return({ 'albany.edu' => 'https://archives.albany.edu/' })
+
+      Arclight::Mapper.iiif_client
+      config = captured_config.first
+
+      request = Struct.new(:uri, :headers) do
+        def []=(k, v)
+          self.headers ||= {}
+          self.headers[k] = v
+        end
+      end.new(URI('https://iiif.albany.edu/manifest/123'), {})
+
+      config.configure_http_request(nil, request)
+
+      expect(request.headers['Referer']).to eq('https://archives.albany.edu/')
+    end
+
+    it 'does not set Referer when host does not match override map' do
+      allow(AppConfig).to receive(:has_key?)
+                            .with(:as_arclight_iiif_referer_override)
+                            .and_return(true)
+
+      allow(AppConfig).to receive(:[])
+                            .with(:as_arclight_iiif_referer_override)
+                            .and_return({ 'albany.edu' => 'https://archives.albany.edu/' })
+
+      Arclight::Mapper.iiif_client
+      config = captured_config.first
+
+      request = Struct.new(:uri, :headers) do
+        def []=(k, v)
+          self.headers ||= {}
+          self.headers[k] = v
+        end
+      end.new(URI('https://example.org/iiif/manifest'), {})
+
+      config.configure_http_request(nil, request)
+
+      expect(request.headers).to eq({})
+    end
+  end
 end
