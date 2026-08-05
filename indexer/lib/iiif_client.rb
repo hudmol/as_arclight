@@ -53,6 +53,8 @@ class IIIFClient
         metadata: parser.parse_metadata(json),
         renderings: select_renderings_of_interest(json, parser),
         annotations: select_annotations(json, parser),
+        thumbnail: parser.parse_thumbnail(json),
+        rights: parser.parse_rights(json),
         json: json
       )
     else
@@ -177,7 +179,7 @@ class IIIFClient
     end
   end
 
-  Manifest = Struct.new(:version, :metadata, :renderings, :annotations, :json) do
+  Manifest = Struct.new(:version, :metadata, :renderings, :annotations, :thumbnail, :rights, :json) do
     extend StructFromHash
   end
 
@@ -192,6 +194,14 @@ class IIIFClient
   end
 
   IIIFAnnotation = Struct.new(:id, :type, :motivation, :body, :target) do
+    extend StructFromHash
+  end
+
+  IIIFThumbnail = Struct.new(:url) do
+    extend StructFromHash
+  end
+
+  IIIFRights = Struct.new(:url) do
     extend StructFromHash
   end
 

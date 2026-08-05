@@ -176,6 +176,14 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
               raise rendering_text.error
             end
           end
+
+          if manifest.thumbnail
+            map_field('thumbnail_path_ssi', manifest.thumbnail)
+          end
+
+          if manifest.rights
+            map_field('dado_rights_statement_ssim', [manifest.rights])
+          end
         end
       end
     end

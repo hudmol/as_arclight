@@ -64,6 +64,13 @@ class IIIFClient
       SharedParser.parse_annotation(tree)
     end
 
+    def parse_thumbnail(json)
+      json.dig('items', 0, 'thumbnail', 0, 'id') || json.dig('items', 0, 'thumbnail', 0, '@id')
+    end
+
+    def parse_rights(json)
+      json.fetch('rights', '')
+    end
   end
 
 end

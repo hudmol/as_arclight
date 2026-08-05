@@ -32,7 +32,7 @@ class IIIFClient
           end
         end
       end
-
+pp result
       result
     end
 
@@ -63,6 +63,13 @@ class IIIFClient
       SharedParser.parse_annotation(tree)
     end
 
+    def parse_thumbnail(json)
+      json.dig('sequences', 0, 'canvases', 0, 'thumbnail', '@id')
+    end
+
+    def parse_rights(json)
+      json.fetch('license', '')
+    end
   end
 
 end
