@@ -5,45 +5,26 @@ class ARCDB
   def initialize(data_dir, opts = {})
     @data_dir_path = File.join(data_dir, 'arclight_indexer.db')
 
-    @lock = java.util.concurrent.locks.ReentrantLock.new
+    ARCLog.info 'Opened db at ' + @data_dir_path
 
-    ensure_prepared
-  end
+    # There's only ever one thread touching SQLite at a time, so we only allow
+    # one connection and fail immediately if a second comes along.
+    @db = Sequel.connect("jdbc:sqlite:#{@data_dir_path}",
+                         max_connections: 1,
+                         pool_timeout: 0,
+                         connect_sqls: [
+                           "PRAGMA busy_timeout = 10000"
+                         ])
 
-  def ensure_prepared
-    unless File.exist?(@data_dir_path)
-      ARCLog.info 'Initializing db at ' + @data_dir_path
-    end
-
-    transaction(:autocommit) do |db|
-      db.run("PRAGMA journal_mode = WAL;")
-      init_schema(db)
-    end
-  end
-
-  def with_lock
-    @lock.lock
-    begin
-      return yield
-    ensure
-      @lock.unlock
+    @db.synchronize do
+      @db.run("PRAGMA journal_mode = WAL")
+      init_schema(@db)
     end
   end
 
-  def transaction(autocommit = false)
-    with_lock do
-      conn = Sequel.connect("jdbc:sqlite:#{@data_dir_path}")
-      conn.run("PRAGMA busy_timeout = 10000;")
-
-      if autocommit
-        yield conn
-      else
-        conn.transaction do
-          yield conn
-        end
-      end
-    ensure
-      conn.disconnect if conn
+  def transaction
+    @db.transaction do
+      yield @db
     end
   end
 
