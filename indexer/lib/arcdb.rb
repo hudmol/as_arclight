@@ -5,6 +5,8 @@ class ARCDB
   def initialize(data_dir, opts = {})
     @data_dir_path = File.join(data_dir, 'arclight_indexer.db')
 
+    @lock = java.util.concurrent.locks.ReentrantLock.new
+
     ensure_prepared
   end
 
@@ -19,20 +21,31 @@ class ARCDB
     end
   end
 
-  def transaction(autocommit = false)
-    conn = Sequel.connect("jdbc:sqlite:#{@data_dir_path}")
-    conn.run("PRAGMA busy_timeout = 10000;")
-    if autocommit
-      yield conn
-    else
-      conn.transaction do
-        yield conn
-      end
+  def with_lock
+    @lock.lock
+    begin
+      return yield
+    ensure
+      @lock.unlock
     end
-  ensure
-    conn.disconnect if conn
   end
 
+  def transaction(autocommit = false)
+    with_lock do
+      conn = Sequel.connect("jdbc:sqlite:#{@data_dir_path}")
+      conn.run("PRAGMA busy_timeout = 10000;")
+
+      if autocommit
+        yield conn
+      else
+        conn.transaction do
+          yield conn
+        end
+      end
+    ensure
+      conn.disconnect if conn
+    end
+  end
 
   def init_schema(db)
     db.create_table?(:resource) do
