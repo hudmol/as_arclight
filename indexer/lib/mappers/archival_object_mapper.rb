@@ -16,6 +16,11 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
     @json['ancestors'].map{|a| a['_resolved']}
   end
 
+  # the last manifest processed on this AO
+  def manifest
+    @manifest
+  end
+
   def archival_object_id(ao_json)
     id = ao_json['ref_id'] || ao_json['component_id'] || ao_json['uri']
     id.tr('.', '-')
@@ -146,7 +151,7 @@ class Arclight::ArchivalObjectMapper < Arclight::Mapper
         if manifest_uri
           iiif = Arclight::Mapper.iiif_client
 
-          manifest = iiif.fetch_manifest(manifest_uri)
+          @manifest = iiif.fetch_manifest(manifest_uri)
 
           manifest.metadata.each do |metadata|
             iiif_text << "#{metadata.label.value}: #{metadata.value.value}"
