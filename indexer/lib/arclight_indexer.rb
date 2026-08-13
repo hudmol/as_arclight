@@ -4,8 +4,18 @@ require_relative 'iiif_client'
 require_relative 'index_version'
 
 class ArclightIndexer < PeriodicIndexer
+  ONE_INSTANCE_ONLY = java.util.concurrent.atomic.AtomicBoolean.new(false)
+
   class << self
     attr_accessor :data_dir
+  end
+
+  def run
+    unless ONE_INSTANCE_ONLY.compareAndSet(false, true)
+      raise "Already running an instance of the ARCLight Indexer!  Bailing out."
+    end
+
+    super
   end
 
   SolrTarget = Struct.new(:url, :label, :user, :pass) do
