@@ -37,23 +37,25 @@ class IndexVersion
 
   class ConfigurationError < StandardError; end
 
-  def self.validate_config_or_die!(db)
+  def self.validate_config_or_die!
     ensure_config!
 
     ARCLog.info "Checking index version #{version}"
 
-    if db[:index_version].count == 0
+    versions = JSONModel::HTTP.get_json('/as_arclight/index_versions')
+
+    if versions.length == 0
       ARCLog.info "Initializing index version #{version}"
       ARCLog.debug "No reindex required - this is the first index version for this deployment"
-      db[:index_version].insert(:version => version, :config_hash => generate_index_version_hash)
+      JSONModel::HTTP.post_form('/as_arclight/index_version', :version => version, :config_hash => generate_index_version_hash)
     else
-      current_index_version = db[:index_version].order(:version).select_all.last
-      if version == current_index_version[:version]
-        if generate_index_version_hash == current_index_version[:config_hash]
+      current_index_version = versions.last
+      if version == current_index_version['version']
+        if generate_index_version_hash == current_index_version['config_hash']
           ARCLog.info "Index version #{version} validated"
           ARCLog.debug "No reindex required - the current version has been validated"
         else
-          parsed_hash = JSON.parse(current_index_version[:config_hash])
+          parsed_hash = JSON.parse(current_index_version['config_hash'])
 
           revert_message = ''
 
@@ -73,13 +75,13 @@ class IndexVersion
 
           raise ConfigurationError.new("Index version mismatch")
         end
-      elsif version < current_index_version[:version]
+      elsif version < current_index_version['version']
         ARCLog.error "Index AppConfig[:as_arclight_index_version] cannot decrease! Current version: #{current_index_version[:version]}. Attempt to set to #{version}"
 
         raise ConfigurationError.new("Invalid index version")
       else
         ARCLog.info "Initializing index version #{version}. Full reindex required"
-        db[:index_version].insert(:version => version, :config_hash => generate_index_version_hash)
+        JSONModel::HTTP.post_form('/as_arclight/index_version', :version => version, :config_hash => generate_index_version_hash)
         @reindex_required = true
       end
     end
