@@ -115,7 +115,7 @@ class IIIFClient
       HTTPResponse.new(response.code.to_s, response.to_hash, response.body)
     end
 
-    def to_json
+    def to_json(*)
       mapped = members.map {|attr| [attr.to_s, self[attr]]}.to_h
       mapped['body'] = Base64.encode64(mapped['body'])
 

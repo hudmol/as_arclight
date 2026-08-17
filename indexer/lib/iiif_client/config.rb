@@ -5,12 +5,11 @@ class IIIFClient
 
   class Config
     def request_cache
-      @cache_instance ||= IIIFClient::Cache::SQLiteCache.new(
-        File.join(ArclightIndexer.data_dir, "iiif_cache.db"),
-        {
-          :min_cache_seconds => (AppConfig[:as_arclight_iiif_min_cache_seconds] rescue nil)
-        }
-      )
+      @cache_instance ||= IIIFClient::Cache::DiskCache.new(File.join(ArclightIndexer.data_dir, "arclight_iiif_cache"),
+                                                           {
+                                                             :min_cache_seconds => (AppConfig[:as_arclight_iiif_min_cache_seconds] rescue nil)
+                                                           }
+                                                              )
     end
 
     def configure_http(_http)
