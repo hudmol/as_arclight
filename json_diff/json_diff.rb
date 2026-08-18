@@ -2,7 +2,7 @@ require 'sequel'
 require 'json'
 require 'tempfile'
 
-require_relative '../indexer/lib/sqlite-jdbc-3.53.0.0.jar'
+require_relative 'lib/sqlite-jdbc-3.53.0.0.jar'
 
 # Read current terminal width into MAX_WIDTH
 ENV['COLUMNS'] ||= `tput cols 2>/dev/null`.strip rescue ''
