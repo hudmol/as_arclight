@@ -38,7 +38,8 @@ ArchivesSpace's data directory.
       AppConfig[:plugins] << 'as_arclight'
     ```
 3.  Configure `as_arclight` (see below)
-4.  Start ArchivesSpace
+4.  Run `scripts/setup-database.sh`, `scripts/setup-database.bat` or `build/run db:migrate`
+5.  Start ArchivesSpace
 
 
 ## Configuration

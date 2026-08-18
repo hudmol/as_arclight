@@ -1,3 +1,4 @@
+
 Sequel.migration do
   up do
     create_table(:as_arclight_resource) do
