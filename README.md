@@ -16,17 +16,13 @@ instances.
 The Arclight Solr expects a collection (ArchivesSpace Resource) to be indexed as
 a single nested document. This means that if any component of the collection
 changes, the entire collection must be reindexed. The plugin achieves this by
-maintaining a SQLite database that stores the URIs of any Resources that have
-had changes made directly or to any of their components or related records
-since the last index run.
+maintaining state in the ArchivesSpace database where it stores the URIs of any
+Resources that have had changes made directly or to any of their components or
+related records since the last index run.
 
 When the Arclight indexer runs an indexing round, it works sequentially through
-the list of Resource URIs in the SQLite database, building up the complete
+the list of Resource URIs flagged during its scan, building up the complete
 nested document for each Resource and posting it to Arclight's Solr.
-
-This database, and another for storing cached IIIF manifests, are placed in a
-directory called `as_arclight` in ArchivesSpace's data directory
-(AppConfig[:data_directory]).
 
 As with other indexers, the as_arclight indexer creates state files -
 containing last indexed timestamps for record types within repositories. These
@@ -144,8 +140,9 @@ reindex of each Solr target to correct the document ids.
 
 The plugin provides the ability to safely manage such config changes. It does
 this by remembering the last configuration settings against an index version
-number (all stored in the SQLite db). The index version defaults to 1, so it
-is not necessary to set it for an initial deployment.
+number (all stored in the ArchivesSpace database and accessed via the backend).
+The index version defaults to 1, so it is not necessary to set it for an initial
+deployment.
 
 On start up the plugin will check to see if any of the relevant config options
 have changed since the last run. If there is a change then the plugin will raise
