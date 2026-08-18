@@ -212,6 +212,10 @@ class ArclightIndexer < PeriodicIndexer
 
     @uris_flagged_this_round = []
 
+    # This preempts the login call in run_index_round so that we have a session
+    # for the IndexVersion to do its business
+    login
+
     IndexVersion.validate_config_or_die!
 
     if IndexVersion.reindex_required?

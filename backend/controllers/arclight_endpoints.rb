@@ -160,12 +160,10 @@ class ArchivesSpaceService < Sinatra::Base
     end
   end
 
-  # FIXME: these two endpoints need permissions
-  #        they currently get called before the indexer logs in
   Endpoint.get('/as_arclight/index_versions')
     .description("Get Arclight index versions")
     .params()
-    .permissions([])
+    .permissions([:index_system])
     .returns([200, "success"]) \
   do
     DB.open do |db|
@@ -177,7 +175,7 @@ class ArchivesSpaceService < Sinatra::Base
     .description("Create a new Arclight index version")
     .params(['version', Integer, "Version number"],
             ['config_hash', String, "Config settings for version"])
-    .permissions([])
+    .permissions([:index_system])
     .no_data(true)
     .returns([200, "success"]) \
   do

@@ -9,11 +9,10 @@ require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar
 if Object.const_defined?('PeriodicIndexer')
   require_relative 'lib/arclight_indexer'
 
-  indexer = ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer')
-
   Thread.new do
     begin
       ARCLog.info("Starting Arclight indexer")
+      indexer = ArclightIndexer.get_indexer(state = nil, name = 'Arclight Indexer')
       indexer.run
     rescue
       ARCLog.error("Unexpected failure in Arclight indexer: #{$!}")
