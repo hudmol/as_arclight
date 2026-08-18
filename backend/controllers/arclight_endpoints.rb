@@ -62,9 +62,11 @@ class ArchivesSpaceService < Sinatra::Base
     .permissions([:index_system])
     .returns([200, "success"]) \
   do
-    # delete all flags
+    DB.open do |db|
+      db[:as_arclight_resource].delete
 
-    json_response({:message => 'success'})
+      json_response({:message => 'success'})
+    end
   end
 
   Endpoint.get('/as_arclight/resources_to_index')
@@ -100,10 +102,11 @@ class ArchivesSpaceService < Sinatra::Base
     .returns([200, "success"]) \
   do
     DB.open do |db|
-      out = {:flagged => [], :not_flagged => []}
       db[:as_arclight_resource].filter(:uri => params[:uri])
         .update(:next_retry_time => params[:next_retry],
                 :failure_count => Sequel.expr(:failure_count) + 1)
+
+      json_response({:message => 'success'})
     end
   end
 
@@ -154,7 +157,7 @@ class ArchivesSpaceService < Sinatra::Base
     .returns([200, "success"]) \
   do
     DB.open do |db|
-      db[:as_arclight_deleted_resource].filter(:uri => uri).delete
+      db[:as_arclight_deleted_resource].filter(:uri => params[:uri]).delete
 
       json_response(:message => 'success')
     end

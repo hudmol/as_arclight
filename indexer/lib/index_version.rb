@@ -37,17 +37,32 @@ class IndexVersion
 
   class ConfigurationError < StandardError; end
 
+  # Index versions are stored in the ArchivesSpace database and reached through
+  # the as_arclight backend endpoints.  These two methods are the only place we
+  # talk to it (which also makes them the seam the tests mock).
+  #
+  # Returns index versions in ascending version order
+  def self.fetch_index_versions
+    JSONModel::HTTP.get_json('/as_arclight/index_versions')
+  end
+
+  def self.create_index_version(new_version, config_hash)
+    JSONModel::HTTP.post_form('/as_arclight/index_version',
+                              :version => new_version,
+                              :config_hash => config_hash)
+  end
+
   def self.validate_config_or_die!
     ensure_config!
 
     ARCLog.info "Checking index version #{version}"
 
-    versions = JSONModel::HTTP.get_json('/as_arclight/index_versions')
+    versions = fetch_index_versions
 
     if versions.length == 0
       ARCLog.info "Initializing index version #{version}"
       ARCLog.debug "No reindex required - this is the first index version for this deployment"
-      JSONModel::HTTP.post_form('/as_arclight/index_version', :version => version, :config_hash => generate_index_version_hash)
+      create_index_version(version, generate_index_version_hash)
     else
       current_index_version = versions.last
       if version == current_index_version['version']
@@ -76,12 +91,12 @@ class IndexVersion
           raise ConfigurationError.new("Index version mismatch")
         end
       elsif version < current_index_version['version']
-        ARCLog.error "Index AppConfig[:as_arclight_index_version] cannot decrease! Current version: #{current_index_version[:version]}. Attempt to set to #{version}"
+        ARCLog.error "Index AppConfig[:as_arclight_index_version] cannot decrease! Current version: #{current_index_version['version']}. Attempt to set to #{version}"
 
         raise ConfigurationError.new("Invalid index version")
       else
         ARCLog.info "Initializing index version #{version}. Full reindex required"
-        JSONModel::HTTP.post_form('/as_arclight/index_version', :version => version, :config_hash => generate_index_version_hash)
+        create_index_version(version, generate_index_version_hash)
         @reindex_required = true
       end
     end

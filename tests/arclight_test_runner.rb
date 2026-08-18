@@ -48,11 +48,17 @@ ArclightIndexer.ensure_data_dir_or_die!
 require 'active_support/all'
 require 'rspec'
 
+Dir.glob(File.join(File.dirname(__FILE__), "spec/support/*.rb")).sort.each do |support_file|
+  require support_file
+end
+
 $ARCLIGHT_UNIT_TESTS = true
 
 
 RSpec.configure do |config|
   config.order = :defined
+
+  config.include ArclightBackendHelpers
 
   config.before(:each) do
     # Ensure some AppConfig entries don't pollute our tests
@@ -70,6 +76,20 @@ RSpec.configure do |config|
     }.each do |config_entry, setting|
       allow(AppConfig).to receive(:has_key?).with(config_entry).and_return(true)
       allow(AppConfig).to receive(:[]).with(config_entry).and_return(setting)
+    end
+
+    # These tests run in isolation, with no ArchivesSpace backend to talk to.
+    # Everything we ask of the backend goes through a method the specs mock out
+    # (see spec/support/fake_arclight_backend.rb), so a call getting this far
+    # means a stub is missing rather than that we want to hit the network.
+    if defined?(JSONModel::HTTP)
+      allow(JSONModel::HTTP).to receive(:get_json) do |url, *_args|
+        raise "Unmocked backend request in a unit test: GET #{url}"
+      end
+
+      allow(JSONModel::HTTP).to receive(:post_form) do |url, *_args|
+        raise "Unmocked backend request in a unit test: POST #{url}"
+      end
     end
   end
 end

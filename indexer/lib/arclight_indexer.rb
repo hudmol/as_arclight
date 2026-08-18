@@ -228,8 +228,86 @@ class ArclightIndexer < PeriodicIndexer
 
     if AppConfig.has_key?(:as_arclight_reset_queue_on_start) && AppConfig[:as_arclight_reset_queue_on_start]
       ARCLog.warn 'Resetting queue!'
-      JSONModel::HTTP.get_json('/as_arclight/remove_all_indexing_flags')
+      remove_all_indexing_flags
     end
+  end
+
+  # Our indexing state lives in the ArchivesSpace database and is reached
+  # through the as_arclight backend endpoints.  Every one of those calls goes
+  # through #backend_get so there's a single place to look for them (and a
+  # single seam to mock in the tests).
+  def backend_get(path, params = {})
+    JSONModel::HTTP.get_json("/as_arclight#{path}", params)
+  end
+
+  # Returns {'flagged' => [uri, ...], 'not_flagged' => [uri, ...]}
+  # The backend only flags resource uris - anything else comes back as
+  # not_flagged.
+  def flag_uris_for_indexing(uris)
+    backend_get('/flag_for_indexing', 'uris[]' => uris)
+  end
+
+  def remove_indexing_flag(*uris)
+    backend_get('/remove_indexing_flag', 'uris[]' => uris)
+  end
+
+  def remove_all_indexing_flags
+    backend_get('/remove_all_indexing_flags')
+  end
+
+  # Returns {'uris' => [uri, ...], 'failed' => [{'uri' => uri, 'failure_count' => n}, ...]}
+  # Resources that have failed more than max_failures times are dropped from
+  # the queue by the backend and reported in 'failed'.
+  def resources_to_index(max_failures)
+    backend_get('/resources_to_index', :max_failures => max_failures)
+  end
+
+  def increment_failure_count(uri, next_retry_time)
+    backend_get('/increment_failure_count', :uri => uri, :next_retry => next_retry_time)
+  end
+
+  def flag_uris_for_delete(uris)
+    backend_get('/flag_for_delete', 'uris[]' => uris)
+  end
+
+  # Returns an array of resource uris that have been deleted in ArchivesSpace
+  def resources_to_delete
+    backend_get('/resources_to_delete')
+  end
+
+  def remove_delete_flag(uri)
+    backend_get('/remove_delete_flag', :uri => uri)
+  end
+
+  # Summary counts that are cheaper to calculate in the database than to
+  # derive from the resource tree
+  def resource_summary_data(resource_uri)
+    backend_get(resource_uri)
+  end
+
+  # Returns the subset of archival_object fields the mapper needs for each
+  # ancestor, in the order the ids were given
+  def ancestor_fields(ancestor_ids)
+    backend_get('/ancestors', 'id_set[]' => ancestor_ids)
+  end
+
+  # The tree endpoints below belong to ArchivesSpace proper rather than to this
+  # plugin, but they get their own methods for the same reason.
+  def fetch_tree_root(resource_uri)
+    JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
+  end
+
+  def fetch_tree_node(resource_uri, node_uri)
+    JSONModel::HTTP.get_json(resource_uri + '/tree/node',
+                             :node_uri => node_uri,
+                             :published_only => true)
+  end
+
+  def fetch_tree_waypoint(resource_uri, parent_uri, offset)
+    JSONModel::HTTP.get_json(resource_uri + '/tree/waypoint',
+                             :offset => offset,
+                             :parent_node => parent_uri,
+                             :published_only => true)
   end
 
   def reset_state_files
@@ -282,13 +360,13 @@ class ArclightIndexer < PeriodicIndexer
     uris_to_flag = uris.select{|uri| !@uris_flagged_this_round.include?(uri)}
 
     unless uris_to_flag.empty?
-      resp = JSONModel::HTTP.get_json('/as_arclight/flag_for_indexing', 'uris[]' => uris_to_flag)
+      resp = flag_uris_for_indexing(uris_to_flag)
       @uris_flagged_this_round += resp['flagged']
     end
   end
 
   def flag_for_delete(*uris)
-    JSONModel::HTTP.get_json('/as_arclight/flag_for_delete', 'uris[]' => uris)
+    flag_uris_for_delete(uris)
   end
 
   def index_records(records, timing = IndexerTiming.new)
@@ -340,9 +418,8 @@ class ArclightIndexer < PeriodicIndexer
     ao_ancestors = fetched_child_records.values.first['ancestors'][0..-2]
 
     unless ao_ancestors.empty?
-      ancestor_fields = JSONModel::HTTP.get_json('/as_arclight/ancestors',
-                                                 'id_set[]' => ao_ancestors.map{|a| JSONModel.parse_reference(a['ref'])[:id]})
-      ao_ancestors.zip(ancestor_fields).each do |aa, flds|
+      fields = ancestor_fields(ao_ancestors.map{|a| JSONModel.parse_reference(a['ref'])[:id]})
+      ao_ancestors.zip(fields).each do |aa, flds|
         aa['_resolved'] = flds
         aa['_resolved']['level'] = aa['level']
       end
@@ -366,26 +443,29 @@ class ArclightIndexer < PeriodicIndexer
       child_wp_json = nil
 
       if child_count > 0
-        child_wp_json = JSONModel::HTTP.get_json(resource_uri + '/tree/node',
-                                                 :node_uri => record_uri,
-                                                 :published_only => true)
+        # this can come back nil if the record was deleted out from under us,
+        # in which case we stream it as a leaf
+        child_wp_json = fetch_tree_node(resource_uri, record_uri)
       end
 
       stream_doc(fh, mapper.json, resource_uri, record_uri, child_wp_json, resource_json, first)
 
       first = false
     end
+
+    # let our caller know whether anything has been written yet so that a
+    # subsequent waypoint page doesn't start a new list
+    first
   end
 
-  def map_waypoints(fh, resource_uri, parent_uri, tree_json)
+  def map_waypoints(fh, resource_uri, parent_uri, tree_json, resource_json, first)
     tree_json.fetch('waypoints').times do |waypoint_number|
-      waypoints_json = JSONModel::HTTP.get_json(resource_uri + '/tree/waypoint',
-                                                :offset => waypoint_number,
-                                                :parent_node => parent_uri,
-                                                :published_only => true)
+      waypoints_json = fetch_tree_waypoint(resource_uri, parent_uri, waypoint_number)
 
-      map_children(fh, waypoints_json, resource_uri, parent_uri)
+      first = map_children(fh, waypoints_json, resource_uri, parent_uri, resource_json, first)
     end
+
+    first
   end
 
   def stream_doc(fh, doc, resource_uri, parent_uri, tree_json, resource_json, first)
@@ -399,13 +479,8 @@ class ArclightIndexer < PeriodicIndexer
       fh.write(doc[0..-2])
       fh.write(',"components":[')
 
-      tree_json.fetch('waypoints').times do |waypoint_number|
-        waypoints_json = JSONModel::HTTP.get_json(resource_uri + '/tree/waypoint',
-                                                  :offset => waypoint_number,
-                                                  :parent_node => parent_uri,
-                                                  :published_only => true)
-        map_children(fh, waypoints_json, resource_uri, parent_uri, resource_json, first)
-      end
+      # our children are the first thing written into the components list
+      map_waypoints(fh, resource_uri, parent_uri, tree_json, resource_json, true)
 
       fh.write(']}')
     end
@@ -414,7 +489,7 @@ class ArclightIndexer < PeriodicIndexer
   def stream_nested_resource_doc(resource_uri, resource_json)
     mapper = Arclight::Mapper.resource_mapper.new(resource_json)
 
-    tree_root_json = JSONModel::HTTP.get_json(resource_uri + '/tree/root', :published_only => true)
+    tree_root_json = fetch_tree_root(resource_uri)
 
     fh = Tempfile.new('arclight_stream.json')
     temp_file_path = fh.path
@@ -511,22 +586,20 @@ class ArclightIndexer < PeriodicIndexer
     unpublished_count = 0
 
     begin
-      JSONModel::HTTP.get_json('/as_arclight/resources_to_delete').each do |resource_uri|
+      resources_to_delete.each do |resource_uri|
         send_delete_for_resource(resource_uri, 'it has been deleted in ArchivesSpace')
         deleted_count += 1
         resource_count += 1
 
-        JSONModel::HTTP.get_json('/as_arclight/remove_delete_flag', :uri => resource_uri)
+        remove_delete_flag(resource_uri)
       end
 
       if deleted_count > 0
         send_commit_to_all_targets
       end
 
-      # Clear any records that have reached our maximum number of failures
-      max_failures = @failed_index_max_failures
-
-      resp = JSONModel::HTTP.get_json('/as_arclight/resources_to_index', :max_failures => max_failures)
+      # this also clears any records that have reached our maximum number of failures
+      resp = resources_to_index(@failed_index_max_failures)
 
       resp['failed'].each do |failed|
         ARCLog.debug "Resource #{failed['uri']} has failed to index #{failed['failure_count']} times in a row and will be skipped"
@@ -541,7 +614,7 @@ class ArclightIndexer < PeriodicIndexer
           resource_uri = resource_record.uri
           resource_json = resource_record.to_hash(:trusted)
 
-          resource_json.merge!(JSONModel::HTTP.get_json("/as_arclight#{resource_uri}"))
+          resource_json.merge!(resource_summary_data(resource_uri))
 
           if resource_json['publish'] && !resource_json['suppressed']
             ARCLog.debug "Preparing resource #{resource_uri}"
@@ -555,7 +628,7 @@ class ArclightIndexer < PeriodicIndexer
             send_commit_to_all_targets
           end
 
-          JSONModel::HTTP.get_json('/as_arclight/remove_indexing_flag', 'uris[]' => resource_uri)
+          remove_indexing_flag(resource_uri)
 
           resource_count += 1
         rescue => e
@@ -565,7 +638,7 @@ class ArclightIndexer < PeriodicIndexer
           ARCLog.error "This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
           ARCLog.exception(e)
 
-          JSONModel::HTTP.get_json('/as_arclight/increment_failure_count', :uri => resource_uri, :next_retry => next_retry_time)
+          increment_failure_count(resource_uri, next_retry_time)
         end
       end
 
