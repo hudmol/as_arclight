@@ -1,9 +1,9 @@
 class ArchivesSpaceService < Sinatra::Base
 
-  # FIXME: some of these should probably be posts
-  Endpoint.get('/as_arclight/flag_for_indexing')
+  Endpoint.post('/as_arclight/flag_for_indexing')
     .description("Flag Resource URIs for Arclight indexing")
     .params(["uris", [String], "The Resource URIs to flag"])
+    .no_data(true)
     .permissions([:index_system])
     .returns([200, "success"]) \
   do
@@ -30,9 +30,10 @@ class ArchivesSpaceService < Sinatra::Base
     end
   end
 
-  Endpoint.get('/as_arclight/remove_indexing_flag')
+  Endpoint.post('/as_arclight/remove_indexing_flag')
     .description("Remove Arclight indexing flags for Resource URIs")
     .params(["uris", [String], "The Resource URIs to flag"])
+    .no_data(true)
     .permissions([:index_system])
     .returns([200, "success"]) \
   do
@@ -56,9 +57,10 @@ class ArchivesSpaceService < Sinatra::Base
     end
   end
 
-  Endpoint.get('/as_arclight/remove_all_indexing_flags')
+  Endpoint.post('/as_arclight/remove_all_indexing_flags')
     .description("Remove all Arclight indexing flags")
     .params()
+    .no_data(true)
     .permissions([:index_system])
     .returns([200, "success"]) \
   do
@@ -94,10 +96,11 @@ class ArchivesSpaceService < Sinatra::Base
     end
   end
 
-  Endpoint.get('/as_arclight/increment_failure_count')
+  Endpoint.post('/as_arclight/increment_failure_count')
     .description("Increment the failure count for a Resource URI")
     .params(["uri", String, "The Resource URI to increment"],
             ["next_retry", Integer, "Timestamp to set for next retry"])
+    .no_data(true)
     .permissions([:index_system])
     .returns([200, "success"]) \
   do
@@ -111,9 +114,10 @@ class ArchivesSpaceService < Sinatra::Base
   end
 
 
-  Endpoint.get('/as_arclight/flag_for_delete')
+  Endpoint.post('/as_arclight/flag_for_delete')
     .description("Flag Resource URIs for Arclight delete")
     .params(["uris", [String], "The Resource URIs to flag"])
+    .no_data(true)
     .permissions([:index_system])
     .returns([200, "success"]) \
   do
@@ -150,9 +154,10 @@ class ArchivesSpaceService < Sinatra::Base
     end
   end
 
-  Endpoint.get('/as_arclight/remove_delete_flag')
+  Endpoint.post('/as_arclight/remove_delete_flag')
     .description("Remove Arclight delete flag for Resource URI")
     .params(["uri", String, "The Resource URI to unflag"])
+    .no_data(true)
     .permissions([:index_system])
     .returns([200, "success"]) \
   do

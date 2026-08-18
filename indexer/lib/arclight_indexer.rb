@@ -234,25 +234,29 @@ class ArclightIndexer < PeriodicIndexer
 
   # Our indexing state lives in the ArchivesSpace database and is reached
   # through the as_arclight backend endpoints.  Every one of those calls goes
-  # through #backend_get so there's a single place to look for them (and a
-  # single seam to mock in the tests).
+  # through #backend_get or #backend_post so there's a single place to look
+  # for them (and a single seam to mock in the tests).
   def backend_get(path, params = {})
     JSONModel::HTTP.get_json("/as_arclight#{path}", params)
+  end
+
+  def backend_post(path, params = {})
+    JSON.parse(JSONModel::HTTP.post_form("/as_arclight#{path}", params).body)
   end
 
   # Returns {'flagged' => [uri, ...], 'not_flagged' => [uri, ...]}
   # The backend only flags resource uris - anything else comes back as
   # not_flagged.
   def flag_uris_for_indexing(uris)
-    backend_get('/flag_for_indexing', 'uris[]' => uris)
+    backend_post('/flag_for_indexing', 'uris[]' => uris)
   end
 
   def remove_indexing_flag(*uris)
-    backend_get('/remove_indexing_flag', 'uris[]' => uris)
+    backend_post('/remove_indexing_flag', 'uris[]' => uris)
   end
 
   def remove_all_indexing_flags
-    backend_get('/remove_all_indexing_flags')
+    backend_post('/remove_all_indexing_flags')
   end
 
   # Returns {'uris' => [uri, ...], 'failed' => [{'uri' => uri, 'failure_count' => n}, ...]}
@@ -263,11 +267,11 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def increment_failure_count(uri, next_retry_time)
-    backend_get('/increment_failure_count', :uri => uri, :next_retry => next_retry_time)
+    backend_post('/increment_failure_count', :uri => uri, :next_retry => next_retry_time)
   end
 
   def flag_uris_for_delete(uris)
-    backend_get('/flag_for_delete', 'uris[]' => uris)
+    backend_post('/flag_for_delete', 'uris[]' => uris)
   end
 
   # Returns an array of resource uris that have been deleted in ArchivesSpace
@@ -276,7 +280,7 @@ class ArclightIndexer < PeriodicIndexer
   end
 
   def remove_delete_flag(uri)
-    backend_get('/remove_delete_flag', :uri => uri)
+    backend_post('/remove_delete_flag', :uri => uri)
   end
 
   # Summary counts that are cheaper to calculate in the database than to
