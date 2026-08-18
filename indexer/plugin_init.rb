@@ -1,7 +1,6 @@
 require 'log'
 require_relative 'lib/arclog'
 require_relative 'lib/ead_helper'
-require_relative File.join(File.dirname(__FILE__), 'lib/sqlite-jdbc-3.53.0.0.jar')
 
 # This file gets loaded first by common_indexer.rb (which is too early because
 # PeriodicIndexer isn't loaded yet) and then again by main.rb.  Since our

@@ -32,7 +32,7 @@ class IIIFClient
           end
         end
       end
-pp result
+
       result
     end
 

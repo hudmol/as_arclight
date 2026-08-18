@@ -41,7 +41,6 @@ end
 require 'log'
 require_relative '../indexer/lib/arclog'
 require_relative '../indexer/lib/ead_helper'
-require_relative File.join(File.dirname(__FILE__), '../indexer/lib/sqlite-jdbc-3.53.0.0.jar')
 require_relative '../indexer/lib/arclight_indexer'
 ArclightIndexer.ensure_data_dir_or_die!
 

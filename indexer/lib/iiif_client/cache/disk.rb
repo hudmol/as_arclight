@@ -1,4 +1,6 @@
 require 'digest/sha1'
+require_relative 'utils'
+
 
 class IIIFClient
   class Cache
