@@ -131,11 +131,11 @@ describe 'ArclightIndexer' do
       allow(AppConfig).to receive(:has_key?).with(:as_arclight_reset_queue_on_start).and_return(true)
       allow(AppConfig).to receive(:[]).with(:as_arclight_reset_queue_on_start).and_return(true)
       allow(ARCLog).to receive(:warn)
-      allow(JSONModel::HTTP).to receive(:get_json).and_return('message' => 'success')
+      allow(JSONModel::HTTP).to receive(:post_form).and_return(double(body: '{"message": "success"}'))
 
       ArclightIndexer.new(nil, nil, 'reset-queue-on-start')
 
-      expect(JSONModel::HTTP).to have_received(:get_json).with('/as_arclight/remove_all_indexing_flags', {})
+      expect(JSONModel::HTTP).to have_received(:post_form).with('/as_arclight/remove_all_indexing_flags', {})
       expect(ARCLog).to have_received(:warn).with(/Resetting queue/)
     end
 
@@ -1097,28 +1097,33 @@ describe 'ArclightIndexer' do
 
     before(:each) do
       allow(JSONModel::HTTP).to receive(:get_json).and_return('flagged' => [])
+      allow(JSONModel::HTTP).to receive(:post_form).and_return(double(body: '{"message": "success"}'))
     end
 
     def expect_request(path, params = {})
       expect(JSONModel::HTTP).to have_received(:get_json).with(path, params)
     end
 
+    def expect_post_request(path, params = {})
+      expect(JSONModel::HTTP).to have_received(:post_form).with(path, params)
+    end
+
     it 'flags uris for indexing' do
       indexer.flag_uris_for_indexing([resource_uri])
 
-      expect_request('/as_arclight/flag_for_indexing', 'uris[]' => [resource_uri])
+      expect_post_request('/as_arclight/flag_for_indexing', 'uris[]' => [resource_uri])
     end
 
     it 'removes indexing flags' do
       indexer.remove_indexing_flag(resource_uri)
 
-      expect_request('/as_arclight/remove_indexing_flag', 'uris[]' => [resource_uri])
+      expect_post_request('/as_arclight/remove_indexing_flag', 'uris[]' => [resource_uri])
     end
 
     it 'removes all indexing flags' do
       indexer.remove_all_indexing_flags
 
-      expect_request('/as_arclight/remove_all_indexing_flags')
+      expect_post_request('/as_arclight/remove_all_indexing_flags')
     end
 
     it 'asks for the resources to index' do
@@ -1130,7 +1135,7 @@ describe 'ArclightIndexer' do
     it 'increments a failure count' do
       indexer.increment_failure_count(resource_uri, 1234567890)
 
-      expect_request('/as_arclight/increment_failure_count',
+      expect_post_request('/as_arclight/increment_failure_count',
                      :uri => resource_uri,
                      :next_retry => 1234567890)
     end
@@ -1138,7 +1143,7 @@ describe 'ArclightIndexer' do
     it 'flags uris for delete' do
       indexer.flag_uris_for_delete([resource_uri])
 
-      expect_request('/as_arclight/flag_for_delete', 'uris[]' => [resource_uri])
+      expect_post_request('/as_arclight/flag_for_delete', 'uris[]' => [resource_uri])
     end
 
     it 'asks for the resources to delete' do
@@ -1150,7 +1155,7 @@ describe 'ArclightIndexer' do
     it 'removes a delete flag' do
       indexer.remove_delete_flag(resource_uri)
 
-      expect_request('/as_arclight/remove_delete_flag', :uri => resource_uri)
+      expect_post_request('/as_arclight/remove_delete_flag', :uri => resource_uri)
     end
 
     it 'asks for the extra resource summary data' do

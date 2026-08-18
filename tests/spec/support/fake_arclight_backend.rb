@@ -121,6 +121,10 @@ module ArclightBackendHelpers
       backend.handle(path, params || {})
     end
 
+    allow(indexer).to receive(:backend_post) do |path, params|
+      backend.handle(path, params || {})
+    end
+
     indexer
   end
 

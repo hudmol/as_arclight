@@ -91,6 +91,10 @@ RSpec.configure do |config|
       end
     end
   end
+
+  config.before do
+    allow_any_instance_of(ArclightIndexer).to receive(:login).and_return(true)
+  end
 end
 
 Dir.glob(File.join(File.dirname(__FILE__), "spec/*_spec.rb")).sort_by {|f| File.basename(f)}.each do |spec|
