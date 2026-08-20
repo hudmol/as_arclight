@@ -89,7 +89,12 @@ Optional configuration:
 *  AppConfig[:include_dadocm_required_fields]
     - If true then map DadoCM required fields for digital objects
 *  AppConfig[:as_arclight_reset_queue_on_start]
-    - If true then the resource table will be emptied on start up
+    - If true then the resource table will be emptied on start up. Any
+      Resources that had been flagged for indexing but not yet indexed
+      from the previous run will be removed from the queue and so not be
+      indexed when ArchivesSpace restarts. This setting is for NOT indexing
+      Resources that would otherwise be indexed. If you're looking for a
+      way to do a full reindex, see the section on Index Version.
 *  AppConfig[:as_arclight_failed_index_retry_delay_seconds]
     - If indexing a Resource record fails for some reason, it will be
       retried periodically until it succeeds. This setting controls
@@ -150,8 +155,20 @@ have changed since the last run. If there is a change then the plugin will raise
 an error and exit (logging instructions) unless the version number has been
 incremented by setting `AppConfig[:as_arclight_index_version]`.
 
+### Full Reindex
+
 Whenever the version number is incremented a full reindex will be triggered, and
-this new version information will be stored and checked on subsequent runs.
+the current version information will be stored and checked on subsequent runs.
+
+For example, to trigger a full reindex on a deployment where you have never set
+`AppConfig[:as_arclight_index_version]`, this setting will trigger a full
+reindex:
+```
+AppConfig[:as_arclight_index_version] = 2
+```
+The index version defaults to 1, so setting it to any higher value will
+invalidate the current version and trigger a full reindex.
+
 
 ## Customization
 
