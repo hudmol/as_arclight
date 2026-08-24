@@ -575,12 +575,24 @@ class ArclightIndexer < PeriodicIndexer
     end
   end
 
+  # Overrides PeriodicIndexer#run_index_round. This is where the indexing happens.
   def run_index_round
+    # This array will cache the uris of resources as they are flagged
+    # in the super call below. To save unnecessary calls to the backend,
+    # previously flagged uris will not be flagged again this round.
+    # Here we ensure the array is empty before starting the round.
     @uris_flagged_this_round = []
 
+    # Updated records in all Repositories are scanned in this call to super
+    # (PeriodicIndexer#round_index_round). Affected resources will be flagged for
+    # indexing.
     super
 
+    # All flagged resources are indexed to Arclight in this call.
     run_arclight_indexing
+
+    # Here we empty the array again so it doesn't hold memory between rounds.
+    @uris_flagged_this_round = []
   end
 
   def run_arclight_indexing
