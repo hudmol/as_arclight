@@ -22,7 +22,9 @@ related records since the last index run.
 
 When the Arclight indexer runs an indexing round, it works sequentially through
 the list of Resource URIs flagged during its scan, building up the complete
-nested document for each Resource and posting it to Arclight's Solr.
+nested document for each Resource and posting it to Arclight's Solr. The scan
+phase will complete for all Repositories before any Resources are indexed into
+Arclight's Solr.
 
 As with other indexers, the as_arclight indexer creates state files -
 containing last indexed timestamps for record types within repositories. These
