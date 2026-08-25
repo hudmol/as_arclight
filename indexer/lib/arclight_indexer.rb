@@ -214,7 +214,15 @@ class ArclightIndexer < PeriodicIndexer
 
     # This preempts the login call in run_index_round so that we have a session
     # for the IndexVersion to do its business
-    login
+    loop do
+      begin
+        login
+        break
+      rescue
+        ARCLog.error 'Failure logging into ArchivesSpace API'
+        sleep 10
+      end
+    end
 
     IndexVersion.validate_config_or_die!
 
