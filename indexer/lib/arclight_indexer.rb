@@ -631,38 +631,47 @@ class ArclightIndexer < PeriodicIndexer
 
       ARCLog.info "There are #{resp['uris'].length} collections in need of indexing"
 
-      fetch_records(:resource,
-                    resp['uris'].map{|resource_uri| JSONModel(:resource).id_for(resource_uri)},
-                    Arclight::Mapper.resource_mapper.resolves) do |resource_record|
-        begin
-          resource_uri = resource_record.uri
-          resource_json = resource_record.to_hash(:trusted)
+      resp['uris']
+        .map {|uri| JSONModel.parse_reference(uri)}
+        .group_by {|parsed| parsed.fetch(:repository)}
+        .each do |repository_uri, parsed_refs|
 
-          resource_json.merge!(resource_summary_data(resource_uri))
+        JSONModel.set_repository(JSONModel(:repository).id_for(repository_uri))
+        fetch_records(:resource,
+                      parsed_refs.map {|ref| ref.fetch(:id)},
+                      Arclight::Mapper.resource_mapper.resolves) do |resource_record|
+          begin
+            resource_uri = resource_record.uri
 
-          if resource_json['publish'] && !resource_json['suppressed']
-            ARCLog.debug "Preparing resource #{resource_uri}"
+            ARCLog.debug("Processing resource #{resource_uri}")
+            resource_json = resource_record.to_hash(:trusted)
 
-            stream_nested_resource_doc(resource_uri, resource_json)
+            resource_json.merge!(resource_summary_data(resource_uri))
 
-            indexed_count += 1
-          else
-            unpublished_count += 1
-            send_delete_for_resource(resource_uri, 'it is either unpublished or suppressed')
-            send_commit_to_all_targets
+            if resource_json['publish'] && !resource_json['suppressed']
+              ARCLog.debug "Preparing resource #{resource_uri}"
+
+              stream_nested_resource_doc(resource_uri, resource_json)
+
+              indexed_count += 1
+            else
+              unpublished_count += 1
+              send_delete_for_resource(resource_uri, 'it is either unpublished or suppressed')
+              send_commit_to_all_targets
+            end
+
+            remove_indexing_flag(resource_uri)
+
+            resource_count += 1
+          rescue => e
+            next_retry_time = Time.now.to_i + @failed_index_retry_delay_seconds
+
+            ARCLog.error "Error indexing resource #{resource_uri}: #{e}"
+            ARCLog.error "This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
+            ARCLog.exception(e)
+
+            increment_failure_count(resource_uri, next_retry_time)
           end
-
-          remove_indexing_flag(resource_uri)
-
-          resource_count += 1
-        rescue => e
-          next_retry_time = Time.now.to_i + @failed_index_retry_delay_seconds
-
-          ARCLog.error "Error indexing resource #{resource_uri}: #{e}"
-          ARCLog.error "This resource has been skipped and will be retried after #{Time.at(next_retry_time)}"
-          ARCLog.exception(e)
-
-          increment_failure_count(resource_uri, next_retry_time)
         end
       end
 
