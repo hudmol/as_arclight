@@ -155,6 +155,7 @@ describe 'ArclightIndexer' do
 
     it 'deletes all collections in unpublished repositories' do
       indexer.repositories_updated_action([unpublished_repo])
+
       delete_request = JSON.parse(http_request_log.first[:request].body)
       commit_request = JSON.parse(http_request_log.last[:request].body)
 
@@ -174,9 +175,13 @@ describe 'ArclightIndexer' do
       resp.define_singleton_method(:body) { 'nope' }
       allow(indexer).to receive(:do_http_request).and_return(resp)
 
-      indexer.repositories_updated_action([
-        { 'record' => { 'name' => 'priv', 'repo_code' => 'PRIV', 'publish' => false } }
-      ])
+      begin
+        indexer.repositories_updated_action([
+          { 'record' => { 'name' => 'priv', 'repo_code' => 'PRIV', 'publish' => false } }
+        ])
+      rescue
+        # error expected
+      end
 
       expect(ARCLog).to have_received(:error)
         .with(/failed to delete Arclight documents in private repository/)
@@ -784,9 +789,13 @@ describe 'ArclightIndexer' do
       resp.define_singleton_method(:body) { 'boom' }
       allow(indexer).to receive(:do_http_request).and_return(resp)
 
-      indexer.stream_nested_resource_doc(resource_uri, resource_json)
+      begin
+        indexer.stream_nested_resource_doc(resource_uri, resource_json)
+      rescue
+        # error expected
+      end
 
-      expect(ARCLog).to have_received(:error).with(/Error when streaming doc/)
+      expect(ARCLog).to have_received(:error).with(/Error deleting/)
     end
 
     it 'cleans up its temp file' do
@@ -1213,14 +1222,19 @@ describe 'ArclightIndexer' do
       allow(ARCLog).to receive(:warn)
       stub_commit_response('400', 'exceeded limit of maxWarmingSearchers')
 
-      expect(indexer.send_commit_for_target(target)).to be_truthy
+      begin
+        expect(indexer.send_commit_for_target(target)).to be_truthy
+      rescue
+        # error expected
+      end
+
       expect(ARCLog).to have_received(:warn).with(/Solr response when sending commit/)
     end
 
     it 'returns false and logs an error on any other failure' do
       stub_commit_response('500', 'kaboom')
 
-      expect(indexer.send_commit_for_target(target)).to be_falsey
+      expect { indexer.send_commit_for_target(target) }.to raise_error(/non-200 response/)
       expect(ARCLog).to have_received(:error).with(/Error when committing/)
     end
   end
@@ -1252,7 +1266,11 @@ describe 'ArclightIndexer' do
       resp.define_singleton_method(:body) { 'down' }
       allow(indexer).to receive(:do_http_request).and_return(resp)
 
-      indexer.send_delete_for_resource('/repositories/2/resources/9', 'we are testing deletes')
+      begin
+        indexer.send_delete_for_resource('/repositories/2/resources/9', 'we are testing deletes')
+      rescue
+        # error expected
+      end
 
       expect(ARCLog).to have_received(:error).with(/Error deleting .* from/)
     end

@@ -76,7 +76,8 @@ class ArclightIndexer < PeriodicIndexer
         true
       else
         ARCLog.error "Error when committing to #{target.name} -- #{resp.body}"
-        false
+
+        raise "Caught a non-200 response from Solr"
       end
     end
   end
@@ -551,15 +552,14 @@ class ArclightIndexer < PeriodicIndexer
 
           unless resp.code == '200'
             ARCLog.error "Error when streaming doc for #{resource_uri} to #{target.name}: #{resp.body}"
-            next
+            raise "Caught a non-200 response from Solr"
           end
         ensure
           stream.close
         end
 
-        if send_commit_for_target(target)
-          ARCLog.info "Successfully indexed #{resource_uri} to #{target.name}"
-        end
+        send_commit_for_target(target)
+        ARCLog.info "Successfully indexed #{resource_uri} to #{target.name}"
       end
     ensure
       File.unlink(temp_file_path)
@@ -579,6 +579,7 @@ class ArclightIndexer < PeriodicIndexer
 
       if resp.code != '200'
         ARCLog.error "Error deleting #{resource_uri} from #{target.name}: #{resp.body}"
+        raise "Caught a non-200 response from Solr"
       end
     end
   end
@@ -697,11 +698,11 @@ class ArclightIndexer < PeriodicIndexer
           req.body = delete_request.to_json
           response = do_http_request(target.parsed_url, req)
           if response.code == '200'
-            if send_commit_for_target(target)
-              ARCLog.info "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
-            end
+            send_commit_for_target(target)
+            ARCLog.info "Deleted all documents in private repository #{repository['record']['repo_code']} for #{target.name}"
           else
             ARCLog.error "failed to delete Arclight documents in private repository #{repository['record']['repo_code']} for #{target.name}: #{response.body}"
+            raise "Caught a non-200 response from Solr"
           end
         end
       end
